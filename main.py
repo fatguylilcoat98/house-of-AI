@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from google import genai as google_genai
 
 app = FastAPI(title="House of AI")
 
@@ -127,18 +128,17 @@ async def call_gemini(task: str, context: str, client: httpx.AsyncClient) -> Age
             full_prompt += f"[CONTEXT FROM PRIOR PHASE]\n{context}\n\n"
         full_prompt += task
 
-        r = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}",
-            headers={"Content-Type": "application/json"},
-            json={
-                "contents": [{"parts": [{"text": full_prompt}]}],
-                "generationConfig": {"maxOutputTokens": 2048},
-            },
-            timeout=60,
-        )
-        r.raise_for_status()
-        data = r.json()
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        # google-genai SDK is sync — run in thread pool to avoid blocking event loop
+        def _sync_call():
+            gclient = google_genai.Client(api_key=GEMINI_API_KEY)
+            response = gclient.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=full_prompt,
+            )
+            return response.text
+
+        loop = asyncio.get_event_loop()
+        text = await loop.run_in_executor(None, _sync_call)
         return AgentResponse(agent="Gemini", response=text)
     except Exception as e:
         return AgentResponse(agent="Gemini", response="", error=str(e))
