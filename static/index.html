@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>House of AI — Veracore</title>
+<title>House of AI v2 — Veracore</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
   :root {
@@ -14,9 +14,8 @@
     --gpt:       #10a37f;
     --gemini:    #4285f4;
     --consensus: #c678dd;
-    --agree:     #a6e3a1;
-    --conflict:  #f38ba8;
-    --action:    #fab387;
+    --action:    #e06c75;
+    --memory:    #56b6c2;
     --text:      #cdd6f4;
     --muted:     #6c7086;
     --danger:    #f38ba8;
@@ -26,182 +25,206 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
 
-  header { padding: 18px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; background: var(--surface); }
-  .logo { font-family: var(--mono); font-size: 1.1rem; color: var(--claude); letter-spacing: 2px; }
+  header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface);
+  }
+  .logo { font-family: var(--mono); font-size: 1rem; color: var(--claude); letter-spacing: 2px; }
   .logo span { color: var(--muted); }
-  .badge { font-family: var(--mono); font-size: 0.65rem; background: #1a1d25; border: 1px solid var(--border); color: var(--muted); padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
+  .badge { font-family: var(--mono); font-size: 0.62rem; background: #1a1d25; border: 1px solid var(--border); color: var(--muted); padding: 2px 7px; border-radius: 4px; letter-spacing: 1px; }
   .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gpt); box-shadow: 0 0 6px var(--gpt); margin-left: auto; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  main { flex: 1; padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; max-width: 1400px; width: 100%; margin: 0 auto; }
+  main { flex: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; max-width: 1500px; width: 100%; margin: 0 auto; }
 
-  .input-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-  .panel-label { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  textarea { background: #0d0f14; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 0.85rem; line-height: 1.6; padding: 12px; resize: vertical; width: 100%; transition: border-color 0.2s; }
-  textarea:focus { outline: none; border-color: var(--claude); }
-  textarea#task { min-height: 100px; }
-  textarea#context { min-height: 70px; }
-  .row { display: flex; gap: 12px; align-items: flex-end; }
-  .col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  /* Input panel */
+  .input-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .panel-label { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .row { display: flex; gap: 12px; align-items: flex-start; }
+  .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .col-narrow { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
 
-  button { font-family: var(--mono); font-size: 0.85rem; letter-spacing: 1px; cursor: pointer; border-radius: 6px; border: none; padding: 12px 24px; transition: all 0.2s; }
-  #submitBtn { background: var(--claude); color: #0a0c10; font-weight: 700; white-space: nowrap; min-width: 160px; }
+  textarea, select, input[type="text"] {
+    background: #0d0f14; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
+    padding: 10px; width: 100%; transition: border-color 0.2s;
+  }
+  textarea:focus, select:focus { outline: none; border-color: var(--claude); }
+  textarea#task { min-height: 90px; resize: vertical; }
+  textarea#context { min-height: 60px; resize: vertical; }
+  select { cursor: pointer; }
+
+  .btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  button { font-family: var(--mono); font-size: 0.82rem; letter-spacing: 1px; cursor: pointer; border-radius: 6px; border: none; padding: 10px 20px; transition: all 0.2s; }
+  #submitBtn { background: var(--claude); color: #0a0c10; font-weight: 700; min-width: 150px; }
   #submitBtn:hover { filter: brightness(1.1); }
   #submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
   #clearBtn { background: transparent; border: 1px solid var(--border); color: var(--muted); }
   #clearBtn:hover { border-color: var(--muted); color: var(--text); }
+  #timer { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
 
-  .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  @media (max-width: 900px) { .agents-grid { grid-template-columns: 1fr; } }
+  label.check { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); cursor: pointer; }
+  input[type="checkbox"] { accent-color: var(--memory); width: 14px; height: 14px; }
 
-  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 280px; }
-  .agent-card.claude { border-top: 2px solid var(--claude); }
-  .agent-card.gpt    { border-top: 2px solid var(--gpt); }
-  .agent-card.gemini { border-top: 2px solid var(--gemini); }
+  /* Agent grid */
+  .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 860px) { .agents-grid { grid-template-columns: 1fr; } }
 
-  .agent-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
-  .agent-name { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 2px; font-weight: 600; }
+  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 240px; }
+  .agent-card.claude  { border-top: 2px solid var(--claude); }
+  .agent-card.gpt     { border-top: 2px solid var(--gpt); }
+  .agent-card.gemini  { border-top: 2px solid var(--gemini); }
+
+  .agent-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .agent-name { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 2px; font-weight: 600; }
   .claude .agent-name { color: var(--claude); }
   .gpt    .agent-name { color: var(--gpt); }
   .gemini .agent-name { color: var(--gemini); }
-  .agent-latency { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); }
   .agent-indicator { width: 6px; height: 6px; border-radius: 50%; margin-left: auto; }
   .claude .agent-indicator { background: var(--claude); }
   .gpt    .agent-indicator { background: var(--gpt); }
   .gemini .agent-indicator { background: var(--gemini); }
   .agent-indicator.active { animation: pulse 1s infinite; }
 
-  .agent-body { padding: 14px 16px; font-size: 0.82rem; line-height: 1.7; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; max-height: 420px; }
-  .agent-body.empty { color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
-  .agent-body.error { color: var(--danger); font-family: var(--mono); font-size: 0.75rem; }
+  .agent-body { padding: 12px 14px; font-size: 0.8rem; line-height: 1.7; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; max-height: 360px; }
+  .agent-body.empty { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; }
+  .agent-body.error { color: var(--danger); font-family: var(--mono); font-size: 0.72rem; }
 
-  .orchestrator-panel { background: var(--surface); border: 1px solid var(--border); border-top: 2px solid var(--consensus); border-radius: 8px; display: none; }
-  .orchestrator-panel.visible { display: block; }
+  /* Consensus sections */
+  .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 860px) { .consensus-grid { grid-template-columns: 1fr; } }
 
-  .orch-header { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .orch-title { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 2px; color: var(--consensus); }
+  .c-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: none; }
+  .c-panel.visible { display: block; }
+  .c-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .c-title { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2px; }
+  .c-body { padding: 14px; font-size: 0.82rem; line-height: 1.8; white-space: pre-wrap; }
 
-  .score-wrap { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-  .score-label { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 1px; }
-  .score-bar-bg { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .score-bar-fill { height: 100%; border-radius: 3px; background: var(--consensus); transition: width 0.6s ease; }
-  .score-num { font-family: var(--mono); font-size: 0.75rem; color: var(--consensus); min-width: 32px; }
+  .panel-summary     { border-top: 2px solid var(--consensus); }
+  .panel-summary     .c-title { color: var(--consensus); }
+  .panel-disagree    { border-top: 2px solid var(--muted); }
+  .panel-disagree    .c-title { color: var(--muted); }
+  .panel-decision    { border-top: 2px solid var(--gpt); }
+  .panel-decision    .c-title { color: var(--gpt); }
+  .panel-memory      { border-top: 2px solid var(--memory); }
+  .panel-memory      .c-title { color: var(--memory); }
 
-  .confidence-badge { font-family: var(--mono); font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; font-weight: 700; }
-  .confidence-badge.HIGH     { background: #1e3a2a; color: var(--agree); }
-  .confidence-badge.MODERATE { background: #2e2a18; color: var(--action); }
-  .confidence-badge.LOW      { background: #2e1a1a; color: var(--conflict); }
+  /* Actionable prompt — full width, copyable */
+  .panel-action { border-top: 2px solid var(--action); grid-column: 1 / -1; }
+  .panel-action .c-title { color: var(--action); }
+  .action-body { padding: 14px; position: relative; }
+  .action-text { font-family: var(--mono); font-size: 0.8rem; line-height: 1.7; white-space: pre-wrap; background: #0d0f14; border: 1px solid var(--border); border-radius: 6px; padding: 12px; max-height: 280px; overflow-y: auto; }
+  #copyBtn {
+    margin-top: 10px; background: var(--action); color: #0a0c10;
+    font-weight: 700; padding: 8px 18px; font-size: 0.75rem;
+  }
+  #copyBtn:hover { filter: brightness(1.1); }
 
-  .orch-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
-  .orch-summary { font-size: 0.88rem; line-height: 1.75; color: var(--text); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes spin  { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--claude); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
 
-  .orch-sections { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  @media (max-width: 860px) { .orch-sections { grid-template-columns: 1fr; } }
-
-  .orch-section { background: #0d0f14; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-  .orch-section-title { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-  .orch-section.agreements .orch-section-title { color: var(--agree); }
-  .orch-section.conflicts  .orch-section-title { color: var(--conflict); }
-  .orch-section.actions    .orch-section-title { color: var(--action); }
-
-  .orch-item { font-size: 0.8rem; line-height: 1.55; padding-left: 14px; position: relative; margin-bottom: 6px; }
-  .orch-item::before { content: '›'; position: absolute; left: 0; font-family: var(--mono); }
-  .orch-section.agreements .orch-item::before { color: var(--agree); }
-  .orch-section.conflicts  .orch-item::before { color: var(--conflict); }
-  .orch-section.actions    .orch-item::before { color: var(--action); }
-  .orch-empty { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
-
-  footer { padding: 12px 28px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-align: center; letter-spacing: 1px; }
+  footer { padding: 10px 24px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 0.62rem; color: var(--muted); text-align: center; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">HOUSE<span>::</span>OF<span>::</span>AI</div>
-  <div class="badge">VERACORE v6+</div>
+  <div class="badge">V2</div>
+  <div class="badge">VERACORE</div>
   <div class="badge">THE GOOD NEIGHBOR GUARD</div>
   <div class="status-dot"></div>
 </header>
 
 <main>
+
+  <!-- Input -->
   <div class="input-panel">
     <div class="row">
       <div class="col">
         <div class="panel-label">Task / Question</div>
-        <textarea id="task" placeholder="Paste your Veracore task, code question, or phase prompt here..."></textarea>
+        <textarea id="task" placeholder="Paste your Veracore phase task, code question, or engineering prompt..."></textarea>
       </div>
       <div class="col">
-        <div class="panel-label">Context (optional — prior phase output)</div>
-        <textarea id="context" placeholder="Paste relevant prior output so all three agents share the same context..."></textarea>
+        <div class="panel-label">Context (optional)</div>
+        <textarea id="context" placeholder="Prior phase output, relevant code, or background context..."></textarea>
+      </div>
+      <div class="col-narrow">
+        <div class="panel-label">Namespace</div>
+        <select id="namespace">
+          <option value="veracore">veracore</option>
+          <option value="lylo">lylo</option>
+          <option value="general">general</option>
+        </select>
+        <div class="panel-label" style="margin-top:8px;">Phase</div>
+        <input type="text" id="phase" placeholder="e.g. 6" style="padding:8px;"/>
       </div>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;">
+    <div class="btn-row">
       <button id="submitBtn" onclick="consult()">▶ ASK THE HOUSE</button>
       <button id="clearBtn" onclick="clearAll()">CLEAR</button>
-      <div id="timer" style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);margin-left:8px;"></div>
+      <label class="check">
+        <input type="checkbox" id="writeMemory" checked/>
+        Write to memory
+      </label>
+      <div id="timer"></div>
     </div>
   </div>
 
+  <!-- Agent panels -->
   <div class="agents-grid">
     <div class="agent-card claude">
-      <div class="agent-header">
-        <div class="agent-name">CLAUDE</div>
-        <span class="agent-latency" id="lat-claude"></span>
-        <div class="agent-indicator" id="ind-claude"></div>
-      </div>
-      <div class="agent-body empty" id="body-claude">Waiting for task...</div>
+      <div class="agent-header"><div class="agent-name">CLAUDE</div><div class="agent-indicator" id="ind-claude"></div></div>
+      <div class="agent-body empty" id="body-claude">Waiting...</div>
     </div>
     <div class="agent-card gpt">
-      <div class="agent-header">
-        <div class="agent-name">GPT</div>
-        <span class="agent-latency" id="lat-gpt"></span>
-        <div class="agent-indicator" id="ind-gpt"></div>
-      </div>
-      <div class="agent-body empty" id="body-gpt">Waiting for task...</div>
+      <div class="agent-header"><div class="agent-name">GPT</div><div class="agent-indicator" id="ind-gpt"></div></div>
+      <div class="agent-body empty" id="body-gpt">Waiting...</div>
     </div>
     <div class="agent-card gemini">
-      <div class="agent-header">
-        <div class="agent-name">GEMINI</div>
-        <span class="agent-latency" id="lat-gemini"></span>
-        <div class="agent-indicator" id="ind-gemini"></div>
-      </div>
-      <div class="agent-body empty" id="body-gemini">Waiting for task...</div>
+      <div class="agent-header"><div class="agent-name">GEMINI</div><div class="agent-indicator" id="ind-gemini"></div></div>
+      <div class="agent-body empty" id="body-gemini">Waiting...</div>
     </div>
   </div>
 
-  <div class="orchestrator-panel" id="orchPanel">
-    <div class="orch-header">
-      <div class="orch-title">◈ ORCHESTRATOR</div>
-      <span class="confidence-badge" id="orchConfidence"></span>
-      <div class="score-wrap">
-        <span class="score-label">CONSENSUS</span>
-        <div class="score-bar-bg">
-          <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
-        </div>
-        <span class="score-num" id="scoreNum">0</span>
+  <!-- Consensus sections -->
+  <div class="consensus-grid">
+
+    <div class="c-panel panel-summary" id="panelSummary">
+      <div class="c-header"><div class="c-title">◈ CONSENSUS SUMMARY</div></div>
+      <div class="c-body" id="bodySummary"></div>
+    </div>
+
+    <div class="c-panel panel-disagree" id="panelDisagree">
+      <div class="c-header"><div class="c-title">⚠ DISAGREEMENTS</div></div>
+      <div class="c-body" id="bodyDisagree"></div>
+    </div>
+
+    <div class="c-panel panel-decision" id="panelDecision">
+      <div class="c-header"><div class="c-title">✓ FINAL DECISION</div></div>
+      <div class="c-body" id="bodyDecision"></div>
+    </div>
+
+    <div class="c-panel panel-memory" id="panelMemory">
+      <div class="c-header"><div class="c-title">⬡ MEMORY WRITTEN</div></div>
+      <div class="c-body" id="bodyMemory"></div>
+    </div>
+
+    <div class="c-panel panel-action" id="panelAction">
+      <div class="c-header"><div class="c-title">⚡ ACTIONABLE PROMPT</div></div>
+      <div class="action-body">
+        <div class="action-text" id="bodyAction"></div>
+        <button id="copyBtn" onclick="copyPrompt()">⧉ COPY PROMPT</button>
       </div>
     </div>
-    <div class="orch-body">
-      <div class="orch-summary" id="orchSummary"></div>
-      <div class="orch-sections">
-        <div class="orch-section agreements">
-          <div class="orch-section-title">✓ Agreements</div>
-          <div id="orchAgree"></div>
-        </div>
-        <div class="orch-section conflicts">
-          <div class="orch-section-title">✗ Conflicts</div>
-          <div id="orchConflict"></div>
-        </div>
-        <div class="orch-section actions">
-          <div class="orch-section-title">⚡ Action Items</div>
-          <div id="orchActions"></div>
-        </div>
-      </div>
-    </div>
+
   </div>
+
 </main>
 
-<footer>THE GOOD NEIGHBOR GUARD — HOUSE OF AI — PROTECTING VULNERABLE USERS THROUGH VERIFIED INTELLIGENCE</footer>
+<footer>THE GOOD NEIGHBOR GUARD — HOUSE OF AI v2 — PROTECTING VULNERABLE USERS THROUGH VERIFIED INTELLIGENCE</footer>
 
 <script>
   let timerInterval = null;
@@ -210,114 +233,107 @@
     const btn = document.getElementById('submitBtn');
     btn.disabled = on;
     btn.textContent = on ? '⏳ CONSULTING...' : '▶ ASK THE HOUSE';
-    ['claude','gpt','gemini'].forEach(a =>
-      document.getElementById('ind-' + a).classList.toggle('active', on)
-    );
+    ['ind-claude','ind-gpt','ind-gemini'].forEach(id => {
+      document.getElementById(id).classList.toggle('active', on);
+    });
     if (on) {
       let s = 0;
-      timerInterval = setInterval(() => {
-        document.getElementById('timer').textContent = (++s) + 's';
-      }, 1000);
+      timerInterval = setInterval(() => document.getElementById('timer').textContent = `${++s}s`, 1000);
     } else {
       clearInterval(timerInterval);
     }
   }
 
-  function setAgent(agent, text, mode, latencyMs) {
-    const body = document.getElementById('body-' + agent);
-    body.textContent = text;
-    body.className = 'agent-body' + (mode === 'empty' ? ' empty' : mode === 'error' ? ' error' : '');
-    const lat = document.getElementById('lat-' + agent);
-    lat.textContent = latencyMs ? latencyMs + 'ms' : '';
+  function setAgentBody(agent, text, mode = 'normal') {
+    const el = document.getElementById(`body-${agent}`);
+    el.textContent = text;
+    el.className = 'agent-body' + (mode === 'empty' ? ' empty' : mode === 'error' ? ' error' : '');
   }
 
-  function renderList(containerId, items) {
-    const el = document.getElementById(containerId);
-    if (!items || items.length === 0) {
-      el.innerHTML = '<div class="orch-empty">None</div>';
-      return;
-    }
-    el.innerHTML = items.map(function(i) {
-      return '<div class="orch-item">' + escHtml(i) + '</div>';
-    }).join('');
-  }
-
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
+  function showPanel(id, content) {
+    if (!content || !content.trim()) return;
+    document.getElementById(id).classList.add('visible');
+    const body = document.getElementById('body' + id.replace('panel',''));
+    if (body) body.textContent = content;
   }
 
   function clearAll() {
     document.getElementById('task').value = '';
     document.getElementById('context').value = '';
+    document.getElementById('phase').value = '';
     document.getElementById('timer').textContent = '';
-    ['claude','gpt','gemini'].forEach(function(a) {
-      setAgent(a, 'Waiting for task...', 'empty', null);
+    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, 'Waiting...', 'empty'));
+    ['panelSummary','panelDisagree','panelDecision','panelMemory','panelAction'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
     });
-    document.getElementById('orchPanel').classList.remove('visible');
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('bodyAction').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ COPIED';
+      setTimeout(() => btn.textContent = '⧉ COPY PROMPT', 2000);
+    });
   }
 
   async function consult() {
-    const task    = document.getElementById('task').value.trim();
-    const context = document.getElementById('context').value.trim();
+    const task = document.getElementById('task').value.trim();
     if (!task) { alert('Enter a task first.'); return; }
 
     setLoading(true);
-    ['claude','gpt','gemini'].forEach(function(a) {
-      setAgent(a, 'Thinking...', 'empty', null);
+    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, 'Thinking...', 'empty'));
+    ['panelSummary','panelDisagree','panelDecision','panelMemory','panelAction'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
     });
-    document.getElementById('orchPanel').classList.remove('visible');
+
+    const payload = {
+      task,
+      context:      document.getElementById('context').value.trim(),
+      namespace:    document.getElementById('namespace').value,
+      phase:        document.getElementById('phase').value.trim(),
+      write_memory: document.getElementById('writeMemory').checked,
+    };
 
     try {
       const res = await fetch('/consult', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task: task, context: context }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
-      data.results.forEach(function(r) {
+      // Agent responses
+      data.results.forEach(r => {
         const key = r.agent.toLowerCase();
-        if (r.status === 'error' || r.error) {
-          setAgent(key, 'ERROR: ' + r.error, 'error', r.latency_ms);
-        } else {
-          setAgent(key, r.response, 'normal', r.latency_ms);
-        }
+        if (r.error) setAgentBody(key, `ERROR: ${r.error}`, 'error');
+        else setAgentBody(key, r.response);
       });
 
-      const o = data.orchestrator;
-      if (o) {
-        document.getElementById('orchSummary').textContent = o.consensus || '';
+      // Consensus panels
+      showPanel('panelSummary',  data.summary);
+      showPanel('panelDisagree', data.disagreements);
+      showPanel('panelDecision', data.final_decision);
+      showPanel('panelAction',   data.actionable_prompt);
 
-        const score = Math.max(0, Math.min(100, o.consensus_score || 0));
-        document.getElementById('scoreBar').style.width = score + '%';
-        document.getElementById('scoreNum').textContent = score;
-
-        const conf = (o.confidence_estimate || 'LOW').toUpperCase();
-        const badge = document.getElementById('orchConfidence');
-        badge.textContent = conf;
-        badge.className = 'confidence-badge ' + conf;
-
-        renderList('orchAgree',   o.agreements);
-        renderList('orchConflict', o.conflicts);
-        renderList('orchActions',  o.action_items);
-
-        document.getElementById('orchPanel').classList.add('visible');
+      // Memory written panel
+      if (data.memory_items && data.memory_items.length) {
+        const lines = data.memory_items.map((m, i) => `${i+1}. ${m}`).join('\n');
+        const writeStatus = data.memory_writes.every(w => w.ok)
+          ? '✓ All written to Pinecone'
+          : '⚠ Some writes failed';
+        showPanel('panelMemory', lines + '\n\n' + writeStatus);
       }
 
     } catch(e) {
-      ['claude','gpt','gemini'].forEach(function(a) {
-        setAgent(a, 'Request failed: ' + e.message, 'error', null);
-      });
+      ['claude','gpt','gemini'].forEach(a => setAgentBody(a, `Request failed: ${e.message}`, 'error'));
     } finally {
       setLoading(false);
     }
   }
 
-  document.getElementById('task').addEventListener('keydown', function(e) {
+  document.getElementById('task').addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'Enter') consult();
   });
 </script>
