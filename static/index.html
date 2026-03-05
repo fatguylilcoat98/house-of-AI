@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>House of AI — Veracore</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0a0c10;
+    --surface:  #111318;
+    --border:   #1e2330;
+    --claude:   #d4a843;
+    --gpt:      #10a37f;
+    --gemini:   #4285f4;
+    --consensus:#c678dd;
+    --text:     #cdd6f4;
+    --muted:    #6c7086;
+    --danger:   #f38ba8;
+    --mono:     'Share Tech Mono', monospace;
+    --sans:     'Barlow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    color: var(--claude);
+    letter-spacing: 2px;
+  }
+  .logo span { color: var(--muted); }
+  .badge {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    background: #1a1d25;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gpt);
+    box-shadow: 0 0 6px var(--gpt);
+    margin-left: auto;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; } 50% { opacity:0.4; }
+  }
+
+  /* ── Main layout ── */
+  main {
+    flex: 1;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ── Input panel ── */
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  textarea {
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    padding: 12px;
+    resize: vertical;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { outline: none; border-color: var(--claude); }
+  textarea#task { min-height: 100px; }
+  textarea#context { min-height: 70px; }
+
+  .row { display: flex; gap: 12px; align-items: flex-end; }
+  .col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+  button {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: none;
+    padding: 12px 24px;
+    transition: all 0.2s;
+  }
+  #submitBtn {
+    background: var(--claude);
+    color: #0a0c10;
+    font-weight: 700;
+    white-space: nowrap;
+    min-width: 160px;
+  }
+  #submitBtn:hover { filter: brightness(1.1); }
+  #submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #clearBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  #clearBtn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── Agent grid ── */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .agents-grid { grid-template-columns: 1fr; }
+  }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+  }
+  .agent-card.claude  { border-top: 2px solid var(--claude); }
+  .agent-card.gpt     { border-top: 2px solid var(--gpt); }
+  .agent-card.gemini  { border-top: 2px solid var(--gemini); }
+
+  .agent-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .agent-name {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+  .claude  .agent-name { color: var(--claude); }
+  .gpt     .agent-name { color: var(--gpt); }
+  .gemini  .agent-name { color: var(--gemini); }
+
+  .agent-indicator {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-left: auto;
+  }
+  .claude  .agent-indicator { background: var(--claude); }
+  .gpt     .agent-indicator { background: var(--gpt); }
+  .gemini  .agent-indicator { background: var(--gemini); }
+  .agent-indicator.active { animation: pulse 1s infinite; }
+
+  .agent-body {
+    padding: 14px 16px;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 420px;
+  }
+  .agent-body.empty { color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
+  .agent-body.error { color: var(--danger); font-family: var(--mono); font-size: 0.75rem; }
+
+  /* ── Consensus panel ── */
+  .consensus-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--consensus);
+    border-radius: 8px;
+    display: none;
+  }
+  .consensus-panel.visible { display: block; }
+  .consensus-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .consensus-title {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--consensus);
+  }
+  .consensus-body {
+    padding: 16px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+  }
+
+  /* ── Loading spinner ── */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--claude);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    padding: 12px 28px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">HOUSE<span>::</span>OF<span>::</span>AI</div>
+  <div class="badge">VERACORE v6+</div>
+  <div class="badge">THE GOOD NEIGHBOR GUARD</div>
+  <div class="status-dot" id="statusDot" title="System ready"></div>
+</header>
+
+<main>
+
+  <!-- Input -->
+  <div class="input-panel">
+    <div class="row">
+      <div class="col">
+        <div class="panel-label">Task / Question</div>
+        <textarea id="task" placeholder="Paste your Veracore task, code question, or phase prompt here..."></textarea>
+      </div>
+      <div class="col">
+        <div class="panel-label">Context (optional — prior phase output)</div>
+        <textarea id="context" placeholder="Paste relevant prior output so all three agents share the same context..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button id="submitBtn" onclick="consult()">▶ ASK THE HOUSE</button>
+      <button id="clearBtn" onclick="clearAll()">CLEAR</button>
+      <div id="timer" style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);align-self:center;margin-left:8px;"></div>
+    </div>
+  </div>
+
+  <!-- Agents -->
+  <div class="agents-grid">
+    <div class="agent-card claude" id="card-claude">
+      <div class="agent-header">
+        <div class="agent-name">CLAUDE</div>
+        <div class="agent-indicator" id="ind-claude"></div>
+      </div>
+      <div class="agent-body empty" id="body-claude">Waiting for task...</div>
+    </div>
+    <div class="agent-card gpt" id="card-gpt">
+      <div class="agent-header">
+        <div class="agent-name">GPT</div>
+        <div class="agent-indicator" id="ind-gpt"></div>
+      </div>
+      <div class="agent-body empty" id="body-gpt">Waiting for task...</div>
+    </div>
+    <div class="agent-card gemini" id="card-gemini">
+      <div class="agent-header">
+        <div class="agent-name">GEMINI</div>
+        <div class="agent-indicator" id="ind-gemini"></div>
+      </div>
+      <div class="agent-body empty" id="body-gemini">Waiting for task...</div>
+    </div>
+  </div>
+
+  <!-- Consensus -->
+  <div class="consensus-panel" id="consensusPanel">
+    <div class="consensus-header">
+      <div class="consensus-title">◈ CONSENSUS ENGINE</div>
+    </div>
+    <div class="consensus-body" id="consensusBody"></div>
+  </div>
+
+</main>
+
+<footer>THE GOOD NEIGHBOR GUARD — HOUSE OF AI — PROTECTING VULNERABLE USERS THROUGH VERIFIED INTELLIGENCE</footer>
+
+<script>
+  let timerInterval = null;
+
+  function setLoading(on) {
+    const btn = document.getElementById('submitBtn');
+    const dots = ['ind-claude', 'ind-gpt', 'ind-gemini'];
+    btn.disabled = on;
+    btn.textContent = on ? '⏳ CONSULTING...' : '▶ ASK THE HOUSE';
+    dots.forEach(id => {
+      document.getElementById(id).classList.toggle('active', on);
+    });
+
+    if (on) {
+      let secs = 0;
+      timerInterval = setInterval(() => {
+        secs++;
+        document.getElementById('timer').textContent = `${secs}s`;
+      }, 1000);
+    } else {
+      clearInterval(timerInterval);
+    }
+  }
+
+  function setAgentBody(agent, text, mode = 'normal') {
+    const el = document.getElementById(`body-${agent}`);
+    el.textContent = text;
+    el.className = 'agent-body' + (mode === 'empty' ? ' empty' : mode === 'error' ? ' error' : '');
+  }
+
+  function clearAll() {
+    document.getElementById('task').value = '';
+    document.getElementById('context').value = '';
+    ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, 'Waiting for task...', 'empty'));
+    document.getElementById('consensusPanel').classList.remove('visible');
+    document.getElementById('consensusBody').textContent = '';
+    document.getElementById('timer').textContent = '';
+  }
+
+  async function consult() {
+    const task = document.getElementById('task').value.trim();
+    const context = document.getElementById('context').value.trim();
+    if (!task) { alert('Enter a task first.'); return; }
+
+    setLoading(true);
+    ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, 'Thinking...', 'empty'));
+    document.getElementById('consensusPanel').classList.remove('visible');
+
+    try {
+      const res = await fetch('/consult', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task, context }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+
+      const data = await res.json();
+
+      data.results.forEach(r => {
+        const key = r.agent.toLowerCase();
+        if (r.error) {
+          setAgentBody(key, `ERROR: ${r.error}`, 'error');
+        } else {
+          setAgentBody(key, r.response);
+        }
+      });
+
+      if (data.consensus) {
+        document.getElementById('consensusBody').textContent = data.consensus;
+        document.getElementById('consensusPanel').classList.add('visible');
+      }
+
+    } catch (e) {
+      ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, `Request failed: ${e.message}`, 'error'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Allow Ctrl+Enter to submit
+  document.getElementById('task').addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') consult();
+  });
+</script>
+</body>
+</html>
