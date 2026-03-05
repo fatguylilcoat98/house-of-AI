@@ -1,8 +1,7 @@
 """
 main.py
-The Good Neighbor Guard — House of AI
-FastAPI backend: routes a task to Claude, GPT, and Gemini simultaneously,
-then returns all three responses for side-by-side review.
+The Good Neighbor Guard — House of AI v2
+Full pipeline: Claude + GPT + Gemini → Consensus Synthesizer → Pinecone Memory
 """
 
 import os
@@ -15,7 +14,10 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from google import genai as google_genai
 
-app = FastAPI(title="House of AI")
+from consensus_engine import run_consensus_pipeline
+from memory_engine import memory_search, memory_pack_for_prompt
+
+app = FastAPI(title="House of AI v2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +27,7 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Config — set these as Render environment variables
+# Config — Render environment variables
 # ---------------------------------------------------------------------------
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
@@ -34,7 +36,7 @@ GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
 SYSTEM_PROMPT = (
     "You are a senior AI engineer on the Veracore fact-verification engine "
     "project for The Good Neighbor Guard. You are collaborating with two other "
-    "AI systems (Claude and Gemini / GPT). Give your honest technical assessment. "
+    "AI systems. Give your honest technical assessment. "
     "Be direct. Flag disagreements. Do not pad your response."
 )
 
@@ -44,7 +46,10 @@ SYSTEM_PROMPT = (
 # ---------------------------------------------------------------------------
 class TaskRequest(BaseModel):
     task: str
-    context: str = ""   # optional: paste prior phase output here
+    context: str = ""
+    namespace: str = "veracore"   # veracore | lylo | general
+    phase: str = ""
+    write_memory: bool = True
 
 
 class AgentResponse(BaseModel):
@@ -55,7 +60,20 @@ class AgentResponse(BaseModel):
 
 class HouseResponse(BaseModel):
     results: list[AgentResponse]
-    consensus: str   # quick summary of where they agree / disagree
+    # Legacy simple consensus (kept for UI backward compat)
+    consensus: str
+    # New structured consensus
+    summary: str = ""
+    disagreements: str = ""
+    final_decision: str = ""
+    actionable_prompt: str = ""
+    memory_items: list[str] = []
+    memory_writes: list[dict] = []
+
+
+class MemorySearchRequest(BaseModel):
+    query: str
+    namespace: str = "veracore"
 
 
 # ---------------------------------------------------------------------------
@@ -65,8 +83,8 @@ async def call_claude(task: str, context: str, client: httpx.AsyncClient) -> Age
     try:
         messages = []
         if context:
-            messages.append({"role": "user", "content": f"[CONTEXT FROM PRIOR PHASE]\n{context}"})
-            messages.append({"role": "assistant", "content": "Understood. I have the context."})
+            messages.append({"role": "user", "content": f"[CONTEXT]\n{context}"})
+            messages.append({"role": "assistant", "content": "Understood."})
         messages.append({"role": "user", "content": task})
 
         r = await client.post(
@@ -85,9 +103,7 @@ async def call_claude(task: str, context: str, client: httpx.AsyncClient) -> Age
             timeout=60,
         )
         r.raise_for_status()
-        data = r.json()
-        text = data["content"][0]["text"]
-        return AgentResponse(agent="Claude", response=text)
+        return AgentResponse(agent="Claude", response=r.json()["content"][0]["text"])
     except Exception as e:
         return AgentResponse(agent="Claude", response="", error=str(e))
 
@@ -96,8 +112,8 @@ async def call_gpt(task: str, context: str, client: httpx.AsyncClient) -> AgentR
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         if context:
-            messages.append({"role": "user", "content": f"[CONTEXT FROM PRIOR PHASE]\n{context}"})
-            messages.append({"role": "assistant", "content": "Understood. I have the context."})
+            messages.append({"role": "user", "content": f"[CONTEXT]\n{context}"})
+            messages.append({"role": "assistant", "content": "Understood."})
         messages.append({"role": "user", "content": task})
 
         r = await client.post(
@@ -114,9 +130,7 @@ async def call_gpt(task: str, context: str, client: httpx.AsyncClient) -> AgentR
             timeout=60,
         )
         r.raise_for_status()
-        data = r.json()
-        text = data["choices"][0]["message"]["content"]
-        return AgentResponse(agent="GPT", response=text)
+        return AgentResponse(agent="GPT", response=r.json()["choices"][0]["message"]["content"])
     except Exception as e:
         return AgentResponse(agent="GPT", response="", error=str(e))
 
@@ -125,10 +139,9 @@ async def call_gemini(task: str, context: str, client: httpx.AsyncClient) -> Age
     try:
         full_prompt = SYSTEM_PROMPT + "\n\n"
         if context:
-            full_prompt += f"[CONTEXT FROM PRIOR PHASE]\n{context}\n\n"
+            full_prompt += f"[CONTEXT]\n{context}\n\n"
         full_prompt += task
 
-        # google-genai SDK is sync — run in thread pool to avoid blocking event loop
         def _sync_call():
             gclient = google_genai.Client(api_key=GEMINI_API_KEY)
             response = gclient.models.generate_content(
@@ -144,39 +157,6 @@ async def call_gemini(task: str, context: str, client: httpx.AsyncClient) -> Age
         return AgentResponse(agent="Gemini", response="", error=str(e))
 
 
-async def build_consensus(results: list[AgentResponse], task: str, client: httpx.AsyncClient) -> str:
-    """Ask Claude to do a quick meta-read: where do the three agree / conflict?"""
-    try:
-        summaries = "\n\n".join(
-            f"=== {r.agent} ===\n{r.response or r.error}" for r in results
-        )
-        meta_prompt = (
-            f"ORIGINAL TASK:\n{task}\n\n"
-            f"THREE AI RESPONSES:\n{summaries}\n\n"
-            "In 3-5 bullet points: where do they agree? Where do they conflict? "
-            "What is the recommended action? Be blunt."
-        )
-        r = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-opus-4-5",
-                "max_tokens": 512,
-                "system": "You are a technical coordinator. Summarize AI consensus concisely.",
-                "messages": [{"role": "user", "content": meta_prompt}],
-            },
-            timeout=60,
-        )
-        r.raise_for_status()
-        return r.json()["content"][0]["text"]
-    except Exception as e:
-        return f"Consensus engine error: {e}"
-
-
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -185,21 +165,73 @@ async def consult(req: TaskRequest):
     if not req.task.strip():
         raise HTTPException(status_code=400, detail="Task cannot be empty.")
 
-    async with httpx.AsyncClient() as client:
-        claude_task, gpt_task, gemini_task = await asyncio.gather(
-            call_claude(req.task, req.context, client),
-            call_gpt(req.task, req.context, client),
-            call_gemini(req.task, req.context, client),
-        )
-        results = [claude_task, gpt_task, gemini_task]
-        consensus = await build_consensus(results, req.task, client)
+    # Inject relevant memory into context if available
+    memory_context = ""
+    try:
+        memory_context = await memory_pack_for_prompt(req.task, req.namespace)
+    except Exception:
+        pass  # Memory failure never blocks a consult
 
-    return HouseResponse(results=results, consensus=consensus)
+    full_context = req.context
+    if memory_context:
+        full_context = memory_context + ("\n\n" + req.context if req.context else "")
+
+    async with httpx.AsyncClient() as client:
+        # Step 1 — fire all three in parallel
+        claude_res, gpt_res, gemini_res = await asyncio.gather(
+            call_claude(req.task, full_context, client),
+            call_gpt(req.task, full_context, client),
+            call_gemini(req.task, full_context, client),
+        )
+        results = [claude_res, gpt_res, gemini_res]
+
+        # Step 2 — consensus synthesizer
+        try:
+            consensus_data = await run_consensus_pipeline(
+                task=req.task,
+                claude_response=claude_res.response,
+                gpt_response=gpt_res.response,
+                gemini_response=gemini_res.response,
+                client=client,
+                namespace=req.namespace,
+                phase=req.phase,
+                write_memory=req.write_memory,
+            )
+        except Exception as e:
+            consensus_data = {
+                "raw": f"Consensus engine error: {e}",
+                "summary": "",
+                "disagreements": "",
+                "final_decision": "",
+                "actionable_prompt": "",
+                "memory_items": [],
+                "memory_writes": [],
+            }
+
+    return HouseResponse(
+        results=results,
+        consensus=consensus_data["raw"],
+        summary=consensus_data["summary"],
+        disagreements=consensus_data["disagreements"],
+        final_decision=consensus_data["final_decision"],
+        actionable_prompt=consensus_data["actionable_prompt"],
+        memory_items=consensus_data["memory_items"],
+        memory_writes=consensus_data["memory_writes"],
+    )
+
+
+@app.post("/memory/search")
+async def search_memory(req: MemorySearchRequest):
+    try:
+        results = await memory_search(req.query, req.namespace)
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")
 async def health():
-    return {"status": "House is live"}
+    return {"status": "House of AI v2 live"}
 
 
 # Serve frontend
