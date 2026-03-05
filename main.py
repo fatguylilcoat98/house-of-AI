@@ -128,7 +128,7 @@ async def call_gemini(task: str, context: str, client: httpx.AsyncClient) -> Age
         full_prompt += task
 
         r = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}",
             headers={"Content-Type": "application/json"},
             json={
                 "contents": [{"parts": [{"text": full_prompt}]}],
