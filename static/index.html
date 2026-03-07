@@ -229,7 +229,7 @@
     <div class="col">
       <div class="panel-label" id="uiTitle">✨ What do you want to build today?</div>
       <div class="panel-subtext" id="uiSubtext">Tell the team what kind of app or game you want. Be as creative as you like!</div>
-      <textarea id="task" placeholder="Example: I want to build a matching game for couples..."></textarea>
+      <textarea id="task" placeholder="Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷"></textarea>
     </div>
     
     <details class="advanced-settings">
@@ -345,10 +345,14 @@
     document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
     document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
 
+    const taskBox = document.getElementById('task');
+
     if (currentMode === 'kid') {
       document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI 🪄';
       document.getElementById('uiTitle').innerText = '✨ What do you want to build today?';
       document.getElementById('uiSubtext').innerText = 'Tell the team what kind of app or game you want. Be as creative as you like!';
+      taskBox.placeholder = 'Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷';
+      
       document.getElementById('nameClaude').innerText = '🏗️ The Architect';
       document.getElementById('nameGpt').innerText = '💻 The Builder';
       document.getElementById('nameGemini').innerText = '🕵️‍♂️ The Tester';
@@ -356,6 +360,8 @@
       document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI [PRO]';
       document.getElementById('uiTitle').innerText = 'ENGINEERING TASK';
       document.getElementById('uiSubtext').innerText = 'Provide technical specs, architecture requirements, or feature requests.';
+      taskBox.placeholder = 'Example: I want to build a real-time matching game for couples using React and Supabase...';
+      
       document.getElementById('nameClaude').innerText = 'CLAUDE (Architect)';
       document.getElementById('nameGpt').innerText = 'GPT (Engineer)';
       document.getElementById('nameGemini').innerText = 'GEMINI (QA)';
@@ -423,14 +429,13 @@
       document.getElementById(id).classList.remove('visible');
     });
 
-    // PASSING THE MODE TO THE BACKEND
     const payload = {
       task,
       context:      document.getElementById('context').value.trim(),
       namespace:    document.getElementById('namespace').value,
       phase:        document.getElementById('phase').value.trim(),
       write_memory: document.getElementById('writeMemory').checked,
-      app_mode:     currentMode // "kid" or "pro"
+      app_mode:     currentMode 
     };
 
     try {
