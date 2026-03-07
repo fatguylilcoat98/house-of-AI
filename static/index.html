@@ -23,7 +23,6 @@
     --font-code:   'Fira Code', monospace;
   }
   
-  /* PRO MODE COLORS */
   body.pro-mode {
     --bg:          #0a0c10;
     --surface:     #111318;
@@ -37,99 +36,37 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { 
-    background: var(--bg); 
-    color: var(--text-main); 
-    font-family: var(--font-main); 
-    min-height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    transition: background 0.3s, color 0.3s;
-  }
+  body { background: var(--bg); color: var(--text-main); font-family: var(--font-main); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.3s, color 0.3s; }
 
-  /* Header & Toggle */
-  header {
-    padding: 16px 30px;
-    background: var(--surface);
-    border-bottom: 2px solid var(--border);
-    display: flex; 
-    align-items: center; 
-    gap: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-  }
+  header { padding: 16px 30px; background: var(--surface); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
   .logo { font-size: 1.5rem; font-weight: 900; color: var(--pm); letter-spacing: -0.5px; }
   .logo span { color: var(--text-muted); font-weight: 600; }
   
-  .mode-toggle {
-    margin-left: auto;
-    display: flex;
-    background: var(--bg);
-    border: 2px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-  }
-  .mode-btn {
-    font-family: var(--font-main);
-    font-weight: 800;
-    font-size: 0.85rem;
-    padding: 8px 16px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .mode-btn.active {
-    background: var(--pm);
-    color: white;
-  }
+  .mode-toggle { margin-left: auto; display: flex; background: var(--bg); border: 2px solid var(--border); border-radius: 20px; overflow: hidden; }
+  .mode-btn { font-family: var(--font-main); font-weight: 800; font-size: 0.85rem; padding: 8px 16px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+  .mode-btn.active { background: var(--pm); color: white; }
 
-  main { 
-    flex: 1; padding: 30px 24px; display: flex; flex-direction: column; 
-    gap: 24px; max-width: 1400px; width: 100%; margin: 0 auto; 
-  }
+  main { flex: 1; padding: 30px 24px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
 
-  /* Input panel */
-  .input-panel { 
-    background: var(--surface); border-radius: 20px; padding: 24px; 
-    box-shadow: 0 8px 30px rgba(0,0,0,0.04); display: flex; 
-    flex-direction: column; gap: 16px; border: 2px solid var(--border);
-  }
+  .input-panel { background: var(--surface); border-radius: 20px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 16px; border: 2px solid var(--border); }
   .panel-label { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
   .panel-subtext { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
   
   .row { display: flex; gap: 20px; align-items: flex-start; }
   .col { flex: 1; display: flex; flex-direction: column; }
   
-  /* Advanced Settings */
-  details.advanced-settings {
-    margin-top: 10px; background: var(--bg); border-radius: 12px;
-    padding: 10px 15px; border: 1px solid var(--border);
-  }
-  details.advanced-settings summary {
-    font-weight: 700; color: var(--text-muted); cursor: pointer;
-    font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 8px;
-  }
+  details.advanced-settings { margin-top: 10px; background: var(--bg); border-radius: 12px; padding: 10px 15px; border: 1px solid var(--border); }
+  details.advanced-settings summary { font-weight: 700; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 8px; }
   details.advanced-settings summary::-webkit-details-marker { display: none; }
   .adv-row { display: flex; gap: 15px; margin-top: 15px; }
 
-  textarea, select, input[type="text"] {
-    background: var(--bg); border: 2px solid var(--border); border-radius: 12px;
-    color: var(--text-main); font-family: var(--font-main); font-size: 1rem; 
-    padding: 14px; width: 100%; transition: all 0.2s;
-  }
-  textarea:focus, select:focus, input[type="text"]:focus { 
-    outline: none; border-color: var(--pm); background: var(--surface);
-  }
+  textarea, select, input[type="text"] { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; color: var(--text-main); font-family: var(--font-main); font-size: 1rem; padding: 14px; width: 100%; transition: all 0.2s; }
+  textarea:focus, select:focus, input[type="text"]:focus { outline: none; border-color: var(--pm); background: var(--surface); }
   textarea#task { min-height: 120px; resize: vertical; font-weight: 600; }
   textarea#context { min-height: 80px; resize: vertical; }
 
   .btn-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
-  button { 
-    font-family: var(--font-main); font-size: 1rem; font-weight: 800;
-    cursor: pointer; border-radius: 12px; border: none; padding: 14px 28px; 
-    transition: transform 0.1s, filter 0.2s; 
-  }
+  button { font-family: var(--font-main); font-size: 1rem; font-weight: 800; cursor: pointer; border-radius: 12px; border: none; padding: 14px 28px; transition: transform 0.1s, filter 0.2s; }
   button:active { transform: scale(0.97); }
   
   #submitBtn { background: linear-gradient(135deg, var(--pm), #a29bfe); color: white; }
@@ -145,52 +82,31 @@
   label.check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
   input[type="checkbox"] { accent-color: var(--pm); width: 18px; height: 18px; }
 
-  /* Agent grid */
   .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   @media (max-width: 900px) { .agents-grid { grid-template-columns: 1fr; } }
 
-  .agent-card { 
-    background: var(--surface); border-radius: 16px; display: flex; flex-direction: column; 
-    min-height: 300px; border: 2px solid var(--border); overflow: hidden;
-  }
-  
+  .agent-card { background: var(--surface); border-radius: 16px; display: flex; flex-direction: column; min-height: 300px; border: 2px solid var(--border); overflow: hidden; }
   .agent-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 2px solid var(--border); background: var(--bg); }
   .agent-name { font-size: 1.1rem; font-weight: 900; }
   .claude .agent-name { color: var(--architect); }
   .gpt    .agent-name { color: var(--builder); }
   .gemini .agent-name { color: var(--tester); }
-  
   .agent-indicator { width: 10px; height: 10px; border-radius: 50%; margin-left: auto; }
   .claude .agent-indicator { background: var(--architect); }
   .gpt    .agent-indicator { background: var(--builder); }
   .gemini .agent-indicator { background: var(--tester); }
   .agent-indicator.active { animation: pulse 1s infinite; box-shadow: 0 0 8px currentColor; }
 
-  .agent-body { 
-    padding: 16px; font-size: 0.95rem; line-height: 1.6; flex: 1; 
-    overflow-y: auto; white-space: pre-wrap; word-break: break-word; 
-    max-height: 400px; font-family: var(--font-code);
-  }
-  .agent-body.empty { 
-    color: var(--text-muted); font-family: var(--font-main); font-size: 1.2rem; 
-    font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center;
-  }
+  .agent-body { padding: 16px; font-size: 0.95rem; line-height: 1.6; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; font-family: var(--font-code); }
+  .agent-body.empty { color: var(--text-muted); font-family: var(--font-main); font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; }
   .agent-body.error { color: var(--danger); font-weight: 700; }
 
-  /* Consensus sections */
   .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 900px) { .consensus-grid { grid-template-columns: 1fr; } }
 
-  .c-panel { 
-    background: var(--surface); border-radius: 16px; display: none; 
-    overflow: hidden; border: 2px solid var(--border);
-  }
+  .c-panel { background: var(--surface); border-radius: 16px; display: none; overflow: hidden; border: 2px solid var(--border); }
   .c-panel.visible { display: block; }
-  
-  .c-header { 
-    display: flex; align-items: center; gap: 10px; padding: 14px 18px; 
-    background: var(--bg); border-bottom: 2px solid var(--border);
-  }
+  .c-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--bg); border-bottom: 2px solid var(--border); }
   .c-title { font-size: 1.05rem; font-weight: 900; }
   .c-body { padding: 18px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
 
@@ -199,18 +115,19 @@
   .panel-decision .c-title { color: var(--builder); }
   .panel-memory .c-title { color: var(--memory); }
 
-  .panel-action { border-color: var(--action); grid-column: 1 / -1; }
-  .panel-action .c-title { color: var(--action); }
+  .panel-action { border-color: var(--builder); grid-column: 1 / -1; }
+  .panel-action .c-title { color: var(--builder); }
   .action-body { padding: 18px; position: relative; }
-  .action-text { 
-    font-family: var(--font-code); font-size: 0.95rem; line-height: 1.6; 
-    white-space: pre-wrap; background: #2d3436; color: #dfe6e9;
-    border-radius: 12px; padding: 20px; max-height: 350px; overflow-y: auto; 
-  }
-  #copyBtn { margin-top: 15px; background: var(--action); color: white; font-size: 0.9rem; }
+  .action-text { font-family: var(--font-main); font-size: 1rem; line-height: 1.6; white-space: pre-wrap; margin-bottom: 15px;}
+  
+  /* Magic Action Buttons */
+  .magic-actions { display: flex; gap: 15px; flex-wrap: wrap; padding-top: 15px; border-top: 2px dashed var(--border); }
+  .btn-play { background: var(--builder); color: white; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4); }
+  .btn-play:hover { filter: brightness(1.1); transform: scale(1.02); }
+  .btn-download { background: var(--architect); color: white; font-size: 1.1rem; }
+  .btn-copy { background: transparent; border: 2px solid var(--text-muted); color: var(--text-muted); }
 
   @keyframes pulse { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:0.5; transform:scale(1.2);} }
-
   footer { padding: 20px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-align: center; }
 </style>
 </head>
@@ -255,11 +172,6 @@
     <div class="btn-row">
       <button id="submitBtn" onclick="consult()">🚀 BUILD MY APP!</button>
       <button id="clearBtn" onclick="clearAll()">Start Over</button>
-      <label class="check" title="Saves important rules to memory">
-        <input type="checkbox" id="writeMemory" checked/>
-        🧠 Save to Memory
-      </label>
-      <div id="timer"></div>
     </div>
   </div>
 
@@ -291,15 +203,15 @@
       <div class="c-header"><div class="c-title">✅ Final Code Status</div></div>
       <div class="c-body" id="bodyDecision"></div>
     </div>
-    <div class="c-panel panel-memory" id="panelMemory">
-      <div class="c-header"><div class="c-title">🧠 Robot Memory Written</div></div>
-      <div class="c-body" id="bodyMemory"></div>
-    </div>
     <div class="c-panel panel-action" id="panelAction">
-      <div class="c-header"><div class="c-title">🚀 Next Step for You</div></div>
+      <div class="c-header"><div class="c-title">🎮 YOUR NEW APP!</div></div>
       <div class="action-body">
         <div class="action-text" id="bodyAction"></div>
-        <button id="copyBtn" onclick="copyPrompt()">⧉ COPY THIS</button>
+        <div class="magic-actions">
+          <button class="btn-play" onclick="playApp()">▶️ PLAY NOW in Browser</button>
+          <button class="btn-download" onclick="downloadApp()">💾 DOWNLOAD to Computer</button>
+          <button class="btn-copy" id="copyBtn" onclick="copyCode()">⧉ Copy Code</button>
+        </div>
       </div>
     </div>
   </div>
@@ -313,30 +225,19 @@
   let kidPin = null;
   let timerInterval = null;
 
-  // Handles the PIN lock and UI swapping
   function setMode(target) {
     if (target === currentMode) return;
-
     if (target === 'kid') {
       let pin = prompt("Set a 4-digit PIN to lock Kid Mode to keep things safe:");
-      if (pin && pin.length >= 4) {
-        kidPin = pin;
-        currentMode = 'kid';
-        applyModeUI();
-      } else {
-        alert("You need at least 4 characters for a PIN.");
-      }
+      if (pin && pin.length >= 4) { kidPin = pin; currentMode = 'kid'; applyModeUI(); } 
+      else { alert("You need at least 4 characters for a PIN."); }
     } else if (target === 'pro') {
       if (kidPin) {
         let entered = prompt("Enter your PIN to unlock Pro Mode:");
-        if (entered !== kidPin) {
-          alert("Incorrect PIN. Remaining in Kid Mode.");
-          return;
-        }
-        kidPin = null; // Unlocked
+        if (entered !== kidPin) { alert("Incorrect PIN. Remaining in Kid Mode."); return; }
+        kidPin = null; 
       }
-      currentMode = 'pro';
-      applyModeUI();
+      currentMode = 'pro'; applyModeUI();
     }
   }
 
@@ -344,15 +245,12 @@
     document.body.className = currentMode + '-mode';
     document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
     document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
-
     const taskBox = document.getElementById('task');
-
     if (currentMode === 'kid') {
       document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI 🪄';
       document.getElementById('uiTitle').innerText = '✨ What do you want to build today?';
       document.getElementById('uiSubtext').innerText = 'Tell the team what kind of app or game you want. Be as creative as you like!';
       taskBox.placeholder = 'Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷';
-      
       document.getElementById('nameClaude').innerText = '🏗️ The Architect';
       document.getElementById('nameGpt').innerText = '💻 The Builder';
       document.getElementById('nameGemini').innerText = '🕵️‍♂️ The Tester';
@@ -361,7 +259,6 @@
       document.getElementById('uiTitle').innerText = 'ENGINEERING TASK';
       document.getElementById('uiSubtext').innerText = 'Provide technical specs, architecture requirements, or feature requests.';
       taskBox.placeholder = 'Example: I want to build a real-time matching game for couples using React and Supabase...';
-      
       document.getElementById('nameClaude').innerText = 'CLAUDE (Architect)';
       document.getElementById('nameGpt').innerText = 'GPT (Engineer)';
       document.getElementById('nameGemini').innerText = 'GEMINI (QA)';
@@ -372,15 +269,7 @@
     const btn = document.getElementById('submitBtn');
     btn.disabled = on;
     btn.textContent = on ? (currentMode === 'kid' ? '✨ ROBOTS WORKING...' : 'EXECUTING...') : (currentMode === 'kid' ? '🚀 BUILD MY APP!' : '▶ EXECUTE BUILD');
-    ['ind-claude','ind-gpt','ind-gemini'].forEach(id => {
-      document.getElementById(id).classList.toggle('active', on);
-    });
-    if (on) {
-      let s = 0;
-      timerInterval = setInterval(() => document.getElementById('timer').textContent = `${++s}s`, 1000);
-    } else {
-      clearInterval(timerInterval);
-    }
+    ['ind-claude','ind-gpt','ind-gemini'].forEach(id => { document.getElementById(id).classList.toggle('active', on); });
   }
 
   function setAgentBody(agent, text, mode = 'normal') {
@@ -399,88 +288,19 @@
 
   function clearAll() {
     document.getElementById('task').value = '';
-    document.getElementById('context').value = '';
-    document.getElementById('phase').value = '';
-    document.getElementById('timer').textContent = '';
     const sleepTxt = currentMode === 'kid' ? 'Sleeping... 💤' : 'Awaiting prompt.';
     ['claude','gpt','gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
-    ['panelSummary','panelDisagree','panelDecision','panelMemory','panelAction'].forEach(id => {
-      document.getElementById(id).classList.remove('visible');
-    });
+    ['panelSummary','panelDisagree','panelDecision','panelAction'].forEach(id => { document.getElementById(id).classList.remove('visible'); });
   }
 
-  function copyPrompt() {
-    const text = document.getElementById('bodyAction').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById('copyBtn');
-      btn.textContent = '✅ COPIED!';
-      setTimeout(() => btn.textContent = '⧉ COPY THIS', 2000);
-    });
-  }
+  // --- MAGIC EXECUTION FUNCTIONS ---
+  function extractCode() {
+    const builderText = document.getElementById('body-gpt').textContent;
+    // Look for HTML code blocks first
+    let codeMatch = builderText.match(/
+http://googleusercontent.com/immersive_entry_chip/0
 
-  async function consult() {
-    const task = document.getElementById('task').value.trim();
-    if (!task) { alert('Please enter a task!'); return; }
+Once you update those 3 files, the friction is 100% gone. 
+Kids enter the prompt -> AI builds it -> Kid clicks **PLAY NOW**. 
 
-    setLoading(true);
-    const workTxt = currentMode === 'kid' ? 'Working hard! 🧠' : 'Generating...';
-    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, workTxt, 'empty'));
-    ['panelSummary','panelDisagree','panelDecision','panelMemory','panelAction'].forEach(id => {
-      document.getElementById(id).classList.remove('visible');
-    });
-
-    const payload = {
-      task,
-      context:      document.getElementById('context').value.trim(),
-      namespace:    document.getElementById('namespace').value,
-      phase:        document.getElementById('phase').value.trim(),
-      write_memory: document.getElementById('writeMemory').checked,
-      app_mode:     currentMode 
-    };
-
-    try {
-      const res = await fetch('/consult', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-
-      data.results.forEach(r => {
-        let key = 'claude';
-        const agentLower = r.agent.toLowerCase();
-        if (agentLower.includes('claude') || agentLower.includes('architect')) key = 'claude';
-        if (agentLower.includes('gpt') || agentLower.includes('builder')) key = 'gpt';
-        if (agentLower.includes('gemini') || agentLower.includes('tester')) key = 'gemini';
-        
-        if (r.error) setAgentBody(key, `ERROR: ${r.error}`, 'error');
-        else setAgentBody(key, r.response);
-      });
-
-      showPanel('panelSummary',  data.summary);
-      showPanel('panelDisagree', data.disagreements);
-      showPanel('panelDecision', data.final_decision);
-      showPanel('panelAction',   data.actionable_prompt);
-
-      if (data.memory_items && data.memory_items.length) {
-        const lines = data.memory_items.map((m, i) => `${i+1}. ${m}`).join('\n');
-        const writeStatus = data.memory_writes.every(w => w.ok)
-          ? '✅ Saved safely to memory'
-          : '⚠️ Had trouble saving some memories.';
-        showPanel('panelMemory', lines + '\n\n' + writeStatus);
-      }
-
-    } catch(e) {
-      ['claude','gpt','gemini'].forEach(a => setAgentBody(a, `Request failed: ${e.message}`, 'error'));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  document.getElementById('task').addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 'Enter') consult();
-  });
-</script>
-</body>
-</html>
+Do you want to go ahead and push this up to Render?
