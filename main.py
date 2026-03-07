@@ -1,7 +1,7 @@
 """
 main.py
-The Good Neighbor Guard — House of AI v2
-Full pipeline: Claude + GPT + Gemini → Consensus Synthesizer → Pinecone Memory
+House of AI — The Developer Council
+Full pipeline: Architect (Claude) → Senior Engineer (GPT) → QA Tester (Gemini) → Synthesizer → Pinecone Memory
 """
 
 import os
@@ -17,7 +17,7 @@ from google import genai as google_genai
 from consensus_engine import run_consensus_pipeline
 from memory_engine import memory_search, memory_pack_for_prompt
 
-app = FastAPI(title="House of AI v2")
+app = FastAPI(title="House of AI")
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,11 +33,33 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
 
-SYSTEM_PROMPT = (
-    "You are a senior AI engineer on the Veracore fact-verification engine "
-    "project for The Good Neighbor Guard. You are collaborating with two other "
-    "AI systems. Give your honest technical assessment. "
-    "Be direct. Flag disagreements. Do not pad your response."
+# ---------------------------------------------------------------------------
+# The Council Personas
+# ---------------------------------------------------------------------------
+ARCHITECT_PROMPT = (
+    "You are the Chief Software Architect. The user will provide an app idea. "
+    "Your job is strictly to design the architecture. You do not write the functional code. "
+    "You must return a clear plan containing: "
+    "1. The optimal tech stack (e.g., React, Node, Supabase). "
+    "2. A complete folder and file structure. "
+    "3. A step-by-step build plan for the Senior Engineer."
+)
+
+ENGINEER_PROMPT = (
+    "You are the Senior Lead Developer. You will receive an architecture plan from the "
+    "Architect and the user's original prompt. Your job is to write the actual, functional "
+    "code for the MVP. You must return the exact code blocks for each required file, "
+    "ensuring there are no placeholders and no missing logic. Write clean, production-ready code."
+)
+
+QA_PROMPT = (
+    "You are the aggressive QA Security Tester. You will review the code written by the "
+    "Senior Engineer. Your job is to break it. Look for security flaws, missing imports, "
+    "infinite loops, and bad database calls. Provide: "
+    "1. A list of critical bugs. "
+    "2. A list of security vulnerabilities. "
+    "3. The exact corrected code to fix these issues. "
+    "If the code is perfect, return a 'PASS' verdict."
 )
 
 
@@ -47,7 +69,7 @@ SYSTEM_PROMPT = (
 class TaskRequest(BaseModel):
     task: str
     context: str = ""
-    namespace: str = "veracore"   # veracore | lylo | general
+    namespace: str = "house_of_ai"   # Updated namespace
     phase: str = ""
     write_memory: bool = True
 
@@ -60,9 +82,7 @@ class AgentResponse(BaseModel):
 
 class HouseResponse(BaseModel):
     results: list[AgentResponse]
-    # Legacy simple consensus (kept for UI backward compat)
     consensus: str
-    # New structured consensus
     summary: str = ""
     disagreements: str = ""
     final_decision: str = ""
@@ -73,13 +93,13 @@ class HouseResponse(BaseModel):
 
 class MemorySearchRequest(BaseModel):
     query: str
-    namespace: str = "veracore"
+    namespace: str = "house_of_ai"
 
 
 # ---------------------------------------------------------------------------
-# LLM Callers
+# LLM Callers (Updated to accept specific system prompts)
 # ---------------------------------------------------------------------------
-async def call_claude(task: str, context: str, client: httpx.AsyncClient) -> AgentResponse:
+async def call_claude(task: str, context: str, system_prompt: str, client: httpx.AsyncClient) -> AgentResponse:
     try:
         messages = []
         if context:
@@ -96,21 +116,21 @@ async def call_claude(task: str, context: str, client: httpx.AsyncClient) -> Age
             },
             json={
                 "model": "claude-opus-4-5",
-                "max_tokens": 2048,
-                "system": SYSTEM_PROMPT,
+                "max_tokens": 4096,  # Increased for larger code outputs
+                "system": system_prompt,
                 "messages": messages,
             },
-            timeout=60,
+            timeout=120, # Increased timeout for heavy code generation
         )
         r.raise_for_status()
-        return AgentResponse(agent="Claude", response=r.json()["content"][0]["text"])
+        return AgentResponse(agent="Architect (Claude)", response=r.json()["content"][0]["text"])
     except Exception as e:
-        return AgentResponse(agent="Claude", response="", error=str(e))
+        return AgentResponse(agent="Architect (Claude)", response="", error=str(e))
 
 
-async def call_gpt(task: str, context: str, client: httpx.AsyncClient) -> AgentResponse:
+async def call_gpt(task: str, context: str, system_prompt: str, client: httpx.AsyncClient) -> AgentResponse:
     try:
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": system_prompt}]
         if context:
             messages.append({"role": "user", "content": f"[CONTEXT]\n{context}"})
             messages.append({"role": "assistant", "content": "Understood."})
@@ -124,20 +144,20 @@ async def call_gpt(task: str, context: str, client: httpx.AsyncClient) -> AgentR
             },
             json={
                 "model": "gpt-4o-mini",
-                "max_tokens": 2048,
+                "max_tokens": 4096, # Increased for larger code outputs
                 "messages": messages,
             },
-            timeout=60,
+            timeout=120, # Increased timeout for heavy code generation
         )
         r.raise_for_status()
-        return AgentResponse(agent="GPT", response=r.json()["choices"][0]["message"]["content"])
+        return AgentResponse(agent="Senior Engineer (GPT)", response=r.json()["choices"][0]["message"]["content"])
     except Exception as e:
-        return AgentResponse(agent="GPT", response="", error=str(e))
+        return AgentResponse(agent="Senior Engineer (GPT)", response="", error=str(e))
 
 
-async def call_gemini(task: str, context: str, client: httpx.AsyncClient) -> AgentResponse:
+async def call_gemini(task: str, context: str, system_prompt: str, client: httpx.AsyncClient) -> AgentResponse:
     try:
-        full_prompt = SYSTEM_PROMPT + "\n\n"
+        full_prompt = system_prompt + "\n\n"
         if context:
             full_prompt += f"[CONTEXT]\n{context}\n\n"
         full_prompt += task
@@ -152,9 +172,9 @@ async def call_gemini(task: str, context: str, client: httpx.AsyncClient) -> Age
 
         loop = asyncio.get_event_loop()
         text = await loop.run_in_executor(None, _sync_call)
-        return AgentResponse(agent="Gemini", response=text)
+        return AgentResponse(agent="QA Tester (Gemini)", response=text)
     except Exception as e:
-        return AgentResponse(agent="Gemini", response="", error=str(e))
+        return AgentResponse(agent="QA Tester (Gemini)", response="", error=str(e))
 
 
 # ---------------------------------------------------------------------------
@@ -177,15 +197,20 @@ async def consult(req: TaskRequest):
         full_context = memory_context + ("\n\n" + req.context if req.context else "")
 
     async with httpx.AsyncClient() as client:
-        # Step 1 — fire all three in parallel
-        claude_res, gpt_res, gemini_res = await asyncio.gather(
-            call_claude(req.task, full_context, client),
-            call_gpt(req.task, full_context, client),
-            call_gemini(req.task, full_context, client),
-        )
+        # Step 1 — The Architect designs the plan (Claude)
+        claude_res = await call_claude(req.task, full_context, ARCHITECT_PROMPT, client)
+
+        # Step 2 — The Engineer writes the code based on the plan (GPT)
+        engineer_context = f"{full_context}\n\n[ARCHITECT PLAN]\n{claude_res.response}"
+        gpt_res = await call_gpt(req.task, engineer_context, ENGINEER_PROMPT, client)
+
+        # Step 3 — The QA Tester reviews the code (Gemini)
+        qa_context = f"{engineer_context}\n\n[ENGINEER CODE]\n{gpt_res.response}"
+        gemini_res = await call_gemini(req.task, qa_context, QA_PROMPT, client)
+
         results = [claude_res, gpt_res, gemini_res]
 
-        # Step 2 — consensus synthesizer
+        # Step 4 — Project Manager synthesizes the final output
         try:
             consensus_data = await run_consensus_pipeline(
                 task=req.task,
@@ -231,7 +256,7 @@ async def search_memory(req: MemorySearchRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "House of AI v2 live"}
+    return {"status": "House of AI live"}
 
 
 # Serve frontend
