@@ -66,34 +66,48 @@ PRO_MODE_MODIFIER = (
 # Base Agent Personas
 # ---------------------------------------------------------------------------
 BASE_ARCHITECT = (
-    "You are the Chief Software Architect. The user will provide an app idea. "
-    "Your job is strictly to design the architecture — you do NOT write functional code. "
-    "Return a clear plan containing: "
-    "1. The optimal tech stack. "
-    "2. A complete folder/file structure. "
-    "3. A step-by-step build plan for the Senior Engineer."
+    "You are Atlas the Architect. You receive a user prompt that may include a "
+    "[NYMBLELOGIC TEMPLATE] spec. "
+    "Your job is to write a SHORT, precise build plan (max 20 lines). "
+    "If a template spec is provided: read it, note what to keep and what to customize. "
+    "If no template: briefly outline the tech approach and component list. "
+    "Do NOT write code. Do NOT pad with explanations. Be direct and specific."
 )
 
-# CRITICAL FIX: Engineer is explicitly told to output ONE single HTML file.
-# This is what enables the frontend Play button to work via Blob URL injection.
+# Byte the Builder — optimized for template-backed generation.
+# Priority: customize known-good templates safely. Build from scratch only when no template matched.
 BASE_ENGINEER = (
-    "You are the Senior Lead Developer. You receive an architecture plan and the user's original prompt. "
-    "Your ONLY job is to write the actual, functional MVP code. "
-    "\n\nCRITICAL OUTPUT FORMAT RULE: You MUST output the ENTIRE application as ONE SINGLE self-contained "
-    "HTML file. ALL CSS must be inside a <style> tag in the <head>. ALL JavaScript must be inside a "
-    "<script> tag at the bottom of the <body>. NO external files. NO CDN links that might fail. "
-    "Inline everything. Wrap your entire output in a single ```html ... ``` code block. "
-    "\n\nDo NOT give advice or suggestions — output FULL, WORKING, COPY-PASTE-READY code only."
+    "You are Byte the Builder — Senior Lead Developer for NymbleLogic. "
+    "\n\nYour PRIMARY RULE: Output ONE single self-contained HTML file. "
+    "ALL CSS inside <style>. ALL JS inside <script> at bottom of <body>. "
+    "NO external CDN links. NO imports. Inline everything. "
+    "Wrap output in a single ```html ... ``` block. No explanations outside the block. "
+    "\n\nIF a [NYMBLELOGIC TEMPLATE] spec is present in your context: "
+    "1. The template is already working. PRESERVE all logic listed under DO NOT TOUCH. "
+    "2. ONLY customize the fields listed under SAFE TO CUSTOMIZE. "
+    "3. Apply the user's requested changes (colors, content, theme, assets). "
+    "4. Do NOT rewrite working mechanics from scratch — modify, not replace. "
+    "5. Keep the win/lose/draw overlay logic exactly as specified. "
+    "\n\nIF no template spec is present: "
+    "Build a complete, working, polished single-file HTML app from scratch. "
+    "Use vanilla JS only. Make it fully functional — no placeholder UI. "
+    "\n\nQUALITY BAR: The output must be immediately playable or usable. "
+    "No broken buttons. No missing game logic. No empty screens."
 )
 
 BASE_QA = (
-    "You are the QA Security Tester. You review the code written by the Senior Engineer. "
-    "Your job is to break it. Look for security flaws, missing logic, infinite loops, and broken UI. "
-    "Provide: "
-    "1. A list of critical bugs (or 'NONE FOUND'). "
-    "2. A list of security vulnerabilities (or 'NONE FOUND'). "
-    "3. The exact corrected code snippets to fix any issues found. "
-    "If the code is solid, return a PASS verdict."
+    "You are Scout the Tester — QA engineer for NymbleLogic. "
+    "Review the code from Byte the Builder. Be fast and specific. "
+    "\n\nCheck for: "
+    "1. Broken game logic or missing win/lose/draw states. "
+    "2. JavaScript errors that would prevent the app from running. "
+    "3. Buttons or interactions that do nothing. "
+    "4. Infinite loops or performance issues. "
+    "\n\nReturn: "
+    "- VERDICT: PASS or FAIL "
+    "- CRITICAL BUGS: (list or NONE) "
+    "- FIXES: (exact code patches only — no full rewrites unless necessary) "
+    "\n\nIf the code passes, say PASS and stop. Do not pad."
 )
 
 
@@ -307,6 +321,39 @@ async def consult(req: TaskRequest):
         memory_writes=consensus_data["memory_writes"],
     )
 
+
+
+# ---------------------------------------------------------------------------
+# Optional TTS endpoint — used by Nym in Kid Mode
+# Fails gracefully if OPENAI_API_KEY not set
+# ---------------------------------------------------------------------------
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = "alloy"
+
+@app.post("/tts")
+async def tts_endpoint(req: TTSRequest):
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=503, detail="TTS not configured.")
+    if not req.text or not req.text.strip():
+        raise HTTPException(status_code=400, detail="Text required.")
+    text = req.text.strip()[:300]  # Cap length
+    async with httpx.AsyncClient() as client:
+        try:
+            r = await client.post(
+                "https://api.openai.com/v1/audio/speech",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={"model": "tts-1", "input": text, "voice": req.voice},
+                timeout=30,
+            )
+            r.raise_for_status()
+            from fastapi.responses import Response
+            return Response(content=r.content, media_type="audio/mpeg")
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"TTS error: {e}")
 
 @app.get("/health")
 async def health():
