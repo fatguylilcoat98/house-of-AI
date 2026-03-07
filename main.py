@@ -1,7 +1,8 @@
 """
 main.py
 House of AI — The Developer Council
-Full pipeline: Architect (Claude) → Senior Engineer (GPT) → QA Tester (Gemini) → Synthesizer → Pinecone Memory
+Full pipeline: Architect (Claude) → Senior Engineer (GPT) → QA Tester (Gemini) → Synthesizer
+Includes strict safety governors for Kid/Pro modes.
 """
 
 import os
@@ -34,26 +35,44 @@ OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
 
 # ---------------------------------------------------------------------------
-# The Council Personas
+# The Council Personas & Safety Governors
 # ---------------------------------------------------------------------------
-ARCHITECT_PROMPT = (
+SAFETY_GOVERNOR = (
+    "\n\nCRITICAL SAFETY RULE: You are a system built under the Good Neighbor Guard ethos. "
+    "You strictly build software applications. You MUST NEVER generate, encourage, or assist with "
+    "adult, sexual, violent, illegal, or highly dangerous content. If the user prompt violates this, "
+    "you must immediately reject the request politely and suggest building a helpful app instead."
+)
+
+KID_MODE_MODIFIER = (
+    "\n\nTONE OVERRIDE [KID MODE]: You are talking to a creative 10-year-old learning to build apps. "
+    "Use simple language, be highly encouraging, use emojis, and explain complex coding concepts using "
+    "fun real-world analogies (like building blocks or magic spells). Keep the code real, but the vibe fun."
+)
+
+PRO_MODE_MODIFIER = (
+    "\n\nTONE OVERRIDE [PRO MODE]: You are talking to an adult solo-developer. "
+    "Be highly technical, concise, use industry-standard terminology, and do not use fluff or excessive emojis."
+)
+
+BASE_ARCHITECT = (
     "You are the Chief Software Architect. The user will provide an app idea. "
     "Your job is strictly to design the architecture. You do not write the functional code. "
     "You must return a clear plan containing: "
-    "1. The optimal tech stack (e.g., React, Node, Supabase). "
+    "1. The optimal tech stack. "
     "2. A complete folder and file structure. "
     "3. A step-by-step build plan for the Senior Engineer."
 )
 
-ENGINEER_PROMPT = (
+BASE_ENGINEER = (
     "You are the Senior Lead Developer. You will receive an architecture plan from the "
     "Architect and the user's original prompt. Your job is to write the actual, functional "
     "code for the MVP. You must return the exact code blocks for each required file, "
     "ensuring there are no placeholders and no missing logic. Write clean, production-ready code."
 )
 
-QA_PROMPT = (
-    "You are the aggressive QA Security Tester. You will review the code written by the "
+BASE_QA = (
+    "You are the QA Security Tester. You will review the code written by the "
     "Senior Engineer. Your job is to break it. Look for security flaws, missing imports, "
     "infinite loops, and bad database calls. Provide: "
     "1. A list of critical bugs. "
@@ -63,15 +82,25 @@ QA_PROMPT = (
 )
 
 
+def build_agent_prompt(base_prompt: str, app_mode: str) -> str:
+    prompt = base_prompt + SAFETY_GOVERNOR
+    if app_mode == "kid":
+        prompt += KID_MODE_MODIFIER
+    else:
+        prompt += PRO_MODE_MODIFIER
+    return prompt
+
+
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
 class TaskRequest(BaseModel):
     task: str
     context: str = ""
-    namespace: str = "house_of_ai"   # Updated namespace
+    namespace: str = "house_of_ai"
     phase: str = ""
     write_memory: bool = True
+    app_mode: str = "kid"  # Inherits from frontend toggle
 
 
 class AgentResponse(BaseModel):
@@ -97,7 +126,7 @@ class MemorySearchRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# LLM Callers (Updated to accept specific system prompts)
+# LLM Callers 
 # ---------------------------------------------------------------------------
 async def call_claude(task: str, context: str, system_prompt: str, client: httpx.AsyncClient) -> AgentResponse:
     try:
@@ -116,11 +145,11 @@ async def call_claude(task: str, context: str, system_prompt: str, client: httpx
             },
             json={
                 "model": "claude-opus-4-5",
-                "max_tokens": 4096,  # Increased for larger code outputs
+                "max_tokens": 4096,
                 "system": system_prompt,
                 "messages": messages,
             },
-            timeout=120, # Increased timeout for heavy code generation
+            timeout=120,
         )
         r.raise_for_status()
         return AgentResponse(agent="Architect (Claude)", response=r.json()["content"][0]["text"])
@@ -144,10 +173,10 @@ async def call_gpt(task: str, context: str, system_prompt: str, client: httpx.As
             },
             json={
                 "model": "gpt-4o-mini",
-                "max_tokens": 4096, # Increased for larger code outputs
+                "max_tokens": 4096,
                 "messages": messages,
             },
-            timeout=120, # Increased timeout for heavy code generation
+            timeout=120,
         )
         r.raise_for_status()
         return AgentResponse(agent="Senior Engineer (GPT)", response=r.json()["choices"][0]["message"]["content"])
@@ -190,23 +219,28 @@ async def consult(req: TaskRequest):
     try:
         memory_context = await memory_pack_for_prompt(req.task, req.namespace)
     except Exception:
-        pass  # Memory failure never blocks a consult
+        pass
 
     full_context = req.context
     if memory_context:
         full_context = memory_context + ("\n\n" + req.context if req.context else "")
 
+    # Build dynamic prompts based on kid/pro mode
+    architect_prompt = build_agent_prompt(BASE_ARCHITECT, req.app_mode)
+    engineer_prompt  = build_agent_prompt(BASE_ENGINEER, req.app_mode)
+    qa_prompt        = build_agent_prompt(BASE_QA, req.app_mode)
+
     async with httpx.AsyncClient() as client:
         # Step 1 — The Architect designs the plan (Claude)
-        claude_res = await call_claude(req.task, full_context, ARCHITECT_PROMPT, client)
+        claude_res = await call_claude(req.task, full_context, architect_prompt, client)
 
         # Step 2 — The Engineer writes the code based on the plan (GPT)
         engineer_context = f"{full_context}\n\n[ARCHITECT PLAN]\n{claude_res.response}"
-        gpt_res = await call_gpt(req.task, engineer_context, ENGINEER_PROMPT, client)
+        gpt_res = await call_gpt(req.task, engineer_context, engineer_prompt, client)
 
         # Step 3 — The QA Tester reviews the code (Gemini)
         qa_context = f"{engineer_context}\n\n[ENGINEER CODE]\n{gpt_res.response}"
-        gemini_res = await call_gemini(req.task, qa_context, QA_PROMPT, client)
+        gemini_res = await call_gemini(req.task, qa_context, qa_prompt, client)
 
         results = [claude_res, gpt_res, gemini_res]
 
@@ -256,7 +290,7 @@ async def search_memory(req: MemorySearchRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "House of AI live"}
+    return {"status": "House of AI live", "safety_layer": "active"}
 
 
 # Serve frontend
