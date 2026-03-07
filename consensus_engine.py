@@ -1,49 +1,70 @@
 """
 consensus_engine.py
 House of AI — Project Manager Synthesizer
+Built by Christopher Hughes & The Good Neighbor Guard
+
 Packages Architect + Engineer + QA Tester responses into one actionable output.
-Optionally writes key decisions to Pinecone memory.
+Memory writes are optional — stubs gracefully if Pinecone/memory_engine is unavailable.
 """
 
 import os
 import re
 import httpx
-from typing import Optional
-from memory_engine import memory_write
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
+# ---------------------------------------------------------------------------
+# Memory Engine — Safe Stub
+# If you have a real memory_engine.py, replace this with:
+#   from memory_engine import memory_write
+# The stub below ensures the server never crashes when memory is unavailable.
+# ---------------------------------------------------------------------------
+async def _memory_write_stub(payload: dict) -> dict:
+    """No-op stub. Replace with real memory_write when Pinecone is connected."""
+    return {"status": "stub", "payload": payload}
+
+try:
+    from memory_engine import memory_write  # type: ignore
+except ImportError:
+    memory_write = _memory_write_stub
+
+
+# ---------------------------------------------------------------------------
+# Project Manager System Prompt
+# ---------------------------------------------------------------------------
 PM_SYSTEM = """You are the Project Manager for the House of AI — a multi-agent coding council.
 
-You receive responses from three AI agents on a user's app request:
-1. The Architect (Claude): The structural design and tech stack.
-2. The Senior Engineer (GPT): The raw code execution.
-3. The QA Tester (Gemini): The security and bug review.
+You receive outputs from three AI agents working on a user's app request:
+1. The Architect (Claude): Structural design and tech stack.
+2. The Senior Engineer (GPT): Raw code execution.
+3. The QA Tester (Gemini): Security and bug review.
 
-Your job is to compress their work into one structured, actionable output for the human developer.
+Your job is to compress their work into one structured, actionable output.
 
-Respond in EXACTLY this format — no deviations:
+Respond in EXACTLY this format — no deviations, no extra headers:
 
 ARCHITECTURE SUMMARY
 • [bullet - key tech stack choices]
 • [bullet - major structural decisions]
 
 QA REVIEW & RISKS
-• [bullet - critical bugs or 'All clear' if QA passed]
-• [bullet - security vulnerabilities or 'None detected']
+• [bullet - critical bugs found, or 'None found']
+• [bullet - security vulnerabilities, or 'None detected']
 
 FINAL CODE STATUS
-[One short paragraph. Is the code ready to copy-paste and deploy, or does it require manual fixes based on the QA review?]
+[One short paragraph. Is the code ready to deploy, or does it need manual fixes?]
 
 ACTIONABLE NEXT STEP
-[A concise next step for the human developer. What should they do right now to move this forward?]
+[A concise next step for the developer. What should they do right now?]
 
 MEMORY ITEMS
-[List 1–3 short facts worth storing about this project. One per line, prefixed with "- ".
-These must be objective facts about the project state.
-Example: - App architecture uses React, Node, and Supabase.]"""
+[List 1–3 short objective facts worth storing about this project. One per line, prefixed with "- ".
+Example: - App uses a single-file HTML architecture with inline CSS and JS.]"""
 
 
+# ---------------------------------------------------------------------------
+# Consensus Generator
+# ---------------------------------------------------------------------------
 async def generate_consensus(
     task: str,
     claude_response: str,
@@ -52,14 +73,14 @@ async def generate_consensus(
     client: httpx.AsyncClient,
 ) -> str:
     """
-    Call Claude to synthesize the Developer Council responses into structured output.
-    Returns the raw structured text.
+    Call Claude (Synthesizer) to package the three agent outputs into
+    a structured Project Manager report. Returns raw structured text.
     """
     combined = (
         f"ORIGINAL USER PROMPT:\n{task}\n\n"
-        f"=== ARCHITECT (CLAUDE) ===\n{claude_response or '[no response]'}\n\n"
-        f"=== SENIOR ENGINEER (GPT) ===\n{gpt_response or '[no response]'}\n\n"
-        f"=== QA TESTER (GEMINI) ===\n{gemini_response or '[no response]'}"
+        f"=== ARCHITECT (CLAUDE) ===\n{claude_response or '[no response received]'}\n\n"
+        f"=== SENIOR ENGINEER (GPT) ===\n{gpt_response or '[no response received]'}\n\n"
+        f"=== QA TESTER (GEMINI) ===\n{gemini_response or '[no response received]'}"
     )
 
     r = await client.post(
@@ -81,19 +102,23 @@ async def generate_consensus(
     return r.json()["content"][0]["text"]
 
 
+# ---------------------------------------------------------------------------
+# Consensus Parser
+# ---------------------------------------------------------------------------
 def parse_consensus(raw: str) -> dict:
     """
-    Parse the structured project manager text into a dict with sections.
+    Parse the structured PM text into a dict with named sections.
+    Handles minor formatting variations from the LLM gracefully.
     """
     sections = {
-        "summary":          "",
-        "disagreements":    "", # Kept for API model compatibility
-        "final_decision":   "",
+        "summary":           "",
+        "disagreements":     "",  # Maps to "QA REVIEW & RISKS" — kept for API compat
+        "final_decision":    "",
         "actionable_prompt": "",
-        "memory_items":     [],
+        "memory_items":      [],
     }
 
-    # Split on known section headers
+    # Split on the known section headers
     pattern = re.compile(
         r"(ARCHITECTURE SUMMARY|QA REVIEW & RISKS|FINAL CODE STATUS|ACTIONABLE NEXT STEP|MEMORY ITEMS)",
         re.IGNORECASE,
@@ -106,7 +131,7 @@ def parse_consensus(raw: str) -> dict:
         if key == "ARCHITECTURE SUMMARY":
             current = "summary"
         elif key == "QA REVIEW & RISKS":
-            current = "disagreements" # Maps to the existing API model field
+            current = "disagreements"
         elif key == "FINAL CODE STATUS":
             current = "final_decision"
         elif key == "ACTIONABLE NEXT STEP":
@@ -117,7 +142,7 @@ def parse_consensus(raw: str) -> dict:
             cleaned = part.strip()
             if current == "memory_items":
                 items = [
-                    line.lstrip("- •").strip()
+                    line.lstrip("-• ").strip()
                     for line in cleaned.splitlines()
                     if line.strip() and line.strip() not in ("", "None")
                 ]
@@ -128,6 +153,9 @@ def parse_consensus(raw: str) -> dict:
     return sections
 
 
+# ---------------------------------------------------------------------------
+# Memory Store
+# ---------------------------------------------------------------------------
 async def store_memory(
     parsed: dict,
     task: str,
@@ -136,24 +164,30 @@ async def store_memory(
 ) -> list[dict]:
     """
     Write memory_items from parsed consensus to Pinecone.
-    Returns list of write results.
+    Returns list of write results. Silently skips on error.
     """
     results = []
     for item in parsed.get("memory_items", []):
         if not item:
             continue
-        result = await memory_write({
-            "text":      item,
-            "project":   namespace,
-            "type":      "architecture_decision",
-            "phase":     phase,
-            "tags":      ["house_of_ai", "auto_architecture"],
-            "confidence": 0.9,
-        })
-        results.append(result)
+        try:
+            result = await memory_write({
+                "text":       item,
+                "project":    namespace,
+                "type":       "architecture_decision",
+                "phase":      phase,
+                "tags":       ["house_of_ai", "auto_architecture"],
+                "confidence": 0.9,
+            })
+            results.append(result)
+        except Exception as e:
+            results.append({"status": "error", "error": str(e)})
     return results
 
 
+# ---------------------------------------------------------------------------
+# Full Pipeline Entry Point
+# ---------------------------------------------------------------------------
 async def run_consensus_pipeline(
     task: str,
     claude_response: str,
@@ -162,14 +196,14 @@ async def run_consensus_pipeline(
     client: httpx.AsyncClient,
     namespace: str = "house_of_ai",
     phase: str = "",
-    write_memory: bool = True,
+    write_memory: bool = False,
 ) -> dict:
     """
     Full pipeline:
-    1. Generate project manager synthesis
-    2. Parse into sections
+    1. Generate PM synthesis via Claude
+    2. Parse into named sections
     3. Optionally write memory items to Pinecone
-    4. Return full structured result
+    4. Return full structured result dict
     """
     raw = await generate_consensus(
         task, claude_response, gpt_response, gemini_response, client
@@ -181,11 +215,11 @@ async def run_consensus_pipeline(
         memory_results = await store_memory(parsed, task, namespace, phase)
 
     return {
-        "raw":              raw,
-        "summary":          parsed["summary"],
-        "disagreements":    parsed["disagreements"],
-        "final_decision":   parsed["final_decision"],
+        "raw":               raw,
+        "summary":           parsed["summary"],
+        "disagreements":     parsed["disagreements"],
+        "final_decision":    parsed["final_decision"],
         "actionable_prompt": parsed["actionable_prompt"],
-        "memory_items":     parsed["memory_items"],
-        "memory_writes":    memory_results,
+        "memory_items":      parsed["memory_items"],
+        "memory_writes":     memory_results,
     }
