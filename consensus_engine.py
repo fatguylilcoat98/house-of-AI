@@ -1,7 +1,7 @@
 """
 consensus_engine.py
-The Good Neighbor Guard — House of AI
-Compresses Claude + GPT + Gemini responses into one actionable output.
+House of AI — Project Manager Synthesizer
+Packages Architect + Engineer + QA Tester responses into one actionable output.
 Optionally writes key decisions to Pinecone memory.
 """
 
@@ -13,35 +13,35 @@ from memory_engine import memory_write
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
-CONSENSUS_SYSTEM = """You are the Consensus Synthesizer for the House of AI — a coordination layer
-for the Veracore fact-verification engine (The Good Neighbor Guard).
+PM_SYSTEM = """You are the Project Manager for the House of AI — a multi-agent coding council.
 
-You receive responses from three AI engineers (Claude, GPT, Gemini) on a technical task.
-Your job is to compress them into one structured output.
+You receive responses from three AI agents on a user's app request:
+1. The Architect (Claude): The structural design and tech stack.
+2. The Senior Engineer (GPT): The raw code execution.
+3. The QA Tester (Gemini): The security and bug review.
+
+Your job is to compress their work into one structured, actionable output for the human developer.
 
 Respond in EXACTLY this format — no deviations:
 
-CONSENSUS SUMMARY
-• [bullet]
-• [bullet]
-• [bullet]
-(3–5 bullets max — agreements only)
+ARCHITECTURE SUMMARY
+• [bullet - key tech stack choices]
+• [bullet - major structural decisions]
 
-DISAGREEMENTS
-• [bullet or "None detected"]
+QA REVIEW & RISKS
+• [bullet - critical bugs or 'All clear' if QA passed]
+• [bullet - security vulnerabilities or 'None detected']
 
-FINAL DECISION
-[One short paragraph. What is the correct path forward? Be direct.]
+FINAL CODE STATUS
+[One short paragraph. Is the code ready to copy-paste and deploy, or does it require manual fixes based on the QA review?]
 
-ACTIONABLE PROMPT
-[A ready-to-copy prompt addressed to Claude for implementation.
-Must be concise, contain only necessary context, no fluff.
-Start with: CLAUDE — ]
+ACTIONABLE NEXT STEP
+[A concise next step for the human developer. What should they do right now to move this forward?]
 
 MEMORY ITEMS
-[List 1–3 short facts worth storing. One per line, prefixed with "- ".
-These must be objective facts about the project state, not opinions.
-Example: - Phase 5 deterministic engine complete]"""
+[List 1–3 short facts worth storing about this project. One per line, prefixed with "- ".
+These must be objective facts about the project state.
+Example: - App architecture uses React, Node, and Supabase.]"""
 
 
 async def generate_consensus(
@@ -52,14 +52,14 @@ async def generate_consensus(
     client: httpx.AsyncClient,
 ) -> str:
     """
-    Call Claude to synthesize three responses into structured consensus output.
+    Call Claude to synthesize the Developer Council responses into structured output.
     Returns the raw structured text.
     """
     combined = (
-        f"ORIGINAL TASK:\n{task}\n\n"
-        f"=== CLAUDE ===\n{claude_response or '[no response]'}\n\n"
-        f"=== GPT ===\n{gpt_response or '[no response]'}\n\n"
-        f"=== GEMINI ===\n{gemini_response or '[no response]'}"
+        f"ORIGINAL USER PROMPT:\n{task}\n\n"
+        f"=== ARCHITECT (CLAUDE) ===\n{claude_response or '[no response]'}\n\n"
+        f"=== SENIOR ENGINEER (GPT) ===\n{gpt_response or '[no response]'}\n\n"
+        f"=== QA TESTER (GEMINI) ===\n{gemini_response or '[no response]'}"
     )
 
     r = await client.post(
@@ -72,7 +72,7 @@ async def generate_consensus(
         json={
             "model": "claude-opus-4-5",
             "max_tokens": 1024,
-            "system": CONSENSUS_SYSTEM,
+            "system": PM_SYSTEM,
             "messages": [{"role": "user", "content": combined}],
         },
         timeout=60,
@@ -83,12 +83,11 @@ async def generate_consensus(
 
 def parse_consensus(raw: str) -> dict:
     """
-    Parse the structured consensus text into a dict with sections:
-    summary, disagreements, final_decision, actionable_prompt, memory_items
+    Parse the structured project manager text into a dict with sections.
     """
     sections = {
         "summary":          "",
-        "disagreements":    "",
+        "disagreements":    "", # Kept for API model compatibility
         "final_decision":   "",
         "actionable_prompt": "",
         "memory_items":     [],
@@ -96,7 +95,7 @@ def parse_consensus(raw: str) -> dict:
 
     # Split on known section headers
     pattern = re.compile(
-        r"(CONSENSUS SUMMARY|DISAGREEMENTS|FINAL DECISION|ACTIONABLE PROMPT|MEMORY ITEMS)",
+        r"(ARCHITECTURE SUMMARY|QA REVIEW & RISKS|FINAL CODE STATUS|ACTIONABLE NEXT STEP|MEMORY ITEMS)",
         re.IGNORECASE,
     )
     parts = pattern.split(raw)
@@ -104,13 +103,13 @@ def parse_consensus(raw: str) -> dict:
     current = None
     for part in parts:
         key = part.strip().upper()
-        if key == "CONSENSUS SUMMARY":
+        if key == "ARCHITECTURE SUMMARY":
             current = "summary"
-        elif key == "DISAGREEMENTS":
-            current = "disagreements"
-        elif key == "FINAL DECISION":
+        elif key == "QA REVIEW & RISKS":
+            current = "disagreements" # Maps to the existing API model field
+        elif key == "FINAL CODE STATUS":
             current = "final_decision"
-        elif key == "ACTIONABLE PROMPT":
+        elif key == "ACTIONABLE NEXT STEP":
             current = "actionable_prompt"
         elif key == "MEMORY ITEMS":
             current = "memory_items"
@@ -132,7 +131,7 @@ def parse_consensus(raw: str) -> dict:
 async def store_memory(
     parsed: dict,
     task: str,
-    namespace: str = "veracore",
+    namespace: str = "house_of_ai",
     phase: str = "",
 ) -> list[dict]:
     """
@@ -148,7 +147,7 @@ async def store_memory(
             "project":   namespace,
             "type":      "architecture_decision",
             "phase":     phase,
-            "tags":      ["consensus", "auto"],
+            "tags":      ["house_of_ai", "auto_architecture"],
             "confidence": 0.9,
         })
         results.append(result)
@@ -161,13 +160,13 @@ async def run_consensus_pipeline(
     gpt_response: str,
     gemini_response: str,
     client: httpx.AsyncClient,
-    namespace: str = "veracore",
+    namespace: str = "house_of_ai",
     phase: str = "",
     write_memory: bool = True,
 ) -> dict:
     """
     Full pipeline:
-    1. Generate consensus
+    1. Generate project manager synthesis
     2. Parse into sections
     3. Optionally write memory items to Pinecone
     4. Return full structured result
