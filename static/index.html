@@ -10,19 +10,19 @@
     --bg:          #f0f4f8;
     --surface:     #ffffff;
     --border:      #e2e8f0;
-    --architect:   #ff9f43; 
-    --builder:     #00b894; 
-    --tester:      #0984e3; 
-    --pm:          #6c5ce7; 
-    --action:      #fd79a8; 
-    --memory:      #00cec9; 
+    --architect:   #ff9f43;
+    --builder:     #00b894;
+    --tester:      #0984e3;
+    --pm:          #6c5ce7;
+    --action:      #fd79a8;
+    --memory:      #00cec9;
     --text-main:   #2d3436;
     --text-muted:  #636e72;
     --danger:      #d63031;
     --font-main:   'Nunito', sans-serif;
     --font-code:   'Fira Code', monospace;
   }
-  
+
   body.pro-mode {
     --bg:          #0a0c10;
     --surface:     #111318;
@@ -38,10 +38,10 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text-main); font-family: var(--font-main); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.3s, color 0.3s; }
 
-  header { padding: 16px 30px; background: var(--surface); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  header { padding: 16px 30px; background: var(--surface); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
   .logo { font-size: 1.5rem; font-weight: 900; color: var(--pm); letter-spacing: -0.5px; }
   .logo span { color: var(--text-muted); font-weight: 600; }
-  
+
   .mode-toggle { margin-left: auto; display: flex; background: var(--bg); border: 2px solid var(--border); border-radius: 20px; overflow: hidden; }
   .mode-btn { font-family: var(--font-main); font-weight: 800; font-size: 0.85rem; padding: 8px 16px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
   .mode-btn.active { background: var(--pm); color: white; }
@@ -51,10 +51,10 @@
   .input-panel { background: var(--surface); border-radius: 20px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 16px; border: 2px solid var(--border); }
   .panel-label { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
   .panel-subtext { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
-  
+
   .row { display: flex; gap: 20px; align-items: flex-start; }
   .col { flex: 1; display: flex; flex-direction: column; }
-  
+
   details.advanced-settings { margin-top: 10px; background: var(--bg); border-radius: 12px; padding: 10px 15px; border: 1px solid var(--border); }
   details.advanced-settings summary { font-weight: 700; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 8px; }
   details.advanced-settings summary::-webkit-details-marker { display: none; }
@@ -68,15 +68,15 @@
   .btn-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
   button { font-family: var(--font-main); font-size: 1rem; font-weight: 800; cursor: pointer; border-radius: 12px; border: none; padding: 14px 28px; transition: transform 0.1s, filter 0.2s; }
   button:active { transform: scale(0.97); }
-  
+
   #submitBtn { background: linear-gradient(135deg, var(--pm), #a29bfe); color: white; }
   body.pro-mode #submitBtn { background: var(--pm); }
   #submitBtn:hover { filter: brightness(1.1); }
   #submitBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  
+
   #clearBtn { background: transparent; border: 2px solid var(--border); color: var(--text-muted); }
   #clearBtn:hover { border-color: var(--text-main); color: var(--text-main); }
-  
+
   #timer { font-size: 0.9rem; font-weight: 800; color: var(--pm); }
 
   label.check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
@@ -99,7 +99,7 @@
 
   .agent-body { padding: 16px; font-size: 0.95rem; line-height: 1.6; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; font-family: var(--font-code); }
   .agent-body.empty { color: var(--text-muted); font-family: var(--font-main); font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; }
-  .agent-body.error { color: var(--danger); font-weight: 700; }
+  .agent-body.error { color: var(--danger); font-weight: 700; font-family: var(--font-main); }
 
   .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 900px) { .consensus-grid { grid-template-columns: 1fr; } }
@@ -110,24 +110,29 @@
   .c-title { font-size: 1.05rem; font-weight: 900; }
   .c-body { padding: 18px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
 
-  .panel-summary .c-title { color: var(--architect); }
+  .panel-summary .c-title  { color: var(--architect); }
   .panel-disagree .c-title { color: var(--danger); }
   .panel-decision .c-title { color: var(--builder); }
-  .panel-memory .c-title { color: var(--memory); }
+  .panel-memory .c-title   { color: var(--memory); }
 
+  /* Action panel spans full width */
   .panel-action { border-color: var(--builder); grid-column: 1 / -1; }
   .panel-action .c-title { color: var(--builder); }
   .action-body { padding: 18px; position: relative; }
-  .action-text { font-family: var(--font-main); font-size: 1rem; line-height: 1.6; white-space: pre-wrap; margin-bottom: 15px;}
-  
-  /* Magic Action Buttons */
+  .action-text { font-family: var(--font-code); font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-bottom: 15px; max-height: 500px; overflow-y: auto; }
+
   .magic-actions { display: flex; gap: 15px; flex-wrap: wrap; padding-top: 15px; border-top: 2px dashed var(--border); }
-  .btn-play { background: var(--builder); color: white; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4); }
+  .btn-play     { background: var(--builder); color: white; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,184,148,0.4); }
   .btn-play:hover { filter: brightness(1.1); transform: scale(1.02); }
   .btn-download { background: var(--architect); color: white; font-size: 1.1rem; }
-  .btn-copy { background: transparent; border: 2px solid var(--text-muted); color: var(--text-muted); }
+  .btn-copy     { background: transparent; border: 2px solid var(--text-muted); color: var(--text-muted); }
 
-  @keyframes pulse { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:0.5; transform:scale(1.2);} }
+  /* Progress bar shown during build */
+  .progress-bar-wrap { width: 100%; background: var(--bg); border-radius: 8px; height: 8px; overflow: hidden; display: none; }
+  .progress-bar-wrap.visible { display: block; }
+  .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pm), var(--builder)); border-radius: 8px; transition: width 0.5s ease; }
+
+  @keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(1.2); } }
   footer { padding: 20px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-align: center; }
 </style>
 </head>
@@ -137,18 +142,22 @@
   <div class="logo" id="uiLogo">HOUSE<span>::</span>OF<span>::</span>AI 🪄</div>
   <div class="mode-toggle">
     <button id="btnKid" class="mode-btn active" onclick="setMode('kid')">🧸 Kid Mode</button>
-    <button id="btnPro" class="mode-btn" onclick="setMode('pro')">💼 Pro Mode</button>
+    <button id="btnPro" class="mode-btn"        onclick="setMode('pro')">💼 Pro Mode</button>
   </div>
 </header>
 
 <main>
   <div class="input-panel">
     <div class="col">
-      <div class="panel-label" id="uiTitle">✨ What do you want to build today?</div>
+      <div class="panel-label"   id="uiTitle">✨ What do you want to build today?</div>
       <div class="panel-subtext" id="uiSubtext">Tell the team what kind of app or game you want. Be as creative as you like!</div>
       <textarea id="task" placeholder="Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷"></textarea>
     </div>
-    
+
+    <div class="progress-bar-wrap" id="progressWrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
     <details class="advanced-settings">
       <summary>⚙️ Advanced Details (Optional)</summary>
       <div class="adv-row">
@@ -171,73 +180,110 @@
 
     <div class="btn-row">
       <button id="submitBtn" onclick="consult()">🚀 BUILD MY APP!</button>
-      <button id="clearBtn" onclick="clearAll()">Start Over</button>
+      <button id="clearBtn"  onclick="clearAll()">Start Over</button>
+      <span   id="timer"></span>
     </div>
   </div>
 
+  <!-- Agent Cards -->
   <div class="agents-grid">
     <div class="agent-card claude">
-      <div class="agent-header"><div class="agent-name" id="nameClaude">🏗️ The Architect</div><div class="agent-indicator" id="ind-claude"></div></div>
+      <div class="agent-header">
+        <div class="agent-name" id="nameClaude">🏗️ The Architect</div>
+        <div class="agent-indicator" id="ind-claude"></div>
+      </div>
       <div class="agent-body empty" id="body-claude">Sleeping... 💤</div>
     </div>
     <div class="agent-card gpt">
-      <div class="agent-header"><div class="agent-name" id="nameGpt">💻 The Builder</div><div class="agent-indicator" id="ind-gpt"></div></div>
+      <div class="agent-header">
+        <div class="agent-name" id="nameGpt">💻 The Builder</div>
+        <div class="agent-indicator" id="ind-gpt"></div>
+      </div>
       <div class="agent-body empty" id="body-gpt">Sleeping... 💤</div>
     </div>
     <div class="agent-card gemini">
-      <div class="agent-header"><div class="agent-name" id="nameGemini">🕵️‍♂️ The Tester</div><div class="agent-indicator" id="ind-gemini"></div></div>
+      <div class="agent-header">
+        <div class="agent-name" id="nameGemini">🕵️‍♂️ The Tester</div>
+        <div class="agent-indicator" id="ind-gemini"></div>
+      </div>
       <div class="agent-body empty" id="body-gemini">Sleeping... 💤</div>
     </div>
   </div>
 
+  <!-- Consensus Panels -->
   <div class="consensus-grid">
     <div class="c-panel panel-summary" id="panelSummary">
       <div class="c-header"><div class="c-title">📋 The Blueprint</div></div>
       <div class="c-body" id="bodySummary"></div>
     </div>
     <div class="c-panel panel-disagree" id="panelDisagree">
-      <div class="c-header"><div class="c-title">🔍 QA & Security Check</div></div>
+      <div class="c-header"><div class="c-title">🔍 QA &amp; Security Check</div></div>
       <div class="c-body" id="bodyDisagree"></div>
     </div>
     <div class="c-panel panel-decision" id="panelDecision">
       <div class="c-header"><div class="c-title">✅ Final Code Status</div></div>
       <div class="c-body" id="bodyDecision"></div>
     </div>
+
+    <!-- Action Panel — full width, contains the Builder's code output -->
     <div class="c-panel panel-action" id="panelAction">
       <div class="c-header"><div class="c-title">🎮 YOUR NEW APP!</div></div>
       <div class="action-body">
         <div class="action-text" id="bodyAction"></div>
         <div class="magic-actions">
-          <button class="btn-play" onclick="playApp()">▶️ PLAY NOW in Browser</button>
+          <button class="btn-play"     onclick="playApp()">▶️ PLAY NOW in Browser</button>
           <button class="btn-download" onclick="downloadApp()">💾 DOWNLOAD to Computer</button>
-          <button class="btn-copy" id="copyBtn" onclick="copyCode()">⧉ Copy Code</button>
+          <button class="btn-copy"     id="copyBtn" onclick="copyCode()">⧉ Copy Code</button>
         </div>
       </div>
     </div>
   </div>
-
 </main>
 
-<footer>BUILT BY CHRISTOPHER HUGHES & THE GOOD NEIGHBOR GUARD</footer>
+<footer>BUILT BY CHRISTOPHER HUGHES &amp; THE GOOD NEIGHBOR GUARD</footer>
 
 <script>
+  // ─────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────
   let currentMode = 'kid';
-  let kidPin = null;
+  let kidPin      = null;
   let timerInterval = null;
+  let elapsedSecs   = 0;
 
+  // ─────────────────────────────────────────────
+  // MODE SWITCHING
+  // Bug fix: PIN is set when activating Kid Mode
+  // and is REQUIRED to leave Kid Mode — not the other way around.
+  // ─────────────────────────────────────────────
   function setMode(target) {
     if (target === currentMode) return;
-    if (target === 'kid') {
-      let pin = prompt("Set a 4-digit PIN to lock Kid Mode to keep things safe:");
-      if (pin && pin.length >= 4) { kidPin = pin; currentMode = 'kid'; applyModeUI(); } 
-      else { alert("You need at least 4 characters for a PIN."); }
-    } else if (target === 'pro') {
+
+    if (target === 'pro') {
+      // Leaving Kid Mode — require PIN if one has been set
       if (kidPin) {
-        let entered = prompt("Enter your PIN to unlock Pro Mode:");
-        if (entered !== kidPin) { alert("Incorrect PIN. Remaining in Kid Mode."); return; }
-        kidPin = null; 
+        const entered = prompt('🔐 Enter your parent PIN to unlock Pro Mode:');
+        if (entered !== kidPin) {
+          alert('❌ Incorrect PIN. Staying in Kid Mode.');
+          return;
+        }
+        kidPin = null; // PIN consumed — cleared so re-entering kid mode will ask again
       }
-      currentMode = 'pro'; applyModeUI();
+      currentMode = 'pro';
+      applyModeUI();
+
+    } else if (target === 'kid') {
+      // Entering Kid Mode — offer to set a PIN so parents can lock it
+      const pin = prompt('🧸 Set a 4-digit PIN to lock Kid Mode (so kids can\'t switch to Pro):\n\nLeave blank to skip PIN lock.');
+      if (pin && pin.trim().length > 0) {
+        if (pin.trim().length < 4) {
+          alert('PIN must be at least 4 characters.');
+          return;
+        }
+        kidPin = pin.trim();
+      }
+      currentMode = 'kid';
+      applyModeUI();
     }
   }
 
@@ -245,62 +291,290 @@
     document.body.className = currentMode + '-mode';
     document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
     document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
+
     const taskBox = document.getElementById('task');
     if (currentMode === 'kid') {
-      document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI 🪄';
-      document.getElementById('uiTitle').innerText = '✨ What do you want to build today?';
+      document.getElementById('uiLogo').innerHTML    = 'HOUSE<span>::</span>OF<span>::</span>AI 🪄';
+      document.getElementById('uiTitle').innerText   = '✨ What do you want to build today?';
       document.getElementById('uiSubtext').innerText = 'Tell the team what kind of app or game you want. Be as creative as you like!';
       taskBox.placeholder = 'Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷';
       document.getElementById('nameClaude').innerText = '🏗️ The Architect';
-      document.getElementById('nameGpt').innerText = '💻 The Builder';
+      document.getElementById('nameGpt').innerText    = '💻 The Builder';
       document.getElementById('nameGemini').innerText = '🕵️‍♂️ The Tester';
+      document.getElementById('submitBtn').textContent = '🚀 BUILD MY APP!';
     } else {
-      document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI [PRO]';
-      document.getElementById('uiTitle').innerText = 'ENGINEERING TASK';
+      document.getElementById('uiLogo').innerHTML    = 'HOUSE<span>::</span>OF<span>::</span>AI [PRO]';
+      document.getElementById('uiTitle').innerText   = 'ENGINEERING TASK';
       document.getElementById('uiSubtext').innerText = 'Provide technical specs, architecture requirements, or feature requests.';
-      taskBox.placeholder = 'Example: I want to build a real-time matching game for couples using React and Supabase...';
+      taskBox.placeholder = 'Example: Build a real-time multiplayer quiz app using a single HTML file with WebSocket simulation via localStorage.';
       document.getElementById('nameClaude').innerText = 'CLAUDE (Architect)';
-      document.getElementById('nameGpt').innerText = 'GPT (Engineer)';
+      document.getElementById('nameGpt').innerText    = 'GPT (Engineer)';
       document.getElementById('nameGemini').innerText = 'GEMINI (QA)';
+      document.getElementById('submitBtn').textContent = '▶ EXECUTE BUILD';
     }
   }
 
+  // ─────────────────────────────────────────────
+  // UI HELPERS
+  // ─────────────────────────────────────────────
   function setLoading(on) {
     const btn = document.getElementById('submitBtn');
     btn.disabled = on;
-    btn.textContent = on ? (currentMode === 'kid' ? '✨ ROBOTS WORKING...' : 'EXECUTING...') : (currentMode === 'kid' ? '🚀 BUILD MY APP!' : '▶ EXECUTE BUILD');
-    ['ind-claude','ind-gpt','ind-gemini'].forEach(id => { document.getElementById(id).classList.toggle('active', on); });
+    if (on) {
+      btn.textContent = currentMode === 'kid' ? '✨ ROBOTS WORKING...' : 'EXECUTING...';
+    } else {
+      btn.textContent = currentMode === 'kid' ? '🚀 BUILD MY APP!' : '▶ EXECUTE BUILD';
+    }
+    ['ind-claude', 'ind-gpt', 'ind-gemini'].forEach(id => {
+      document.getElementById(id).classList.toggle('active', on);
+    });
   }
 
   function setAgentBody(agent, text, mode = 'normal') {
-    const el = document.getElementById(`body-${agent}`);
-    if(!el) return; 
+    const el = document.getElementById('body-' + agent);
+    if (!el) return;
     el.textContent = text;
     el.className = 'agent-body' + (mode === 'empty' ? ' empty' : mode === 'error' ? ' error' : '');
   }
 
+  // ─────────────────────────────────────────────
+  // showPanel — fixed to handle panelAction separately
+  // ─────────────────────────────────────────────
   function showPanel(id, content) {
     if (!content || !content.trim()) return;
-    document.getElementById(id).classList.add('visible');
-    const body = document.getElementById('body' + id.replace('panel',''));
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    panel.classList.add('visible');
+
+    // panelAction's text lives in #bodyAction inside .action-body, not .c-body
+    const bodyId = id === 'panelAction' ? 'bodyAction' : 'body' + id.charAt(5).toUpperCase() + id.slice(6);
+    const body = document.getElementById(bodyId);
     if (body) body.textContent = content;
+  }
+
+  // Map panel IDs to their content body IDs explicitly — safer than string manipulation
+  const PANEL_BODY_MAP = {
+    panelSummary:  'bodySummary',
+    panelDisagree: 'bodyDisagree',
+    panelDecision: 'bodyDecision',
+    panelAction:   'bodyAction',
+  };
+
+  function showPanelById(id, content) {
+    if (!content || !content.trim()) return;
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    panel.classList.add('visible');
+    const bodyEl = document.getElementById(PANEL_BODY_MAP[id]);
+    if (bodyEl) bodyEl.textContent = content;
   }
 
   function clearAll() {
     document.getElementById('task').value = '';
+    document.getElementById('context').value = '';
+    document.getElementById('timer').textContent = '';
+    stopTimer();
+    setProgress(0);
+    document.getElementById('progressWrap').classList.remove('visible');
+
     const sleepTxt = currentMode === 'kid' ? 'Sleeping... 💤' : 'Awaiting prompt.';
-    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
-    ['panelSummary','panelDisagree','panelDecision','panelAction'].forEach(id => { document.getElementById(id).classList.remove('visible'); });
+    ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
+    ['panelSummary', 'panelDisagree', 'panelDecision', 'panelAction'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
+    });
   }
 
-  // --- MAGIC EXECUTION FUNCTIONS ---
+  // ─────────────────────────────────────────────
+  // TIMER
+  // ─────────────────────────────────────────────
+  function startTimer() {
+    elapsedSecs = 0;
+    const timerEl = document.getElementById('timer');
+    timerEl.textContent = '⏱ 0s';
+    timerInterval = setInterval(() => {
+      elapsedSecs++;
+      timerEl.textContent = '⏱ ' + elapsedSecs + 's';
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  // ─────────────────────────────────────────────
+  // PROGRESS BAR (cosmetic — signals pipeline stage)
+  // ─────────────────────────────────────────────
+  function setProgress(pct) {
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  // ─────────────────────────────────────────────
+  // MAIN CONSULT FUNCTION
+  // Bug fix: app_mode is now correctly sent in the fetch payload.
+  // ─────────────────────────────────────────────
+  async function consult() {
+    const task = document.getElementById('task').value.trim();
+    if (!task) {
+      alert(currentMode === 'kid'
+        ? '✏️ Tell us what you want to build first!'
+        : 'Task field cannot be empty.');
+      return;
+    }
+
+    setLoading(true);
+    startTimer();
+    document.getElementById('progressWrap').classList.add('visible');
+    setProgress(5);
+
+    // Reset panels
+    const sleepTxt = currentMode === 'kid' ? '🤔 Thinking...' : 'Processing...';
+    ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
+    ['panelSummary', 'panelDisagree', 'panelDecision', 'panelAction'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
+    });
+
+    const payload = {
+      task:        task,
+      context:     document.getElementById('context').value.trim(),
+      namespace:   document.getElementById('namespace').value,
+      phase:       document.getElementById('phase').value.trim(),
+      write_memory: false,
+      app_mode:    currentMode,   // ← CRITICAL: kid | pro passed to backend
+    };
+
+    try {
+      setProgress(15);
+      const res = await fetch('/consult', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+
+      setProgress(80);
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error('Server error ' + res.status + ': ' + errText);
+      }
+
+      const data = await res.json();
+      setProgress(95);
+
+      // ── Populate Agent Cards ──────────────────
+      // results array: [0] = Architect (Claude), [1] = Engineer (GPT), [2] = QA (Gemini)
+      const agents = ['claude', 'gpt', 'gemini'];
+      data.results.forEach((r, i) => {
+        if (r.error) {
+          setAgentBody(agents[i], '⚠️ Error: ' + r.error, 'error');
+        } else {
+          setAgentBody(agents[i], r.response || '(No response)', 'normal');
+        }
+      });
+
+      // ── Populate Consensus Panels ─────────────
+      showPanelById('panelSummary',  data.summary);
+      showPanelById('panelDisagree', data.disagreements);
+      showPanelById('panelDecision', data.final_decision);
+
+      // Action panel gets the raw builder (GPT) output so extractCode() can find it
+      // We also surface the actionable_prompt as a human-readable note
+      const builderOutput = (data.results[1] && data.results[1].response) || '';
+      const actionNote    = data.actionable_prompt
+        ? '📌 NEXT STEP: ' + data.actionable_prompt + '\n\n' + builderOutput
+        : builderOutput;
+      showPanelById('panelAction', actionNote || data.consensus);
+
+      setProgress(100);
+
+    } catch (err) {
+      ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, '⚠️ ' + err.message, 'error'));
+      console.error('Consult error:', err);
+    } finally {
+      setLoading(false);
+      stopTimer();
+      setTimeout(() => setProgress(0), 1500);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // CODE EXTRACTION
+  // Bug fix: regex was truncated in the original file.
+  // Searches builder output (body-gpt) for ```html ... ``` block.
+  // Falls back to any ``` ... ``` block, then raw text.
+  // ─────────────────────────────────────────────
   function extractCode() {
-    const builderText = document.getElementById('body-gpt').textContent;
-    // Look for HTML code blocks first
-    let codeMatch = builderText.match(/
-http://googleusercontent.com/immersive_entry_chip/0
+    // Primary source: the Builder's (GPT) agent card
+    const builderText = document.getElementById('body-gpt').textContent || '';
 
-Once you update those 3 files, the friction is 100% gone. 
-Kids enter the prompt -> AI builds it -> Kid clicks **PLAY NOW**. 
+    // 1. Try ```html ... ``` (what the engineer is instructed to output)
+    let match = builderText.match(/```html\s*([\s\S]*?)```/i);
+    if (match && match[1].trim()) return match[1].trim();
 
-Do you want to go ahead and push this up to Render?
+    // 2. Try generic ``` ... ``` (fallback if language tag missing)
+    match = builderText.match(/```(?:\w*)\s*([\s\S]*?)```/);
+    if (match && match[1].trim()) return match[1].trim();
+
+    // 3. If the entire text looks like raw HTML (starts with <), use it as-is
+    const trimmed = builderText.trim();
+    if (trimmed.startsWith('<') && trimmed.includes('</html>')) return trimmed;
+
+    // 4. Last resort — check the action panel body
+    const actionText = document.getElementById('bodyAction').textContent || '';
+    match = actionText.match(/```html\s*([\s\S]*?)```/i);
+    if (match && match[1].trim()) return match[1].trim();
+
+    return null;
+  }
+
+  // ─────────────────────────────────────────────
+  // MAGIC ACTION BUTTONS
+  // ─────────────────────────────────────────────
+  function playApp() {
+    const code = extractCode();
+    if (!code) {
+      alert(currentMode === 'kid'
+        ? '😅 Hmm, we couldn\'t find the app code yet! Make sure the Builder finished.'
+        : 'No HTML code block found in Builder output. Check the Engineer card.');
+      return;
+    }
+    const blob = new Blob([code], { type: 'text/html' });
+    const url  = URL.createObjectURL(blob);
+    const win  = window.open(url, '_blank');
+    if (!win) alert('Pop-up blocked! Please allow pop-ups for this site and try again.');
+    // Revoke after short delay to free memory
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  function downloadApp() {
+    const code = extractCode();
+    if (!code) {
+      alert('No code found to download yet.');
+      return;
+    }
+    const task     = document.getElementById('task').value.trim();
+    const fileName = (task.slice(0, 30).replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'my_app') + '.html';
+    const blob     = new Blob([code], { type: 'text/html' });
+    const a        = document.createElement('a');
+    a.href         = URL.createObjectURL(blob);
+    a.download     = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+
+  function copyCode() {
+    const code = extractCode();
+    if (!code) { alert('No code found to copy yet.'); return; }
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = '⧉ Copy Code'; }, 2000);
+    }).catch(() => {
+      alert('Clipboard copy failed. Please select and copy the code manually from the Builder card.');
+    });
+  }
+</script>
+
+</body>
+</html>
