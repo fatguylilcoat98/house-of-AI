@@ -200,6 +200,65 @@ body.pro .nym-hello { opacity: 0.5; }
 .stage-role { font-size: 0.72rem; font-weight: 700; color: var(--muted); }
 .stage-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--stage-color, var(--snap)); animation: pulse 1s infinite; display: none; }
 .stage-card.active .stage-pulse { display: block; }
+
+/* ── Animated stage icons ── */
+.stage-card.active .stage-icon { animation: stageWiggle 0.6s ease-in-out infinite alternate; }
+@keyframes stageWiggle { from { transform: rotate(-8deg) scale(1); } to { transform: rotate(8deg) scale(1.12); } }
+
+/* Atlas blueprint animation */
+#stage-atlas.active .stage-icon::after { content: '📐'; font-size: 0.9rem; position: absolute; top: 4px; right: 4px; animation: blueprintFlash 1s infinite; }
+@keyframes blueprintFlash { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+/* Byte coding animation */
+#stage-byte.active .stage-icon { animation: byteBlink 0.4s steps(1) infinite; }
+@keyframes byteBlink { 0%,49%{filter:brightness(1);} 50%,100%{filter:brightness(1.6) drop-shadow(0 0 6px var(--byte));} }
+
+/* Scout scanning animation */
+#stage-scout.active .stage-icon { animation: scoutScan 1.2s ease-in-out infinite; }
+@keyframes scoutScan { 0%{transform:translateX(-4px) rotate(-5deg);} 50%{transform:translateX(4px) rotate(5deg);} 100%{transform:translateX(-4px) rotate(-5deg);} }
+
+/* Shield pulsing animation */
+#stage-shield.active .stage-icon { animation: shieldPulse 0.8s ease-in-out infinite; }
+@keyframes shieldPulse { 0%,100%{transform:scale(1);filter:drop-shadow(0 0 4px var(--shield));} 50%{transform:scale(1.15);filter:drop-shadow(0 0 12px var(--shield));} }
+
+/* Template match banner */
+.template-match-banner {
+  display: none;
+  background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.08));
+  border: 1.5px solid rgba(16,185,129,0.3);
+  border-radius: var(--r-md);
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--green);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.template-match-banner.visible { display: flex; }
+.template-badge {
+  background: rgba(16,185,129,0.15);
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* Instant preview pill */
+.instant-preview-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.instant-preview-btn:hover { filter: brightness(1.1); }
 .build-progress { margin-top: 16px; height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
 .build-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--snap), var(--cyan)); border-radius: 100px; transition: width 0.5s ease; }
 
@@ -319,6 +378,43 @@ footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex;
 @keyframes celebIn { from{opacity:0;transform:scale(0.5)translateY(30px);}to{opacity:1;transform:scale(1)translateY(0);} }
 @keyframes fadeIn { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
 .fade-in { animation: fadeIn 0.4s ease both; }
+
+/* TEMPLATE MATCH BANNER */
+.template-match-banner {
+  display: none;
+  background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.06));
+  border: 1.5px solid rgba(16,185,129,0.25);
+  border-radius: var(--r-md);
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--green);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.template-match-banner.visible { display: flex; }
+.template-badge {
+  background: rgba(16,185,129,0.12);
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.instant-preview-btn {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.instant-preview-btn:hover { filter: brightness(1.1); }
 </style>
 </head>
 <body class="kid">
@@ -352,9 +448,9 @@ footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex;
 
   <!-- HERO -->
   <section id="heroSection">
-    <div class="nym-hello">
-      <span class="nym-bounce">🐇</span>
-      Hi! I'm Nym — What do you want to build today?
+    <div class="nym-hello" id="nymHello">
+      <span id="nymLogoSlot" class="nym-bounce">🐇</span>
+      <span id="nymHelloText">Hi! I'm Nym — What do you want to build today?</span>
     </div>
     <h1 class="hero-title" id="heroTitle">
       Turn your idea into a<br/><em>real, playable app.</em>
@@ -514,9 +610,17 @@ footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex;
   <div class="projects-list" id="projectsList"></div>
 </div>
 
+<!-- NymbleLogic Module System — loaded before main script -->
+<script src="/static/js/nl-assets.js"></script>
+<script src="/static/js/nl-mechanics.js"></script>
+<script src="/static/js/nl-templates.js"></script>
+<script src="/static/js/nl-router.js"></script>
+<script src="/static/js/nl-specs.js"></script>
+<script src="/static/js/nl-nym.js"></script>
+
 <footer>
   <span>NymbleLogic by <strong>Christopher Hughes</strong> · The Good Neighbor Guard</span>
-  <span style="opacity:0.6;">Powered by House of AI · 🐇 Nym Jr.</span>
+  <span style="opacity:0.6;" id="footerNym">Powered by House of AI · 🐇 Nym Jr.</span>
 </footer>
 
 <script>
@@ -565,11 +669,13 @@ function applyMode() {
   document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
   document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
   if (currentMode === 'kid') {
+    nymEnterKidMode();
     document.getElementById('heroTitle').innerHTML = 'Turn your idea into a<br/><em>real, playable app.</em>';
     document.getElementById('taskInput').placeholder = 'Example: A space ninja game where you collect magical pizzas 🍕🥷';
     document.getElementById('buildBtn').textContent  = '🚀 BUILD MY APP';
     document.getElementById('stageHeaderText').textContent = '🏗️ The team is building your app…';
   } else {
+    nymExitKidMode();
     document.getElementById('heroTitle').innerHTML = 'Describe what to build.<br/><em>We\'ll ship it.</em>';
     document.getElementById('taskInput').placeholder = 'e.g. Single-file HTML snake game with high score tracking and mobile controls';
     document.getElementById('buildBtn').textContent  = '▶ EXECUTE BUILD';
@@ -604,6 +710,7 @@ function startRemix() {
   document.getElementById('taskInput').placeholder = 'What to change? e.g. "Add power-ups and a high score table"';
   document.getElementById('taskInput').focus();
   document.getElementById('heroSection').scrollIntoView({ behavior: 'smooth' });
+  if (nymIsActive()) NYM.trigger.remixReady();
 }
 
 function cancelRemix() {
@@ -620,60 +727,7 @@ function cancelRemix() {
 }
 
 // ── Main Build ───────────────────────────────────────────
-async function runBuild() {
-  const task = document.getElementById('taskInput').value.trim();
-  if (!task) {
-    alert(currentMode === 'kid' ? '✏️ Tell Nym what you want to build first!' : 'Task field cannot be empty.');
-    return;
-  }
 
-  document.getElementById('buildBtn').disabled = true;
-  document.getElementById('resultSection').classList.remove('visible');
-  document.getElementById('stageSection').classList.add('visible');
-  setProgress(0); resetStages(); startTimer();
-
-  let fullContext = document.getElementById('contextInput').value.trim();
-  if (isRemixing && remixContext) {
-    fullContext = '[REMIX — modify this existing app based on the user request. Keep it as ONE single HTML file]\n'
-      + remixContext + '\n\n' + fullContext;
-  }
-
-  const payload = {
-    task:         task,
-    context:      fullContext,
-    namespace:    document.getElementById('namespaceInput').value,
-    phase:        document.getElementById('phaseInput').value.trim(),
-    write_memory: false,
-    app_mode:     currentMode,   // ← kid | pro → backend injects tone modifier
-  };
-
-  // Animate stage cards while the single fetch is in flight
-  animateStages();
-
-  try {
-    const res = await fetch('/consult', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error('Server ' + res.status + ': ' + errText);
-    }
-    const data = await res.json();
-    completeAllStages();
-    setProgress(100);
-    processResults(data, task);
-  } catch (err) {
-    completeAllStages();
-    alert('Build failed: ' + err.message);
-    console.error(err);
-  } finally {
-    stopTimer();
-    document.getElementById('buildBtn').disabled = false;
-    if (isRemixing) cancelRemix();
-  }
-}
 
 function processResults(data, originalTask) {
   const agents    = data.results || [];
@@ -722,376 +776,181 @@ function processResults(data, originalTask) {
   document.getElementById('resultSection').classList.add('visible');
   document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Fire celebration
+  // Fire celebration + Nym
   setTimeout(() => triggerFireworks(lastBuiltTitle), 350);
+  if (nymIsActive()) setTimeout(() => NYM.trigger.buildSuccess(), 300);
 }
+async function runBuild() {
+  const task = document.getElementById('taskInput').value.trim();
+  if (!task) {
+    alert(currentMode === 'kid' ? '✏️ Tell Nym what you want to build first!' : 'Task field cannot be empty.');
+    return;
+  }
 
-// ── Code Extraction ──────────────────────────────────────
-function extractCode(src) {
-  if (!src) return null;
-  // 1. ```html ... ```
-  let m = src.match(/```html\s*([\s\S]*?)```/i);
-  if (m && m[1].trim()) return m[1].trim();
-  // 2. any ``` ... ```
-  m = src.match(/```(?:\w*)\s*([\s\S]*?)```/);
-  if (m && m[1].trim()) return m[1].trim();
-  // 3. Raw HTML
-  const t = src.trim();
-  if (/^<!doctype|^<html/i.test(t)) return t;
-  return null;
-}
+  if (nymIsActive()) NYM.trigger.buildStart();
+  document.getElementById('buildBtn').disabled = true;
+  document.getElementById('resultSection').classList.remove('visible');
+  document.getElementById('stageSection').classList.add('visible');
+  setProgress(0); resetStages(); startTimer();
 
-// ── Title Derivation ─────────────────────────────────────
-function deriveTitle(prompt) {
-  return prompt.replace(/[^a-zA-Z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ').trim()
-    .split(' ').slice(0, 5)
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-}
+  // Classify and build smart context
+  let fullContext = '';
+  if (window.NL_ROUTER) {
+    const classification = NL_ROUTER.classify(task);
+    const userCtx = document.getElementById('contextInput').value.trim();
+    let remixBase = '';
+    if (isRemixing && remixContext) {
+      remixBase = '[REMIX — modify this app per user request. Keep ONE HTML file]\n' + remixContext;
+    }
+    fullContext = NL_ROUTER.buildContext(classification, remixBase || userCtx);
 
-// ── Tab Switcher ─────────────────────────────────────────
-function switchTab(id, btnEl) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  btnEl.classList.add('active');
-}
-
-// ── Stage Animations ─────────────────────────────────────
-// These purely animate the UI — the actual build is one fetch call.
-const STAGE_TIMINGS = [
-  { name: 'atlas',  start: 0,    end: 18,  delay: 0    },
-  { name: 'byte',   start: 18,   end: 58,  delay: 1800 },
-  { name: 'scout',  start: 58,   end: 82,  delay: 4500 },
-  { name: 'shield', start: 82,   end: 96,  delay: 7200 },
-];
-let stageTimers = [];
-
-function resetStages() {
-  stageTimers.forEach(clearTimeout); stageTimers = [];
-  STAGE_TIMINGS.forEach(s => {
-    const el = document.getElementById('stage-' + s.name);
-    el.classList.remove('active', 'done');
-  });
-}
-
-function animateStages() {
-  STAGE_TIMINGS.forEach((s, i) => {
-    const t = setTimeout(() => {
-      // Mark previous done
-      if (i > 0) {
-        document.getElementById('stage-' + STAGE_TIMINGS[i-1].name).classList.remove('active');
-        document.getElementById('stage-' + STAGE_TIMINGS[i-1].name).classList.add('done');
+    // Instant iframe preview while backend builds
+    if (classification.templateId && classification.confidence >= 0.5) {
+      const previewHtml = NL_TEMPLATES.render(classification.templateId);
+      if (previewHtml) {
+        document.getElementById('previewIframe').srcdoc = previewHtml;
+        document.getElementById('resultSection').classList.add('visible');
       }
-      document.getElementById('stage-' + s.name).classList.add('active');
-      animateProgressTo(s.start, s.end);
-    }, s.delay);
-    stageTimers.push(t);
-  });
-}
+    }
+    hideBanner();
+  } else {
+    fullContext = document.getElementById('contextInput').value.trim();
+    if (isRemixing && remixContext) {
+      fullContext = '[REMIX]\n' + remixContext + '\n\n' + fullContext;
+    }
+  }
 
-function animateProgressTo(from, to) {
-  let v = from;
-  const step = () => {
-    if (v < to) { v = Math.min(v + 0.6, to); setProgress(v); requestAnimationFrame(step); }
+  const payload = {
+    task:         task,
+    context:      fullContext,
+    namespace:    document.getElementById('namespaceInput').value,
+    phase:        document.getElementById('phaseInput').value.trim(),
+    write_memory: false,
+    app_mode:     currentMode,
   };
-  requestAnimationFrame(step);
+
+  animateStages();
+
+  try {
+    const res = await fetch('/consult', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error('Server ' + res.status + ': ' + errText);
+    }
+    const data = await res.json();
+    completeAllStages();
+    setProgress(100);
+    processResults(data, task);
+  } catch (err) {
+    completeAllStages();
+    if (nymIsActive()) NYM.trigger.buildError();
+    alert('Build failed: ' + err.message);
+    console.error(err);
+  } finally {
+    stopTimer();
+    document.getElementById('buildBtn').disabled = false;
+    if (isRemixing) cancelRemix();
+  }
+}
+// ── Router: Template match banner ───────────────────────────
+function showMatchBanner(result) {
+  let banner = document.getElementById('templateMatchBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'templateMatchBanner';
+    banner.className = 'template-match-banner';
+    const remixBanner = document.getElementById('remixBanner');
+    if (remixBanner) remixBanner.parentNode.insertBefore(banner, remixBanner);
+  }
+  if (!result || !result.templateId || result.confidence < 0.3) {
+    banner.classList.remove('visible'); return;
+  }
+  const t = window.NL_TEMPLATES ? NL_TEMPLATES.get(result.templateId) : null;
+  const name = t ? t.title : result.templateId;
+  const pct  = Math.round(result.confidence * 100);
+  banner.innerHTML = `
+    <span>🎯 Template matched:</span>
+    <span class="template-badge">${result.category === 'game' ? '\u{1F3AE}' : '\u{1F4F1}'} ${name}</span>
+    <span style="opacity:0.7;">${pct}% confidence</span>
+    ${result.assets.length ? `<span style="opacity:0.55;font-size:0.78rem;">Assets: ${result.assets.slice(0,3).join(', ')}</span>` : ''}
+    <button class="instant-preview-btn" onclick="previewTemplate('${result.templateId}')">\u{1F441}\uFE0F Preview</button>
+  `;
+  banner.classList.add('visible');
 }
 
-function completeAllStages() {
-  stageTimers.forEach(clearTimeout); stageTimers = [];
-  STAGE_TIMINGS.forEach(s => {
-    const el = document.getElementById('stage-' + s.name);
-    el.classList.remove('active'); el.classList.add('done');
-  });
-  setProgress(100);
+function hideBanner() {
+  const b = document.getElementById('templateMatchBanner');
+  if (b) b.classList.remove('visible');
 }
 
-function setProgress(pct) {
-  document.getElementById('progressBar').style.width = pct + '%';
-}
-
-// ── Timer ────────────────────────────────────────────────
-function startTimer() {
-  elapsedSecs = 0;
-  const el = document.getElementById('timerEl');
-  el.textContent = '⏱ 0s';
-  timerInterval = setInterval(() => { elapsedSecs++; el.textContent = '⏱ ' + elapsedSecs + 's'; }, 1000);
-}
-function stopTimer() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  document.getElementById('timerEl').textContent = '⏱ ' + elapsedSecs + 's';
-}
-
-// ── Action Buttons ───────────────────────────────────────
-function playApp() {
-  const code = lastBuiltCode;
-  if (!code) { alert('Build an app first!'); return; }
-  const html = extractCode(code) || code;
+function previewTemplate(templateId) {
+  if (!window.NL_TEMPLATES) return;
+  const html = NL_TEMPLATES.render(templateId);
+  if (!html) return;
   const blob = new Blob([html], { type: 'text/html' });
   const url  = URL.createObjectURL(blob);
   const win  = window.open(url, '_blank');
-  if (!win) alert('Pop-up blocked! Please allow pop-ups for this site.');
+  if (!win) alert('Allow pop-ups to preview templates.');
   setTimeout(() => URL.revokeObjectURL(url), 15000);
 }
 
-function downloadApp() {
-  const code = lastBuiltCode;
-  if (!code) { alert('Build an app first!'); return; }
-  const html     = extractCode(code) || code;
-  const fileName = (lastBuiltTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'my_app') + '.html';
-  const blob = new Blob([html], { type: 'text/html' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-}
-
-function copyCode() {
-  const code = document.getElementById('codeOutput').textContent;
-  if (!code || code.startsWith('// Code will')) { alert('No code to copy yet.'); return; }
-  navigator.clipboard.writeText(code).then(() => {
-    const btn = document.getElementById('copyBtn');
-    const orig = btn.textContent;
-    btn.textContent = '✅ Copied!';
-    setTimeout(() => btn.textContent = orig, 2000);
-  }).catch(() => alert('Clipboard unavailable — copy manually from the Code tab.'));
-}
-
-function clearAll() {
-  document.getElementById('taskInput').value = '';
-  document.getElementById('contextInput').value = '';
-  document.getElementById('timerEl').textContent = '';
-  stopTimer();
-  document.getElementById('stageSection').classList.remove('visible');
-  document.getElementById('resultSection').classList.remove('visible');
-  resetStages(); setProgress(0); cancelRemix();
-  lastBuiltCode = ''; lastBuiltTitle = '';
-}
-
-function resetToHome() {
-  clearAll();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 // ═══════════════════════════════════════════════════════
-// FIREWORKS ENGINE
+// NYM INTEGRATION — Kid Mode only
+// The Good Neighbor Guard — Christopher Hughes
 // ═══════════════════════════════════════════════════════
-let fwCanvas, fwCtx, fwParticles = [], fwAF;
 
-function triggerFireworks(appTitle) {
-  const overlay = document.getElementById('fwOverlay');
-  fwCanvas = document.getElementById('fwCanvas');
-  fwCtx    = fwCanvas.getContext('2d');
-  resizeFW();
-  fwParticles = [];
-  document.getElementById('celebText').textContent =
-    (appTitle ? appTitle + ' is' : 'Your app is') + ' Ready! 🎉';
-  overlay.classList.add('active');
-  launchBurst(); setTimeout(launchBurst, 550); setTimeout(launchBurst, 1050); setTimeout(launchBurst, 1550);
-  fwAF = requestAnimationFrame(drawFW);
-  setTimeout(stopFireworks, 2800);
+function nymIsActive() {
+  return currentMode === 'kid' && window.NYM;
 }
 
-function stopFireworks() {
-  document.getElementById('fwOverlay').classList.remove('active');
-  if (fwAF) { cancelAnimationFrame(fwAF); fwAF = null; }
-  fwParticles = [];
+function nymEnterKidMode() {
+  if (!window.NYM) return;
+  const slot = document.getElementById('nymLogoSlot');
+  if (slot) slot.innerHTML = NYM.LOGO_SVG;
+  const txt = document.getElementById('nymHelloText');
+  if (txt) txt.textContent = NYM.getNymPhrase('greeting');
+  NYM.runOnboarding();
+  NYM.watchInactivity();
 }
 
-function resizeFW() {
-  if (fwCanvas) { fwCanvas.width = window.innerWidth; fwCanvas.height = window.innerHeight; }
+function nymExitKidMode() {
+  if (!window.NYM) return;
+  NYM.trigger.kidModeExit();
+  const slot = document.getElementById('nymLogoSlot');
+  if (slot) slot.innerHTML = '🐇';
 }
-window.addEventListener('resize', resizeFW);
 
-function launchBurst() {
-  const cx = fwCanvas.width  * (0.2 + Math.random() * 0.6);
-  const cy = fwCanvas.height * (0.15 + Math.random() * 0.4);
-  const palette = ['#7c3aed','#a78bfa','#10b981','#f59e0b','#f43f5e','#06b6d4','#fff','#fbbf24'];
-  const color   = palette[Math.floor(Math.random() * palette.length)];
-  const count   = 55 + Math.floor(Math.random() * 30);
-  for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count;
-    const speed = 2 + Math.random() * 5.5;
-    fwParticles.push({
-      x: cx, y: cy,
-      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-      alpha: 1, color,
-      r:     1.5 + Math.random() * 2.5,
-      grav:  0.055 + Math.random() * 0.04,
-      decay: 0.014 + Math.random() * 0.012,
+// ── Single load listener: router debounce + Nym boot ────────
+window.addEventListener('load', () => {
+  const ti = document.getElementById('taskInput');
+  if (ti) {
+    ti.addEventListener('input', () => {
+      if (nymIsActive()) NYM.trigger.typingStart();
+      clearTimeout(window._nlDebounce);
+      window._nlDebounce = setTimeout(() => {
+        const prompt = ti.value.trim();
+        if (!prompt) { hideBanner(); return; }
+        if (window.NL_ROUTER) showMatchBanner(NL_ROUTER.classify(prompt));
+      }, 400);
+    });
+    ti.addEventListener('focus', () => {
+      if (nymIsActive()) {
+        NYM.setState('point_target');
+        NYM.speak(NYM.getNymPhrase('prompt_invite'), true, 3500);
+      }
     });
   }
-}
+  if (currentMode === 'kid') nymEnterKidMode();
+});
 
-function drawFW() {
-  fwCtx.fillStyle = 'rgba(0,0,0,0.18)';
-  fwCtx.fillRect(0, 0, fwCanvas.width, fwCanvas.height);
-  fwParticles.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.vy += p.grav; p.alpha -= p.decay;
-    if (p.alpha <= 0) return;
-    fwCtx.save();
-    fwCtx.globalAlpha = Math.max(p.alpha, 0);
-    fwCtx.beginPath();
-    fwCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    fwCtx.fillStyle = p.color;
-    fwCtx.fill();
-    fwCtx.restore();
-  });
-  fwParticles = fwParticles.filter(p => p.alpha > 0);
-  fwAF = requestAnimationFrame(drawFW);
-}
-
-// ═══════════════════════════════════════════════════════
-// PROJECT PERSISTENCE (localStorage)
-// ═══════════════════════════════════════════════════════
-const STORAGE_KEY = 'nymblelogic_v1_projects';
-
-function loadProjects() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
-}
-function saveProjects(list) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) { console.warn(e); }
-}
-
-function saveProject({ title, prompt, code, mode, summary, actionable, remixed }) {
-  const projects = loadProjects();
-
-  // If remixing existing project — add prior state as a version
-  if (remixed && currentProjectId) {
-    const existing = projects.find(p => p.id === currentProjectId);
-    if (existing) {
-      if (!existing.versions) existing.versions = [];
-      existing.versions.push({
-        vNum:   (existing.versions.length + 1),
-        prompt: existing.prompt,
-        code:   existing.code,
-        ts:     existing.updatedAt,
-      });
-      existing.prompt    = prompt;
-      existing.code      = code;
-      existing.updatedAt = Date.now();
-      saveProjects(projects);
-      return existing.id;
-    }
-  }
-
-  // New project
-  const id = 'p_' + Date.now();
-  projects.unshift({ id, title, prompt, code, mode, summary, actionable, versions: [], createdAt: Date.now(), updatedAt: Date.now() });
-  if (projects.length > 50) projects.splice(50);
-  saveProjects(projects);
-  return id;
-}
-
-function loadProject(project, versionIndex) {
-  let code   = project.code;
-  let title  = project.title;
-  let prompt = project.prompt;
-
-  if (versionIndex !== undefined && project.versions && project.versions[versionIndex]) {
-    const v = project.versions[versionIndex];
-    code = v.code; prompt = v.prompt;
-    title = project.title + ' (V' + v.vNum + ')';
-  }
-
-  lastBuiltCode  = code;
-  lastBuiltTitle = title;
-  currentProjectId = project.id;
-
-  document.getElementById('resultAppName').textContent = title;
-  document.getElementById('taskInput').value           = prompt;
-  document.getElementById('codeOutput').textContent    = code;
-
-  const html = extractCode(code) || code;
-  if (html) document.getElementById('previewIframe').srcdoc = html;
-
-  document.getElementById('qaSummary').textContent    = project.summary    || '—';
-  document.getElementById('qaActionable').textContent = project.actionable || '—';
-
-  document.getElementById('resultSection').classList.add('visible');
-  closeProjects();
-  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
-}
-
-// ── Drawer ────────────────────────────────────────────────
-function openProjects() {
-  renderProjectsList();
-  document.getElementById('projectsDrawer').classList.add('open');
-  document.getElementById('drawerOverlay').classList.add('visible');
-}
-function closeProjects() {
-  document.getElementById('projectsDrawer').classList.remove('open');
-  document.getElementById('drawerOverlay').classList.remove('visible');
-}
-
-function renderProjectsList() {
-  const list     = document.getElementById('projectsList');
-  const projects = loadProjects();
-  if (!projects.length) {
-    list.innerHTML = '<div class="projects-empty">🐇 No projects yet!<br/>Build something and it\'ll appear here.</div>';
-    return;
-  }
-  list.innerHTML = '';
-  projects.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'proj-item';
-    const ts = new Date(p.updatedAt).toLocaleDateString();
-
-    let versHtml = '';
-    if (p.versions && p.versions.length > 0) {
-      versHtml = '<div class="proj-versions">';
-      p.versions.forEach((v, idx) => {
-        versHtml += `<span class="ver-chip" data-idx="${idx}" data-pid="${p.id}">V${v.vNum}</span>`;
-      });
-      versHtml += `<span class="ver-chip curr">V${p.versions.length + 1} ★</span></div>`;
-    }
-
-    div.innerHTML = `
-      <div class="proj-name">${esc(p.title)}
-        <button class="proj-del" data-pid="${p.id}" title="Delete">🗑</button>
-      </div>
-      <div class="proj-meta">
-        <span class="proj-badge">${p.mode === 'kid' ? '🧸 Kid' : '💼 Pro'}</span>
-        <span>${ts}</span>
-      </div>${versHtml}`;
-
-    // Load latest on main click
-    div.addEventListener('click', (e) => {
-      if (e.target.classList.contains('ver-chip') && !e.target.classList.contains('curr')) return;
-      if (e.target.classList.contains('proj-del')) return;
-      loadProject(p);
-    });
-    // Version chip clicks
-    div.querySelectorAll('.ver-chip:not(.curr)').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        loadProject(p, parseInt(chip.dataset.idx));
-      });
-    });
-    // Delete button
-    div.querySelector('.proj-del').addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!confirm('Delete "' + p.title + '"?')) return;
-      const updated = loadProjects().filter(x => x.id !== p.id);
-      saveProjects(updated);
-      renderProjectsList();
-    });
-
-    list.appendChild(div);
-  });
-}
-
-function esc(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── Boot ─────────────────────────────────────────────────
-applyMode();
+// ── Global game win hook ──────────────────────────────────────
+window.nymGameWin = function() {
+  if (nymIsActive()) NYM.trigger.gameWin();
+};
 </script>
 </body>
 </html>
