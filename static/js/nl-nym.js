@@ -4,7 +4,7 @@
  * The Good Neighbor Guard — Christopher Hughes
  *
  * Asset-based mascot system. No SVG drawing.
- * Assets live at /static/nym/nym_[state].svg
+ * Assets live at /static/nym_[state].svg
  */
 
 window.NYM = (() => {
@@ -14,15 +14,15 @@ window.NYM = (() => {
   // ASSETS
   // ═══════════════════════════════════════════════════
   const ASSETS = {
-    idle:      '/static/nym/nym_idle.svg',
-    greet:     '/static/nym/nym_greet.svg',
-    point:     '/static/nym/nym_point.svg',
-    think:     '/static/nym/nym_think.svg',
-    cheer:     '/static/nym/nym_cheer.svg',
-    error:     '/static/nym/nym_error.svg',
-    celebrate: '/static/nym/nym_celebrate.svg',
-    icon:      '/static/nym/nym_icon.svg',
-    head:      '/static/nym/nym_head.svg',
+    idle:      '/static/nym_idle.svg',
+    greet:     '/static/nym_greet.svg',
+    point:     '/static/nym_point.svg',
+    think:     '/static/nym_think.svg',
+    cheer:     '/static/nym_cheer.svg',
+    error:     '/static/nym_error.svg',
+    celebrate: '/static/nym_celebrate.svg',
+    icon:      '/static/nym_icon.svg',
+    head:      '/static/nym_head.svg',
   };
 
   const STATE_ANIM = {
@@ -596,6 +596,6 @@ window.NYM = (() => {
     getNymPhrase,
     trigger,
     ASSETS,
-    LOGO_HTML: `<img src="/static/nym/nym_icon.svg" alt="Nym" style="width:26px;height:26px;object-fit:contain;vertical-align:middle;"/>`,
+    LOGO_HTML: `<img src="/static/nym_icon.svg" alt="Nym" style="width:26px;height:26px;object-fit:contain;vertical-align:middle;"/>`,
   };
 })();
