@@ -3,236 +3,369 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>House of AI v2 — Veracore</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet"/>
+<title>House of AI — App Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --bg:        #0a0c10;
-    --surface:   #111318;
-    --border:    #1e2330;
-    --claude:    #d4a843;
-    --gpt:       #10a37f;
-    --gemini:    #4285f4;
-    --consensus: #c678dd;
-    --action:    #e06c75;
-    --memory:    #56b6c2;
-    --text:      #cdd6f4;
-    --muted:     #6c7086;
-    --danger:    #f38ba8;
-    --mono:      'Share Tech Mono', monospace;
-    --sans:      'Barlow', sans-serif;
+    --bg:          #f0f4f8;
+    --surface:     #ffffff;
+    --border:      #e2e8f0;
+    --architect:   #ff9f43; 
+    --builder:     #00b894; 
+    --tester:      #0984e3; 
+    --pm:          #6c5ce7; 
+    --action:      #fd79a8; 
+    --memory:      #00cec9; 
+    --text-main:   #2d3436;
+    --text-muted:  #636e72;
+    --danger:      #d63031;
+    --font-main:   'Nunito', sans-serif;
+    --font-code:   'Fira Code', monospace;
   }
+  
+  /* PRO MODE COLORS */
+  body.pro-mode {
+    --bg:          #0a0c10;
+    --surface:     #111318;
+    --border:      #1e2330;
+    --text-main:   #cdd6f4;
+    --text-muted:  #6c7086;
+    --pm:          #c678dd;
+    --builder:     #10a37f;
+    --architect:   #d4a843;
+    --tester:      #4285f4;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
-
-  header {
-    padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface);
+  body { 
+    background: var(--bg); 
+    color: var(--text-main); 
+    font-family: var(--font-main); 
+    min-height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    transition: background 0.3s, color 0.3s;
   }
-  .logo { font-family: var(--mono); font-size: 1rem; color: var(--claude); letter-spacing: 2px; }
-  .logo span { color: var(--muted); }
-  .badge { font-family: var(--mono); font-size: 0.62rem; background: #1a1d25; border: 1px solid var(--border); color: var(--muted); padding: 2px 7px; border-radius: 4px; letter-spacing: 1px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gpt); box-shadow: 0 0 6px var(--gpt); margin-left: auto; animation: pulse 2s infinite; }
 
-  main { flex: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; max-width: 1500px; width: 100%; margin: 0 auto; }
+  /* Header & Toggle */
+  header {
+    padding: 16px 30px;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    display: flex; 
+    align-items: center; 
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  }
+  .logo { font-size: 1.5rem; font-weight: 900; color: var(--pm); letter-spacing: -0.5px; }
+  .logo span { color: var(--text-muted); font-weight: 600; }
+  
+  .mode-toggle {
+    margin-left: auto;
+    display: flex;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .mode-btn {
+    font-family: var(--font-main);
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: var(--pm);
+    color: white;
+  }
+
+  main { 
+    flex: 1; padding: 30px 24px; display: flex; flex-direction: column; 
+    gap: 24px; max-width: 1400px; width: 100%; margin: 0 auto; 
+  }
 
   /* Input panel */
-  .input-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-  .panel-label { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .row { display: flex; gap: 12px; align-items: flex-start; }
-  .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-  .col-narrow { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
+  .input-panel { 
+    background: var(--surface); border-radius: 20px; padding: 24px; 
+    box-shadow: 0 8px 30px rgba(0,0,0,0.04); display: flex; 
+    flex-direction: column; gap: 16px; border: 2px solid var(--border);
+  }
+  .panel-label { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+  .panel-subtext { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+  
+  .row { display: flex; gap: 20px; align-items: flex-start; }
+  .col { flex: 1; display: flex; flex-direction: column; }
+  
+  /* Advanced Settings */
+  details.advanced-settings {
+    margin-top: 10px; background: var(--bg); border-radius: 12px;
+    padding: 10px 15px; border: 1px solid var(--border);
+  }
+  details.advanced-settings summary {
+    font-weight: 700; color: var(--text-muted); cursor: pointer;
+    font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  details.advanced-settings summary::-webkit-details-marker { display: none; }
+  .adv-row { display: flex; gap: 15px; margin-top: 15px; }
 
   textarea, select, input[type="text"] {
-    background: #0d0f14; border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text); font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
-    padding: 10px; width: 100%; transition: border-color 0.2s;
+    background: var(--bg); border: 2px solid var(--border); border-radius: 12px;
+    color: var(--text-main); font-family: var(--font-main); font-size: 1rem; 
+    padding: 14px; width: 100%; transition: all 0.2s;
   }
-  textarea:focus, select:focus { outline: none; border-color: var(--claude); }
-  textarea#task { min-height: 90px; resize: vertical; }
-  textarea#context { min-height: 60px; resize: vertical; }
-  select { cursor: pointer; }
+  textarea:focus, select:focus, input[type="text"]:focus { 
+    outline: none; border-color: var(--pm); background: var(--surface);
+  }
+  textarea#task { min-height: 120px; resize: vertical; font-weight: 600; }
+  textarea#context { min-height: 80px; resize: vertical; }
 
-  .btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  button { font-family: var(--mono); font-size: 0.82rem; letter-spacing: 1px; cursor: pointer; border-radius: 6px; border: none; padding: 10px 20px; transition: all 0.2s; }
-  #submitBtn { background: var(--claude); color: #0a0c10; font-weight: 700; min-width: 150px; }
+  .btn-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  button { 
+    font-family: var(--font-main); font-size: 1rem; font-weight: 800;
+    cursor: pointer; border-radius: 12px; border: none; padding: 14px 28px; 
+    transition: transform 0.1s, filter 0.2s; 
+  }
+  button:active { transform: scale(0.97); }
+  
+  #submitBtn { background: linear-gradient(135deg, var(--pm), #a29bfe); color: white; }
+  body.pro-mode #submitBtn { background: var(--pm); }
   #submitBtn:hover { filter: brightness(1.1); }
-  #submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-  #clearBtn { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  #clearBtn:hover { border-color: var(--muted); color: var(--text); }
-  #timer { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+  #submitBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  
+  #clearBtn { background: transparent; border: 2px solid var(--border); color: var(--text-muted); }
+  #clearBtn:hover { border-color: var(--text-main); color: var(--text-main); }
+  
+  #timer { font-size: 0.9rem; font-weight: 800; color: var(--pm); }
 
-  label.check { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); cursor: pointer; }
-  input[type="checkbox"] { accent-color: var(--memory); width: 14px; height: 14px; }
+  label.check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+  input[type="checkbox"] { accent-color: var(--pm); width: 18px; height: 18px; }
 
   /* Agent grid */
-  .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  @media (max-width: 860px) { .agents-grid { grid-template-columns: 1fr; } }
+  .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .agents-grid { grid-template-columns: 1fr; } }
 
-  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 240px; }
-  .agent-card.claude  { border-top: 2px solid var(--claude); }
-  .agent-card.gpt     { border-top: 2px solid var(--gpt); }
-  .agent-card.gemini  { border-top: 2px solid var(--gemini); }
+  .agent-card { 
+    background: var(--surface); border-radius: 16px; display: flex; flex-direction: column; 
+    min-height: 300px; border: 2px solid var(--border); overflow: hidden;
+  }
+  
+  .agent-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 2px solid var(--border); background: var(--bg); }
+  .agent-name { font-size: 1.1rem; font-weight: 900; }
+  .claude .agent-name { color: var(--architect); }
+  .gpt    .agent-name { color: var(--builder); }
+  .gemini .agent-name { color: var(--tester); }
+  
+  .agent-indicator { width: 10px; height: 10px; border-radius: 50%; margin-left: auto; }
+  .claude .agent-indicator { background: var(--architect); }
+  .gpt    .agent-indicator { background: var(--builder); }
+  .gemini .agent-indicator { background: var(--tester); }
+  .agent-indicator.active { animation: pulse 1s infinite; box-shadow: 0 0 8px currentColor; }
 
-  .agent-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-  .agent-name { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 2px; font-weight: 600; }
-  .claude .agent-name { color: var(--claude); }
-  .gpt    .agent-name { color: var(--gpt); }
-  .gemini .agent-name { color: var(--gemini); }
-  .agent-indicator { width: 6px; height: 6px; border-radius: 50%; margin-left: auto; }
-  .claude .agent-indicator { background: var(--claude); }
-  .gpt    .agent-indicator { background: var(--gpt); }
-  .gemini .agent-indicator { background: var(--gemini); }
-  .agent-indicator.active { animation: pulse 1s infinite; }
-
-  .agent-body { padding: 12px 14px; font-size: 0.8rem; line-height: 1.7; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; max-height: 360px; }
-  .agent-body.empty { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; }
-  .agent-body.error { color: var(--danger); font-family: var(--mono); font-size: 0.72rem; }
+  .agent-body { 
+    padding: 16px; font-size: 0.95rem; line-height: 1.6; flex: 1; 
+    overflow-y: auto; white-space: pre-wrap; word-break: break-word; 
+    max-height: 400px; font-family: var(--font-code);
+  }
+  .agent-body.empty { 
+    color: var(--text-muted); font-family: var(--font-main); font-size: 1.2rem; 
+    font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+  .agent-body.error { color: var(--danger); font-weight: 700; }
 
   /* Consensus sections */
-  .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 860px) { .consensus-grid { grid-template-columns: 1fr; } }
+  .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .consensus-grid { grid-template-columns: 1fr; } }
 
-  .c-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: none; }
-  .c-panel.visible { display: block; }
-  .c-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-  .c-title { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2px; }
-  .c-body { padding: 14px; font-size: 0.82rem; line-height: 1.8; white-space: pre-wrap; }
-
-  .panel-summary     { border-top: 2px solid var(--consensus); }
-  .panel-summary     .c-title { color: var(--consensus); }
-  .panel-disagree    { border-top: 2px solid var(--muted); }
-  .panel-disagree    .c-title { color: var(--muted); }
-  .panel-decision    { border-top: 2px solid var(--gpt); }
-  .panel-decision    .c-title { color: var(--gpt); }
-  .panel-memory      { border-top: 2px solid var(--memory); }
-  .panel-memory      .c-title { color: var(--memory); }
-
-  /* Actionable prompt — full width, copyable */
-  .panel-action { border-top: 2px solid var(--action); grid-column: 1 / -1; }
-  .panel-action .c-title { color: var(--action); }
-  .action-body { padding: 14px; position: relative; }
-  .action-text { font-family: var(--mono); font-size: 0.8rem; line-height: 1.7; white-space: pre-wrap; background: #0d0f14; border: 1px solid var(--border); border-radius: 6px; padding: 12px; max-height: 280px; overflow-y: auto; }
-  #copyBtn {
-    margin-top: 10px; background: var(--action); color: #0a0c10;
-    font-weight: 700; padding: 8px 18px; font-size: 0.75rem;
+  .c-panel { 
+    background: var(--surface); border-radius: 16px; display: none; 
+    overflow: hidden; border: 2px solid var(--border);
   }
-  #copyBtn:hover { filter: brightness(1.1); }
+  .c-panel.visible { display: block; }
+  
+  .c-header { 
+    display: flex; align-items: center; gap: 10px; padding: 14px 18px; 
+    background: var(--bg); border-bottom: 2px solid var(--border);
+  }
+  .c-title { font-size: 1.05rem; font-weight: 900; }
+  .c-body { padding: 18px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
 
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  @keyframes spin  { to { transform: rotate(360deg); } }
-  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--claude); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+  .panel-summary .c-title { color: var(--architect); }
+  .panel-disagree .c-title { color: var(--danger); }
+  .panel-decision .c-title { color: var(--builder); }
+  .panel-memory .c-title { color: var(--memory); }
 
-  footer { padding: 10px 24px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 0.62rem; color: var(--muted); text-align: center; letter-spacing: 1px; }
+  .panel-action { border-color: var(--action); grid-column: 1 / -1; }
+  .panel-action .c-title { color: var(--action); }
+  .action-body { padding: 18px; position: relative; }
+  .action-text { 
+    font-family: var(--font-code); font-size: 0.95rem; line-height: 1.6; 
+    white-space: pre-wrap; background: #2d3436; color: #dfe6e9;
+    border-radius: 12px; padding: 20px; max-height: 350px; overflow-y: auto; 
+  }
+  #copyBtn { margin-top: 15px; background: var(--action); color: white; font-size: 0.9rem; }
+
+  @keyframes pulse { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:0.5; transform:scale(1.2);} }
+
+  footer { padding: 20px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-align: center; }
 </style>
 </head>
-<body>
+<body class="kid-mode">
 
 <header>
-  <div class="logo">HOUSE<span>::</span>OF<span>::</span>AI</div>
-  <div class="badge">V2</div>
-  <div class="badge">VERACORE</div>
-  <div class="badge">THE GOOD NEIGHBOR GUARD</div>
-  <div class="status-dot"></div>
+  <div class="logo" id="uiLogo">HOUSE<span>::</span>OF<span>::</span>AI 🪄</div>
+  <div class="mode-toggle">
+    <button id="btnKid" class="mode-btn active" onclick="setMode('kid')">🧸 Kid Mode</button>
+    <button id="btnPro" class="mode-btn" onclick="setMode('pro')">💼 Pro Mode</button>
+  </div>
 </header>
 
 <main>
-
-  <!-- Input -->
   <div class="input-panel">
-    <div class="row">
-      <div class="col">
-        <div class="panel-label">Task / Question</div>
-        <textarea id="task" placeholder="Paste your Veracore phase task, code question, or engineering prompt..."></textarea>
-      </div>
-      <div class="col">
-        <div class="panel-label">Context (optional)</div>
-        <textarea id="context" placeholder="Prior phase output, relevant code, or background context..."></textarea>
-      </div>
-      <div class="col-narrow">
-        <div class="panel-label">Namespace</div>
-        <select id="namespace">
-          <option value="veracore">veracore</option>
-          <option value="lylo">lylo</option>
-          <option value="general">general</option>
-        </select>
-        <div class="panel-label" style="margin-top:8px;">Phase</div>
-        <input type="text" id="phase" placeholder="e.g. 6" style="padding:8px;"/>
-      </div>
+    <div class="col">
+      <div class="panel-label" id="uiTitle">✨ What do you want to build today?</div>
+      <div class="panel-subtext" id="uiSubtext">Tell the team what kind of app or game you want. Be as creative as you like!</div>
+      <textarea id="task" placeholder="Example: I want to build a matching game for couples..."></textarea>
     </div>
+    
+    <details class="advanced-settings">
+      <summary>⚙️ Advanced Details (Optional)</summary>
+      <div class="adv-row">
+        <div class="col">
+          <div class="panel-subtext" style="font-weight:700;">Extra Context or Rules:</div>
+          <textarea id="context" placeholder="Any specific colors, rules, or coding languages you want us to use?"></textarea>
+        </div>
+        <div class="col" style="flex: 0.5;">
+          <div class="panel-subtext" style="font-weight:700;">Namespace</div>
+          <select id="namespace">
+            <option value="house_of_ai">house_of_ai</option>
+            <option value="lylo">lylo</option>
+            <option value="veracore">veracore</option>
+          </select>
+          <div class="panel-subtext" style="font-weight:700; margin-top:12px;">Phase</div>
+          <input type="text" id="phase" placeholder="e.g. MVP, Beta"/>
+        </div>
+      </div>
+    </details>
+
     <div class="btn-row">
-      <button id="submitBtn" onclick="consult()">▶ ASK THE HOUSE</button>
-      <button id="clearBtn" onclick="clearAll()">CLEAR</button>
-      <label class="check">
+      <button id="submitBtn" onclick="consult()">🚀 BUILD MY APP!</button>
+      <button id="clearBtn" onclick="clearAll()">Start Over</button>
+      <label class="check" title="Saves important rules to memory">
         <input type="checkbox" id="writeMemory" checked/>
-        Write to memory
+        🧠 Save to Memory
       </label>
       <div id="timer"></div>
     </div>
   </div>
 
-  <!-- Agent panels -->
   <div class="agents-grid">
     <div class="agent-card claude">
-      <div class="agent-header"><div class="agent-name">CLAUDE</div><div class="agent-indicator" id="ind-claude"></div></div>
-      <div class="agent-body empty" id="body-claude">Waiting...</div>
+      <div class="agent-header"><div class="agent-name" id="nameClaude">🏗️ The Architect</div><div class="agent-indicator" id="ind-claude"></div></div>
+      <div class="agent-body empty" id="body-claude">Sleeping... 💤</div>
     </div>
     <div class="agent-card gpt">
-      <div class="agent-header"><div class="agent-name">GPT</div><div class="agent-indicator" id="ind-gpt"></div></div>
-      <div class="agent-body empty" id="body-gpt">Waiting...</div>
+      <div class="agent-header"><div class="agent-name" id="nameGpt">💻 The Builder</div><div class="agent-indicator" id="ind-gpt"></div></div>
+      <div class="agent-body empty" id="body-gpt">Sleeping... 💤</div>
     </div>
     <div class="agent-card gemini">
-      <div class="agent-header"><div class="agent-name">GEMINI</div><div class="agent-indicator" id="ind-gemini"></div></div>
-      <div class="agent-body empty" id="body-gemini">Waiting...</div>
+      <div class="agent-header"><div class="agent-name" id="nameGemini">🕵️‍♂️ The Tester</div><div class="agent-indicator" id="ind-gemini"></div></div>
+      <div class="agent-body empty" id="body-gemini">Sleeping... 💤</div>
     </div>
   </div>
 
-  <!-- Consensus sections -->
   <div class="consensus-grid">
-
     <div class="c-panel panel-summary" id="panelSummary">
-      <div class="c-header"><div class="c-title">◈ CONSENSUS SUMMARY</div></div>
+      <div class="c-header"><div class="c-title">📋 The Blueprint</div></div>
       <div class="c-body" id="bodySummary"></div>
     </div>
-
     <div class="c-panel panel-disagree" id="panelDisagree">
-      <div class="c-header"><div class="c-title">⚠ DISAGREEMENTS</div></div>
+      <div class="c-header"><div class="c-title">🔍 QA & Security Check</div></div>
       <div class="c-body" id="bodyDisagree"></div>
     </div>
-
     <div class="c-panel panel-decision" id="panelDecision">
-      <div class="c-header"><div class="c-title">✓ FINAL DECISION</div></div>
+      <div class="c-header"><div class="c-title">✅ Final Code Status</div></div>
       <div class="c-body" id="bodyDecision"></div>
     </div>
-
     <div class="c-panel panel-memory" id="panelMemory">
-      <div class="c-header"><div class="c-title">⬡ MEMORY WRITTEN</div></div>
+      <div class="c-header"><div class="c-title">🧠 Robot Memory Written</div></div>
       <div class="c-body" id="bodyMemory"></div>
     </div>
-
     <div class="c-panel panel-action" id="panelAction">
-      <div class="c-header"><div class="c-title">⚡ ACTIONABLE PROMPT</div></div>
+      <div class="c-header"><div class="c-title">🚀 Next Step for You</div></div>
       <div class="action-body">
         <div class="action-text" id="bodyAction"></div>
-        <button id="copyBtn" onclick="copyPrompt()">⧉ COPY PROMPT</button>
+        <button id="copyBtn" onclick="copyPrompt()">⧉ COPY THIS</button>
       </div>
     </div>
-
   </div>
 
 </main>
 
-<footer>THE GOOD NEIGHBOR GUARD — HOUSE OF AI v2 — PROTECTING VULNERABLE USERS THROUGH VERIFIED INTELLIGENCE</footer>
+<footer>BUILT BY CHRISTOPHER HUGHES & THE GOOD NEIGHBOR GUARD</footer>
 
 <script>
+  let currentMode = 'kid';
+  let kidPin = null;
   let timerInterval = null;
+
+  // Handles the PIN lock and UI swapping
+  function setMode(target) {
+    if (target === currentMode) return;
+
+    if (target === 'kid') {
+      let pin = prompt("Set a 4-digit PIN to lock Kid Mode to keep things safe:");
+      if (pin && pin.length >= 4) {
+        kidPin = pin;
+        currentMode = 'kid';
+        applyModeUI();
+      } else {
+        alert("You need at least 4 characters for a PIN.");
+      }
+    } else if (target === 'pro') {
+      if (kidPin) {
+        let entered = prompt("Enter your PIN to unlock Pro Mode:");
+        if (entered !== kidPin) {
+          alert("Incorrect PIN. Remaining in Kid Mode.");
+          return;
+        }
+        kidPin = null; // Unlocked
+      }
+      currentMode = 'pro';
+      applyModeUI();
+    }
+  }
+
+  function applyModeUI() {
+    document.body.className = currentMode + '-mode';
+    document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
+    document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
+
+    if (currentMode === 'kid') {
+      document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI 🪄';
+      document.getElementById('uiTitle').innerText = '✨ What do you want to build today?';
+      document.getElementById('uiSubtext').innerText = 'Tell the team what kind of app or game you want. Be as creative as you like!';
+      document.getElementById('nameClaude').innerText = '🏗️ The Architect';
+      document.getElementById('nameGpt').innerText = '💻 The Builder';
+      document.getElementById('nameGemini').innerText = '🕵️‍♂️ The Tester';
+    } else {
+      document.getElementById('uiLogo').innerHTML = 'HOUSE<span>::</span>OF<span>::</span>AI [PRO]';
+      document.getElementById('uiTitle').innerText = 'ENGINEERING TASK';
+      document.getElementById('uiSubtext').innerText = 'Provide technical specs, architecture requirements, or feature requests.';
+      document.getElementById('nameClaude').innerText = 'CLAUDE (Architect)';
+      document.getElementById('nameGpt').innerText = 'GPT (Engineer)';
+      document.getElementById('nameGemini').innerText = 'GEMINI (QA)';
+    }
+  }
 
   function setLoading(on) {
     const btn = document.getElementById('submitBtn');
     btn.disabled = on;
-    btn.textContent = on ? '⏳ CONSULTING...' : '▶ ASK THE HOUSE';
+    btn.textContent = on ? (currentMode === 'kid' ? '✨ ROBOTS WORKING...' : 'EXECUTING...') : (currentMode === 'kid' ? '🚀 BUILD MY APP!' : '▶ EXECUTE BUILD');
     ['ind-claude','ind-gpt','ind-gemini'].forEach(id => {
       document.getElementById(id).classList.toggle('active', on);
     });
@@ -246,6 +379,7 @@
 
   function setAgentBody(agent, text, mode = 'normal') {
     const el = document.getElementById(`body-${agent}`);
+    if(!el) return; 
     el.textContent = text;
     el.className = 'agent-body' + (mode === 'empty' ? ' empty' : mode === 'error' ? ' error' : '');
   }
@@ -262,7 +396,8 @@
     document.getElementById('context').value = '';
     document.getElementById('phase').value = '';
     document.getElementById('timer').textContent = '';
-    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, 'Waiting...', 'empty'));
+    const sleepTxt = currentMode === 'kid' ? 'Sleeping... 💤' : 'Awaiting prompt.';
+    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
     ['panelSummary','panelDisagree','panelDecision','panelMemory','panelAction'].forEach(id => {
       document.getElementById(id).classList.remove('visible');
     });
@@ -272,27 +407,30 @@
     const text = document.getElementById('bodyAction').textContent;
     navigator.clipboard.writeText(text).then(() => {
       const btn = document.getElementById('copyBtn');
-      btn.textContent = '✓ COPIED';
-      setTimeout(() => btn.textContent = '⧉ COPY PROMPT', 2000);
+      btn.textContent = '✅ COPIED!';
+      setTimeout(() => btn.textContent = '⧉ COPY THIS', 2000);
     });
   }
 
   async function consult() {
     const task = document.getElementById('task').value.trim();
-    if (!task) { alert('Enter a task first.'); return; }
+    if (!task) { alert('Please enter a task!'); return; }
 
     setLoading(true);
-    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, 'Thinking...', 'empty'));
+    const workTxt = currentMode === 'kid' ? 'Working hard! 🧠' : 'Generating...';
+    ['claude','gpt','gemini'].forEach(a => setAgentBody(a, workTxt, 'empty'));
     ['panelSummary','panelDisagree','panelDecision','panelMemory','panelAction'].forEach(id => {
       document.getElementById(id).classList.remove('visible');
     });
 
+    // PASSING THE MODE TO THE BACKEND
     const payload = {
       task,
       context:      document.getElementById('context').value.trim(),
       namespace:    document.getElementById('namespace').value,
       phase:        document.getElementById('phase').value.trim(),
       write_memory: document.getElementById('writeMemory').checked,
+      app_mode:     currentMode // "kid" or "pro"
     };
 
     try {
@@ -304,25 +442,27 @@
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
-      // Agent responses
       data.results.forEach(r => {
-        const key = r.agent.toLowerCase();
+        let key = 'claude';
+        const agentLower = r.agent.toLowerCase();
+        if (agentLower.includes('claude') || agentLower.includes('architect')) key = 'claude';
+        if (agentLower.includes('gpt') || agentLower.includes('builder')) key = 'gpt';
+        if (agentLower.includes('gemini') || agentLower.includes('tester')) key = 'gemini';
+        
         if (r.error) setAgentBody(key, `ERROR: ${r.error}`, 'error');
         else setAgentBody(key, r.response);
       });
 
-      // Consensus panels
       showPanel('panelSummary',  data.summary);
       showPanel('panelDisagree', data.disagreements);
       showPanel('panelDecision', data.final_decision);
       showPanel('panelAction',   data.actionable_prompt);
 
-      // Memory written panel
       if (data.memory_items && data.memory_items.length) {
         const lines = data.memory_items.map((m, i) => `${i+1}. ${m}`).join('\n');
         const writeStatus = data.memory_writes.every(w => w.ok)
-          ? '✓ All written to Pinecone'
-          : '⚠ Some writes failed';
+          ? '✅ Saved safely to memory'
+          : '⚠️ Had trouble saving some memories.';
         showPanel('panelMemory', lines + '\n\n' + writeStatus);
       }
 
