@@ -276,11 +276,31 @@ window.NYM = (() => {
     _widget.appendChild(_img);
     document.body.appendChild(_widget);
 
+    // Enter animation — guard so early setState calls inside runOnboarding
+    // don't fire animationend before the slide-in finishes
+    let _enterDone = false;
     _widget.classList.add('nym-enter');
-    _widget.addEventListener('animationend', () => {
+    const _onEnterEnd = (e) => {
+      if (e.target !== _img) return;
+      if (_enterDone) return;
+      _enterDone = true;
+      _widget.removeEventListener('animationend', _onEnterEnd);
       _widget.classList.remove('nym-enter');
-      _widget.classList.add(STATE_ANIM['idle']);
-    }, { once: true });
+      if (!Object.values(STATE_ANIM).some(c => _widget.classList.contains(c))) {
+        _widget.classList.add(STATE_ANIM['idle']);
+      }
+    };
+    _widget.addEventListener('animationend', _onEnterEnd);
+    // Safety: force-complete enter after 700ms regardless
+    setTimeout(() => {
+      if (!_enterDone && _widget) {
+        _enterDone = true;
+        _widget.classList.remove('nym-enter');
+        if (!Object.values(STATE_ANIM).some(c => _widget.classList.contains(c))) {
+          _widget.classList.add(STATE_ANIM['idle']);
+        }
+      }
+    }, 700);
   }
 
   function unmount() {
@@ -301,24 +321,30 @@ window.NYM = (() => {
   // ═══════════════════════════════════════════════════
   function setState(state) {
     if (!_mounted || !_img || !ASSETS[state]) return;
-    // Clear all animation classes
     Object.values(STATE_ANIM).forEach(c => _widget.classList.remove(c));
     _widget.classList.remove('nym-enter', 'nym-exit');
 
     _img.classList.add('swapping');
+
+    function _applyState() {
+      if (!_img) return;
+      _img.onload = _img.onerror = null;
+      _img.classList.remove('swapping');
+      if (STATE_ANIM[state]) _widget.classList.add(STATE_ANIM[state]);
+      _currentState = state;
+    }
+
     setTimeout(() => {
       if (!_img) return;
+      _img.onload  = null;
+      _img.onerror = null;
+      _img.onload  = _applyState;
+      _img.onerror = _applyState; // show widget even if asset 404s
       _img.src = ASSETS[state];
-      _img.onload = () => {
-        _img.classList.remove('swapping');
-        if (STATE_ANIM[state]) _widget.classList.add(STATE_ANIM[state]);
-        _currentState = state;
-      };
-      // Fallback if onload doesn't fire (cached)
-      if (_img.complete) {
-        _img.classList.remove('swapping');
-        if (STATE_ANIM[state]) _widget.classList.add(STATE_ANIM[state]);
-        _currentState = state;
+      // Cached image: complete+naturalWidth set synchronously after src assign
+      if (_img.complete && _img.naturalWidth > 0) {
+        _img.onload = _img.onerror = null;
+        _applyState();
       }
     }, 160);
 
