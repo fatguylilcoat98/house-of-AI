@@ -910,11 +910,10 @@ function nymIsActive() {
 function nymEnterKidMode() {
   if (!window.NYM) return;
   const slot = document.getElementById('nymLogoSlot');
-  if (slot) slot.innerHTML = NYM.LOGO_SVG;
+  if (slot) slot.innerHTML = NYM.LOGO_HTML;
   const txt = document.getElementById('nymHelloText');
   if (txt) txt.textContent = NYM.getNymPhrase('greeting');
-  NYM.runOnboarding();
-  NYM.watchInactivity();
+  NYM.trigger.kidModeEnter();
 }
 
 function nymExitKidMode() {
@@ -939,8 +938,8 @@ window.addEventListener('load', () => {
     });
     ti.addEventListener('focus', () => {
       if (nymIsActive()) {
-        NYM.setState('point_target');
-        NYM.speak(NYM.getNymPhrase('prompt_invite'), true, 3500);
+        NYM.pointAt('#taskInput');
+        NYM.say(NYM.getNymPhrase('prompt_invite'), true, 3500);
       }
     });
   }
