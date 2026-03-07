@@ -3,578 +3,1095 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>House of AI — App Builder</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet"/>
+<title>NymbleLogic — Build an App in a Snap</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg:          #f0f4f8;
-    --surface:     #ffffff;
-    --border:      #e2e8f0;
-    --architect:   #ff9f43;
-    --builder:     #00b894;
-    --tester:      #0984e3;
-    --pm:          #6c5ce7;
-    --action:      #fd79a8;
-    --memory:      #00cec9;
-    --text-main:   #2d3436;
-    --text-muted:  #636e72;
-    --danger:      #d63031;
-    --font-main:   'Nunito', sans-serif;
-    --font-code:   'Fira Code', monospace;
-  }
+/* ═══════════════════════════════════════════════
+   NYMBLELOGIC — Design System
+   Brand: The Good Neighbor Guard
+   Founder: Christopher Hughes
+   ═══════════════════════════════════════════════ */
+:root {
+  --snap:       #7c3aed;
+  --snap-light: #a78bfa;
+  --snap-glow:  rgba(124,58,237,0.22);
+  --green:      #10b981;
+  --green-glow: rgba(16,185,129,0.28);
+  --amber:      #f59e0b;
+  --rose:       #f43f5e;
+  --blue:       #3b82f6;
+  --cyan:       #06b6d4;
+  --bg:         #f8f7ff;
+  --surface:    #ffffff;
+  --surface2:   #f3f0ff;
+  --border:     #e5e0fa;
+  --text:       #1a1040;
+  --muted:      #6b5fa8;
+  --faint:      #c4b8f0;
+  --atlas:      var(--amber);
+  --byte:       var(--green);
+  --scout:      var(--blue);
+  --shield:     var(--rose);
+  --font-brand: 'Syne', sans-serif;
+  --font-code:  'Space Mono', monospace;
+  --font-body:  'Nunito', sans-serif;
+  --shadow-sm:  0 2px 8px rgba(124,58,237,0.06);
+  --shadow-md:  0 8px 30px rgba(124,58,237,0.10);
+  --r-sm: 12px; --r-md: 18px; --r-lg: 24px; --r-xl: 32px;
+}
+body.pro {
+  --bg:       #090b12; --surface: #0f1117; --surface2: #161922;
+  --border:   #1e2333; --text: #e2dcff; --muted: #7c6fbf; --faint: #2a2545;
+  --snap:     #9d72ff; --snap-light: #c4a8ff; --snap-glow: rgba(157,114,255,0.2);
+  --green:    #34d399; --amber: #fbbf24;
+  --shadow-md: 0 8px 30px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--font-body);
+  min-height: 100vh; display: flex; flex-direction: column;
+  transition: background 0.4s, color 0.4s; overflow-x: hidden;
+}
 
-  body.pro-mode {
-    --bg:          #0a0c10;
-    --surface:     #111318;
-    --border:      #1e2330;
-    --text-main:   #cdd6f4;
-    --text-muted:  #6c7086;
-    --pm:          #c678dd;
-    --builder:     #10a37f;
-    --architect:   #d4a843;
-    --tester:      #4285f4;
-  }
+/* HEADER */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 64px;
+  display: flex; align-items: center; gap: 16px;
+  backdrop-filter: blur(12px); box-shadow: var(--shadow-sm);
+}
+.brand { display: flex; flex-direction: column; gap: 1px; text-decoration: none; line-height: 1; }
+.brand-name { font-family: var(--font-brand); font-size: 1.35rem; font-weight: 800; color: var(--snap); letter-spacing: -0.5px; }
+.brand-tag  { font-size: 0.62rem; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.mode-pill { display: flex; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 100px; padding: 3px; gap: 2px; }
+.mode-pill button {
+  font-family: var(--font-body); font-size: 0.8rem; font-weight: 800;
+  padding: 6px 14px; border: none; border-radius: 100px;
+  background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+.mode-pill button.active { background: var(--snap); color: white; box-shadow: 0 2px 12px var(--snap-glow); }
+.btn-ghost {
+  font-family: var(--font-body); font-size: 0.85rem; font-weight: 700;
+  padding: 8px 16px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--snap-light); color: var(--snap); }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text-main); font-family: var(--font-main); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.3s, color 0.3s; }
+/* MAIN */
+main { flex: 1; display: flex; flex-direction: column; }
 
-  header { padding: 16px 30px; background: var(--surface); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
-  .logo { font-size: 1.5rem; font-weight: 900; color: var(--pm); letter-spacing: -0.5px; }
-  .logo span { color: var(--text-muted); font-weight: 600; }
+/* HERO */
+#heroSection {
+  padding: 52px 28px 36px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 8px; position: relative;
+}
+#heroSection::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, var(--snap-glow), transparent);
+  pointer-events: none;
+}
+.nym-hello {
+  display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700;
+  color: var(--muted); background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 100px; padding: 6px 16px; margin-bottom: 8px;
+}
+.nym-bounce { display: inline-block; animation: bunnyBounce 1.4s ease-in-out infinite; }
+body.pro .nym-hello { opacity: 0.5; }
+.hero-title {
+  font-family: var(--font-brand); font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800; color: var(--text); letter-spacing: -1px;
+  line-height: 1.1; max-width: 680px;
+}
+.hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--snap), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
 
-  .mode-toggle { margin-left: auto; display: flex; background: var(--bg); border: 2px solid var(--border); border-radius: 20px; overflow: hidden; }
-  .mode-btn { font-family: var(--font-main); font-weight: 800; font-size: 0.85rem; padding: 8px 16px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-  .mode-btn.active { background: var(--pm); color: white; }
+/* BUILD PANEL */
+#buildPanel { max-width: 860px; width: 100%; margin: 0 auto; padding: 0 28px 40px; }
+.prompt-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-xl);
+  padding: 24px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 16px;
+}
+#taskInput {
+  width: 100%; min-height: 110px; resize: vertical;
+  background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-body); font-size: 1.05rem; font-weight: 600;
+  padding: 16px; transition: border-color 0.2s, box-shadow 0.2s; line-height: 1.5;
+}
+#taskInput:focus { outline: none; border-color: var(--snap-light); box-shadow: 0 0 0 3px var(--snap-glow); }
+#taskInput::placeholder { color: var(--faint); font-weight: 600; }
+.starters { display: flex; flex-wrap: wrap; gap: 8px; }
+.starter-chip {
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 700;
+  padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 100px;
+  background: var(--surface2); color: var(--muted); cursor: pointer; transition: all 0.18s;
+}
+.starter-chip:hover { border-color: var(--snap-light); color: var(--snap); background: var(--surface); }
+.adv-toggle {
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 700;
+  color: var(--faint); cursor: pointer; display: flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0; width: fit-content;
+}
+.adv-toggle:hover { color: var(--muted); }
+.adv-fields { display: none; flex-direction: column; gap: 12px; }
+.adv-fields.open { display: flex; }
+.adv-fields textarea,.adv-fields select,.adv-fields input {
+  background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text); font-family: var(--font-body); font-size: 0.95rem; padding: 12px; width: 100%;
+}
+.adv-fields textarea:focus,.adv-fields select:focus,.adv-fields input:focus { outline: none; border-color: var(--snap-light); }
+.adv-fields textarea { min-height: 70px; resize: vertical; }
+.adv-row { display: flex; gap: 12px; }
+.adv-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.adv-label { font-size: 0.78rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.cta-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+#buildBtn {
+  font-family: var(--font-brand); font-size: 1.05rem; font-weight: 800;
+  padding: 14px 32px; background: linear-gradient(135deg, var(--snap), #6366f1);
+  color: white; border: none; border-radius: var(--r-md); cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 20px var(--snap-glow); letter-spacing: 0.2px;
+}
+#buildBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--snap-glow); }
+#buildBtn:active { transform: translateY(0); }
+#buildBtn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+#buildBtn.remix-mode { background: linear-gradient(135deg, var(--green), var(--cyan)); }
+#clearBtn {
+  font-family: var(--font-body); font-size: 0.9rem; font-weight: 700;
+  padding: 14px 20px; background: transparent; border: 1.5px solid var(--border);
+  border-radius: var(--r-md); color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+#clearBtn:hover { border-color: var(--muted); color: var(--text); }
+#timerEl { font-family: var(--font-code); font-size: 0.82rem; font-weight: 700; color: var(--snap-light); margin-left: auto; }
 
-  main { flex: 1; padding: 30px 24px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
+/* REMIX BANNER */
+#remixBanner {
+  display: none; background: rgba(16,185,129,0.08);
+  border: 1.5px solid rgba(16,185,129,0.3); border-radius: var(--r-md);
+  padding: 12px 20px; font-size: 0.88rem; font-weight: 700; color: var(--green);
+  align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
+}
+#remixBanner.visible { display: flex; }
+#remixBanner .cancel-remix {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  font-size: 0.82rem; font-weight: 700; color: var(--muted);
+}
+#remixBanner .cancel-remix:hover { color: var(--rose); }
 
-  .input-panel { background: var(--surface); border-radius: 20px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 16px; border: 2px solid var(--border); }
-  .panel-label { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
-  .panel-subtext { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+/* STAGE SECTION */
+#stageSection { max-width: 860px; width: 100%; margin: 0 auto; padding: 0 28px 32px; display: none; }
+#stageSection.visible { display: block; }
+.stage-header { font-family: var(--font-brand); font-size: 1rem; font-weight: 700; color: var(--muted); text-align: center; margin-bottom: 20px; }
+.stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 680px) { .stages { grid-template-columns: repeat(2,1fr); } }
+.stage-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-md);
+  padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center; opacity: 0.4; transition: all 0.4s; position: relative; overflow: hidden;
+}
+.stage-card.active { opacity: 1; border-color: var(--stage-color, var(--snap)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--stage-color, var(--snap)) 20%, transparent); }
+.stage-card.done { opacity: 1; background: var(--surface2); }
+.stage-card.done::after { content: '✓'; position: absolute; top: 8px; right: 10px; font-size: 0.7rem; font-weight: 900; color: var(--green); }
+.stage-icon { font-size: 1.9rem; line-height: 1; }
+.stage-name { font-family: var(--font-brand); font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.stage-role { font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+.stage-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--stage-color, var(--snap)); animation: pulse 1s infinite; display: none; }
+.stage-card.active .stage-pulse { display: block; }
+.build-progress { margin-top: 16px; height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
+.build-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--snap), var(--cyan)); border-radius: 100px; transition: width 0.5s ease; }
 
-  .row { display: flex; gap: 20px; align-items: flex-start; }
-  .col { flex: 1; display: flex; flex-direction: column; }
+/* RESULT SECTION */
+#resultSection { max-width: 1100px; width: 100%; margin: 0 auto; padding: 0 28px 60px; display: none; flex-direction: column; gap: 24px; }
+#resultSection.visible { display: flex; }
+.result-hero {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-xl);
+  padding: 24px 28px; display: flex; align-items: center; gap: 20px;
+  box-shadow: var(--shadow-md); flex-wrap: wrap; animation: fadeIn 0.4s ease both;
+}
+.result-title-block { flex: 1; }
+.result-label { font-size: 0.72rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.result-app-name { font-family: var(--font-brand); font-size: 1.5rem; font-weight: 800; color: var(--text); }
+.result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-p {
+  font-family: var(--font-body); font-size: 0.95rem; font-weight: 800;
+  padding: 12px 22px; border: none; border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.18s; display: flex; align-items: center; gap: 6px;
+}
+.btn-play-m  { background: var(--green); color: white; box-shadow: 0 4px 16px var(--green-glow); }
+.btn-dl-m    { background: var(--amber); color: #1a1040; }
+.btn-remix-m { background: linear-gradient(135deg, var(--snap), #6366f1); color: white; box-shadow: 0 4px 16px var(--snap-glow); }
+.btn-p:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-sec {
+  font-family: var(--font-body); font-size: 0.85rem; font-weight: 700;
+  padding: 10px 16px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: transparent; color: var(--muted); cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-sec:hover { border-color: var(--snap-light); color: var(--snap); }
 
-  details.advanced-settings { margin-top: 10px; background: var(--bg); border-radius: 12px; padding: 10px 15px; border: 1px solid var(--border); }
-  details.advanced-settings summary { font-weight: 700; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 8px; }
-  details.advanced-settings summary::-webkit-details-marker { display: none; }
-  .adv-row { display: flex; gap: 15px; margin-top: 15px; }
+/* Tabs */
+.result-tabs { display: flex; border-bottom: 1.5px solid var(--border); overflow-x: auto; }
+.result-tab {
+  font-family: var(--font-body); font-size: 0.88rem; font-weight: 700;
+  padding: 12px 20px; border: none; background: transparent; color: var(--muted);
+  cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+  transition: all 0.18s; white-space: nowrap;
+}
+.result-tab.active { color: var(--snap); border-bottom-color: var(--snap); }
+.result-tab:hover:not(.active) { color: var(--text); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 
-  textarea, select, input[type="text"] { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; color: var(--text-main); font-family: var(--font-main); font-size: 1rem; padding: 14px; width: 100%; transition: all 0.2s; }
-  textarea:focus, select:focus, input[type="text"]:focus { outline: none; border-color: var(--pm); background: var(--surface); }
-  textarea#task { min-height: 120px; resize: vertical; font-weight: 600; }
-  textarea#context { min-height: 80px; resize: vertical; }
+/* Preview */
+#previewWrap { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-md); margin-top: 16px; }
+.preview-bar { background: var(--surface2); border-bottom: 1.5px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
+.preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+.preview-iframe { width: 100%; height: 520px; border: none; display: block; background: white; }
 
-  .btn-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
-  button { font-family: var(--font-main); font-size: 1rem; font-weight: 800; cursor: pointer; border-radius: 12px; border: none; padding: 14px 28px; transition: transform 0.1s, filter 0.2s; }
-  button:active { transform: scale(0.97); }
+/* Code */
+#codeWrap { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-top: 16px; }
+.code-hdr { background: var(--surface2); border-bottom: 1.5px solid var(--border); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; }
+.code-hdr-title { font-family: var(--font-brand); font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+#codeOutput { padding: 20px; font-family: var(--font-code); font-size: 0.8rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; overflow-y: auto; max-height: 520px; color: var(--text); }
 
-  #submitBtn { background: linear-gradient(135deg, var(--pm), #a29bfe); color: white; }
-  body.pro-mode #submitBtn { background: var(--pm); }
-  #submitBtn:hover { filter: brightness(1.1); }
-  #submitBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+/* QA */
+.qa-wrap { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-top: 16px; }
+.qa-sec { padding: 18px 24px; border-bottom: 1.5px solid var(--border); font-size: 0.9rem; line-height: 1.7; white-space: pre-wrap; }
+.qa-sec:last-child { border-bottom: none; }
+.qa-lbl { font-family: var(--font-brand); font-size: 0.72rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
 
-  #clearBtn { background: transparent; border: 2px solid var(--border); color: var(--text-muted); }
-  #clearBtn:hover { border-color: var(--text-main); color: var(--text-main); }
+/* Agent details */
+.agents-detail { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 16px; }
+@media (max-width: 800px) { .agents-detail { grid-template-columns: 1fr; } }
+.ag-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.ag-hdr { padding: 12px 16px; background: var(--surface2); border-bottom: 1.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.ag-name { font-family: var(--font-brand); font-size: 0.85rem; font-weight: 700; }
+.ag-body { padding: 14px 16px; font-size: 0.8rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto; font-family: var(--font-code); color: var(--text); }
 
-  #timer { font-size: 0.9rem; font-weight: 800; color: var(--pm); }
+/* PROJECTS DRAWER */
+#projectsDrawer {
+  position: fixed; top: 0; right: 0; width: min(420px,100vw); height: 100vh;
+  background: var(--surface); border-left: 1.5px solid var(--border);
+  box-shadow: -8px 0 40px rgba(0,0,0,0.15); z-index: 200;
+  transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display: flex; flex-direction: column;
+}
+#projectsDrawer.open { transform: translateX(0); }
+.drw-hdr { padding: 20px 24px; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.drw-title { font-family: var(--font-brand); font-size: 1.1rem; font-weight: 800; color: var(--text); }
+.drw-close { background: none; border: none; cursor: pointer; font-size: 1.3rem; color: var(--muted); padding: 4px; line-height: 1; }
+.drw-close:hover { color: var(--text); }
+.projects-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.proj-item { background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; cursor: pointer; transition: all 0.2s; }
+.proj-item:hover { border-color: var(--snap-light); }
+.proj-name { font-family: var(--font-brand); font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proj-meta { font-size: 0.75rem; font-weight: 600; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.proj-badge { font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 100px; background: var(--surface); border: 1px solid var(--border); }
+.proj-versions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ver-chip { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 100px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.ver-chip:hover { border-color: var(--snap-light); color: var(--snap); }
+.ver-chip.curr { background: var(--snap); color: white; border-color: var(--snap); }
+.proj-del { float: right; background: none; border: none; cursor: pointer; font-size: 0.75rem; color: var(--faint); padding: 2px 4px; }
+.proj-del:hover { color: var(--rose); }
+.projects-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.9rem; font-weight: 600; line-height: 1.7; }
+#drawerOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 199; display: none; backdrop-filter: blur(2px); }
+#drawerOverlay.visible { display: block; }
 
-  label.check { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
-  input[type="checkbox"] { accent-color: var(--pm); width: 18px; height: 18px; }
+/* FIREWORKS */
+#fwOverlay { position: fixed; inset: 0; z-index: 999; pointer-events: none; display: none; flex-direction: column; align-items: center; justify-content: center; }
+#fwOverlay.active { display: flex; }
+#fwCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.celeb-msg { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: celebIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+.celeb-rab { font-size: 4rem; animation: rabbitDance 0.4s ease-in-out infinite alternate; }
+.celeb-txt { font-family: var(--font-brand); font-size: clamp(1.4rem,4vw,2.2rem); font-weight: 800; color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.5); text-align: center; }
+.celeb-sub { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.8); }
 
-  .agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  @media (max-width: 900px) { .agents-grid { grid-template-columns: 1fr; } }
+/* FOOTER */
+footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; font-weight: 700; color: var(--faint); }
 
-  .agent-card { background: var(--surface); border-radius: 16px; display: flex; flex-direction: column; min-height: 300px; border: 2px solid var(--border); overflow: hidden; }
-  .agent-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 2px solid var(--border); background: var(--bg); }
-  .agent-name { font-size: 1.1rem; font-weight: 900; }
-  .claude .agent-name { color: var(--architect); }
-  .gpt    .agent-name { color: var(--builder); }
-  .gemini .agent-name { color: var(--tester); }
-  .agent-indicator { width: 10px; height: 10px; border-radius: 50%; margin-left: auto; }
-  .claude .agent-indicator { background: var(--architect); }
-  .gpt    .agent-indicator { background: var(--builder); }
-  .gemini .agent-indicator { background: var(--tester); }
-  .agent-indicator.active { animation: pulse 1s infinite; box-shadow: 0 0 8px currentColor; }
-
-  .agent-body { padding: 16px; font-size: 0.95rem; line-height: 1.6; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; font-family: var(--font-code); }
-  .agent-body.empty { color: var(--text-muted); font-family: var(--font-main); font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; }
-  .agent-body.error { color: var(--danger); font-weight: 700; font-family: var(--font-main); }
-
-  .consensus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 900px) { .consensus-grid { grid-template-columns: 1fr; } }
-
-  .c-panel { background: var(--surface); border-radius: 16px; display: none; overflow: hidden; border: 2px solid var(--border); }
-  .c-panel.visible { display: block; }
-  .c-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--bg); border-bottom: 2px solid var(--border); }
-  .c-title { font-size: 1.05rem; font-weight: 900; }
-  .c-body { padding: 18px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
-
-  .panel-summary .c-title  { color: var(--architect); }
-  .panel-disagree .c-title { color: var(--danger); }
-  .panel-decision .c-title { color: var(--builder); }
-  .panel-memory .c-title   { color: var(--memory); }
-
-  /* Action panel spans full width */
-  .panel-action { border-color: var(--builder); grid-column: 1 / -1; }
-  .panel-action .c-title { color: var(--builder); }
-  .action-body { padding: 18px; position: relative; }
-  .action-text { font-family: var(--font-code); font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-bottom: 15px; max-height: 500px; overflow-y: auto; }
-
-  .magic-actions { display: flex; gap: 15px; flex-wrap: wrap; padding-top: 15px; border-top: 2px dashed var(--border); }
-  .btn-play     { background: var(--builder); color: white; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,184,148,0.4); }
-  .btn-play:hover { filter: brightness(1.1); transform: scale(1.02); }
-  .btn-download { background: var(--architect); color: white; font-size: 1.1rem; }
-  .btn-copy     { background: transparent; border: 2px solid var(--text-muted); color: var(--text-muted); }
-
-  /* Progress bar shown during build */
-  .progress-bar-wrap { width: 100%; background: var(--bg); border-radius: 8px; height: 8px; overflow: hidden; display: none; }
-  .progress-bar-wrap.visible { display: block; }
-  .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pm), var(--builder)); border-radius: 8px; transition: width 0.5s ease; }
-
-  @keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(1.2); } }
-  footer { padding: 20px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-align: center; }
+/* ANIMATIONS */
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.3);} }
+@keyframes bunnyBounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);} }
+@keyframes rabbitDance { from{transform:rotate(-12deg)scale(1);}to{transform:rotate(12deg)scale(1.08);} }
+@keyframes celebIn { from{opacity:0;transform:scale(0.5)translateY(30px);}to{opacity:1;transform:scale(1)translateY(0);} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+.fade-in { animation: fadeIn 0.4s ease both; }
 </style>
 </head>
-<body class="kid-mode">
+<body class="kid">
 
+<!-- FIREWORKS OVERLAY -->
+<div id="fwOverlay">
+  <canvas id="fwCanvas"></canvas>
+  <div class="celeb-msg">
+    <div class="celeb-rab">🐇</div>
+    <div class="celeb-txt" id="celebText">Your App is Ready!</div>
+    <div class="celeb-sub">Built by the House of AI team 🎉</div>
+  </div>
+</div>
+
+<!-- HEADER -->
 <header>
-  <div class="logo" id="uiLogo">HOUSE<span>::</span>OF<span>::</span>AI 🪄</div>
-  <div class="mode-toggle">
-    <button id="btnKid" class="mode-btn active" onclick="setMode('kid')">🧸 Kid Mode</button>
-    <button id="btnPro" class="mode-btn"        onclick="setMode('pro')">💼 Pro Mode</button>
+  <a class="brand" href="#" onclick="resetToHome(); return false;">
+    <span class="brand-name">NymbleLogic</span>
+    <span class="brand-tag">Build an App in a Snap</span>
+  </a>
+  <div class="header-right">
+    <button class="btn-ghost" onclick="openProjects()">📁 My Projects</button>
+    <div class="mode-pill">
+      <button id="btnKid" class="active" onclick="setMode('kid')">🧸 Kid Mode</button>
+      <button id="btnPro"               onclick="setMode('pro')">💼 Pro Mode</button>
+    </div>
   </div>
 </header>
 
 <main>
-  <div class="input-panel">
-    <div class="col">
-      <div class="panel-label"   id="uiTitle">✨ What do you want to build today?</div>
-      <div class="panel-subtext" id="uiSubtext">Tell the team what kind of app or game you want. Be as creative as you like!</div>
-      <textarea id="task" placeholder="Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷"></textarea>
-    </div>
 
-    <div class="progress-bar-wrap" id="progressWrap">
-      <div class="progress-bar" id="progressBar"></div>
+  <!-- HERO -->
+  <section id="heroSection">
+    <div class="nym-hello">
+      <span class="nym-bounce">🐇</span>
+      Hi! I'm Nym — What do you want to build today?
     </div>
+    <h1 class="hero-title" id="heroTitle">
+      Turn your idea into a<br/><em>real, playable app.</em>
+    </h1>
+  </section>
 
-    <details class="advanced-settings">
-      <summary>⚙️ Advanced Details (Optional)</summary>
-      <div class="adv-row">
-        <div class="col">
-          <div class="panel-subtext" style="font-weight:700;">Extra Context or Rules:</div>
-          <textarea id="context" placeholder="Any specific colors, rules, or coding languages you want us to use?"></textarea>
-        </div>
-        <div class="col" style="flex: 0.5;">
-          <div class="panel-subtext" style="font-weight:700;">Namespace</div>
-          <select id="namespace">
-            <option value="house_of_ai">house_of_ai</option>
-            <option value="lylo">lylo</option>
-            <option value="veracore">veracore</option>
-          </select>
-          <div class="panel-subtext" style="font-weight:700; margin-top:12px;">Phase</div>
-          <input type="text" id="phase" placeholder="e.g. MVP, Beta"/>
+  <!-- BUILD PANEL -->
+  <div id="buildPanel">
+    <div id="remixBanner">
+      <span>🪄 Remix mode — describe what to change below</span>
+      <button class="cancel-remix" onclick="cancelRemix()">✕ Cancel</button>
+    </div>
+    <div class="prompt-card">
+      <textarea id="taskInput" placeholder="Example: A space ninja game where you collect magical pizzas 🍕🥷"></textarea>
+      <div class="starters" id="starterChips">
+        <button class="starter-chip" onclick="useStarter(this)">🎮 A clicker game</button>
+        <button class="starter-chip" onclick="useStarter(this)">🧠 A trivia quiz app</button>
+        <button class="starter-chip" onclick="useStarter(this)">🐍 A snake game</button>
+        <button class="starter-chip" onclick="useStarter(this)">⏱️ A countdown timer</button>
+        <button class="starter-chip" onclick="useStarter(this)">🎨 A drawing canvas</button>
+        <button class="starter-chip" onclick="useStarter(this)">🔢 A calculator</button>
+      </div>
+      <button class="adv-toggle" onclick="toggleAdv()" id="advToggle">⚙️ Advanced Options</button>
+      <div class="adv-fields" id="advFields">
+        <div class="adv-row">
+          <div class="adv-col">
+            <span class="adv-label">Extra Context</span>
+            <textarea id="contextInput" placeholder="Special rules, colors, or features…"></textarea>
+          </div>
+          <div class="adv-col" style="flex:0.5;">
+            <span class="adv-label">Namespace</span>
+            <select id="namespaceInput">
+              <option value="nymblelogic">nymblelogic</option>
+              <option value="house_of_ai">house_of_ai</option>
+              <option value="lylo">lylo</option>
+              <option value="veracore">veracore</option>
+            </select>
+            <div style="height:10px;"></div>
+            <span class="adv-label">Phase</span>
+            <input type="text" id="phaseInput" placeholder="MVP, Beta, v2…"/>
+          </div>
         </div>
       </div>
-    </details>
-
-    <div class="btn-row">
-      <button id="submitBtn" onclick="consult()">🚀 BUILD MY APP!</button>
-      <button id="clearBtn"  onclick="clearAll()">Start Over</button>
-      <span   id="timer"></span>
+      <div class="cta-row">
+        <button id="buildBtn" onclick="runBuild()">🚀 BUILD MY APP</button>
+        <button id="clearBtn" onclick="clearAll()">Start Over</button>
+        <span id="timerEl"></span>
+      </div>
     </div>
   </div>
 
-  <!-- Agent Cards -->
-  <div class="agents-grid">
-    <div class="agent-card claude">
-      <div class="agent-header">
-        <div class="agent-name" id="nameClaude">🏗️ The Architect</div>
-        <div class="agent-indicator" id="ind-claude"></div>
+  <!-- STAGE PROGRESS -->
+  <div id="stageSection">
+    <div class="stage-header" id="stageHeaderText">🏗️ The team is building your app…</div>
+    <div class="stages">
+      <div class="stage-card" id="stage-atlas"  style="--stage-color:var(--atlas);">
+        <div class="stage-icon">🏗️</div><div class="stage-name">Atlas</div>
+        <div class="stage-role">the Architect</div><div class="stage-pulse"></div>
       </div>
-      <div class="agent-body empty" id="body-claude">Sleeping... 💤</div>
-    </div>
-    <div class="agent-card gpt">
-      <div class="agent-header">
-        <div class="agent-name" id="nameGpt">💻 The Builder</div>
-        <div class="agent-indicator" id="ind-gpt"></div>
+      <div class="stage-card" id="stage-byte"   style="--stage-color:var(--byte);">
+        <div class="stage-icon">💻</div><div class="stage-name">Byte</div>
+        <div class="stage-role">the Builder</div><div class="stage-pulse"></div>
       </div>
-      <div class="agent-body empty" id="body-gpt">Sleeping... 💤</div>
-    </div>
-    <div class="agent-card gemini">
-      <div class="agent-header">
-        <div class="agent-name" id="nameGemini">🕵️‍♂️ The Tester</div>
-        <div class="agent-indicator" id="ind-gemini"></div>
+      <div class="stage-card" id="stage-scout"  style="--stage-color:var(--scout);">
+        <div class="stage-icon">🕵️</div><div class="stage-name">Scout</div>
+        <div class="stage-role">the Tester</div><div class="stage-pulse"></div>
       </div>
-      <div class="agent-body empty" id="body-gemini">Sleeping... 💤</div>
+      <div class="stage-card" id="stage-shield" style="--stage-color:var(--shield);">
+        <div class="stage-icon">🛡️</div><div class="stage-name">Shield</div>
+        <div class="stage-role">QA Guardian</div><div class="stage-pulse"></div>
+      </div>
     </div>
+    <div class="build-progress"><div class="build-progress-bar" id="progressBar"></div></div>
   </div>
 
-  <!-- Consensus Panels -->
-  <div class="consensus-grid">
-    <div class="c-panel panel-summary" id="panelSummary">
-      <div class="c-header"><div class="c-title">📋 The Blueprint</div></div>
-      <div class="c-body" id="bodySummary"></div>
+  <!-- RESULT SECTION -->
+  <div id="resultSection">
+    <div class="result-hero fade-in">
+      <div class="result-title-block">
+        <div class="result-label">Your Generated App</div>
+        <div class="result-app-name" id="resultAppName">App</div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-p btn-play-m"  onclick="playApp()">🎮 Play in Browser</button>
+        <button class="btn-p btn-dl-m"    onclick="downloadApp()">💾 Download</button>
+        <button class="btn-p btn-remix-m" onclick="startRemix()">🪄 Remix</button>
+      </div>
     </div>
-    <div class="c-panel panel-disagree" id="panelDisagree">
-      <div class="c-header"><div class="c-title">🔍 QA &amp; Security Check</div></div>
-      <div class="c-body" id="bodyDisagree"></div>
-    </div>
-    <div class="c-panel panel-decision" id="panelDecision">
-      <div class="c-header"><div class="c-title">✅ Final Code Status</div></div>
-      <div class="c-body" id="bodyDecision"></div>
-    </div>
-
-    <!-- Action Panel — full width, contains the Builder's code output -->
-    <div class="c-panel panel-action" id="panelAction">
-      <div class="c-header"><div class="c-title">🎮 YOUR NEW APP!</div></div>
-      <div class="action-body">
-        <div class="action-text" id="bodyAction"></div>
-        <div class="magic-actions">
-          <button class="btn-play"     onclick="playApp()">▶️ PLAY NOW in Browser</button>
-          <button class="btn-download" onclick="downloadApp()">💾 DOWNLOAD to Computer</button>
-          <button class="btn-copy"     id="copyBtn" onclick="copyCode()">⧉ Copy Code</button>
+    <div>
+      <div class="result-tabs">
+        <button class="result-tab active" onclick="switchTab('preview',this)">👁️ Live Preview</button>
+        <button class="result-tab"        onclick="switchTab('code',this)">📄 Code</button>
+        <button class="result-tab"        onclick="switchTab('qa',this)">🧪 QA Report</button>
+        <button class="result-tab"        onclick="switchTab('agents',this)">🤖 Agents</button>
+      </div>
+      <!-- Preview -->
+      <div class="tab-panel active" id="tab-preview">
+        <div id="previewWrap">
+          <div class="preview-bar">
+            <div class="preview-dot" style="background:#f43f5e;"></div>
+            <div class="preview-dot" style="background:#f59e0b;margin-left:4px;"></div>
+            <div class="preview-dot" style="background:#10b981;margin-left:4px;"></div>
+            <span style="font-size:0.78rem;font-weight:700;color:var(--muted);margin-left:12px;">Live App Preview</span>
+            <button class="btn-sec" style="margin-left:auto;padding:5px 12px;font-size:0.78rem;" onclick="playApp()">↗ New Tab</button>
+          </div>
+          <iframe id="previewIframe" class="preview-iframe" sandbox="allow-scripts allow-same-origin" title="App Preview"></iframe>
+        </div>
+      </div>
+      <!-- Code -->
+      <div class="tab-panel" id="tab-code">
+        <div id="codeWrap">
+          <div class="code-hdr">
+            <span class="code-hdr-title">index.html — Generated by Byte the Builder</span>
+            <button class="btn-sec" style="padding:6px 12px;font-size:0.8rem;" id="copyBtn" onclick="copyCode()">⧉ Copy</button>
+          </div>
+          <pre id="codeOutput">// Code will appear here after build…</pre>
+        </div>
+      </div>
+      <!-- QA -->
+      <div class="tab-panel" id="tab-qa">
+        <div class="qa-wrap">
+          <div class="qa-sec"><div class="qa-lbl">📐 Architecture Summary</div><div id="qaSummary">—</div></div>
+          <div class="qa-sec"><div class="qa-lbl">🔍 QA &amp; Security</div><div id="qaDisagree">—</div></div>
+          <div class="qa-sec"><div class="qa-lbl">✅ Final Status</div><div id="qaDecision">—</div></div>
+          <div class="qa-sec"><div class="qa-lbl">📌 Next Step</div><div id="qaActionable">—</div></div>
+        </div>
+      </div>
+      <!-- Agents -->
+      <div class="tab-panel" id="tab-agents">
+        <div class="agents-detail">
+          <div class="ag-card">
+            <div class="ag-hdr"><span style="color:var(--atlas);">🏗️</span><span class="ag-name" style="color:var(--atlas);">Atlas the Architect</span></div>
+            <div class="ag-body" id="detailClaude">—</div>
+          </div>
+          <div class="ag-card">
+            <div class="ag-hdr"><span style="color:var(--byte);">💻</span><span class="ag-name" style="color:var(--byte);">Byte the Builder</span></div>
+            <div class="ag-body" id="detailGpt">—</div>
+          </div>
+          <div class="ag-card">
+            <div class="ag-hdr"><span style="color:var(--scout);">🕵️</span><span class="ag-name" style="color:var(--scout);">Scout the Tester</span></div>
+            <div class="ag-body" id="detailGemini">—</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
 </main>
 
-<footer>BUILT BY CHRISTOPHER HUGHES &amp; THE GOOD NEIGHBOR GUARD</footer>
+<!-- PROJECTS DRAWER -->
+<div id="drawerOverlay" onclick="closeProjects()"></div>
+<div id="projectsDrawer">
+  <div class="drw-hdr">
+    <span class="drw-title">📁 My Projects</span>
+    <button class="drw-close" onclick="closeProjects()">✕</button>
+  </div>
+  <div class="projects-list" id="projectsList"></div>
+</div>
+
+<footer>
+  <span>NymbleLogic by <strong>Christopher Hughes</strong> · The Good Neighbor Guard</span>
+  <span style="opacity:0.6;">Powered by House of AI · 🐇 Nym Jr.</span>
+</footer>
 
 <script>
-  // ─────────────────────────────────────────────
-  // STATE
-  // ─────────────────────────────────────────────
-  let currentMode = 'kid';
-  let kidPin      = null;
-  let timerInterval = null;
-  let elapsedSecs   = 0;
+// ═══════════════════════════════════════════════════════
+// NYMBLELOGIC — Frontend Engine v1.0
+// Built by Christopher Hughes / The Good Neighbor Guard
+// Powered by House of AI
+// ═══════════════════════════════════════════════════════
 
-  // ─────────────────────────────────────────────
-  // MODE SWITCHING
-  // Bug fix: PIN is set when activating Kid Mode
-  // and is REQUIRED to leave Kid Mode — not the other way around.
-  // ─────────────────────────────────────────────
-  function setMode(target) {
-    if (target === currentMode) return;
+// ── State ────────────────────────────────────────────────
+let currentMode      = 'kid';
+let kidPin           = null;
+let timerInterval    = null;
+let elapsedSecs      = 0;
+let lastBuiltCode    = '';
+let lastBuiltTitle   = '';
+let isRemixing       = false;
+let remixContext     = '';
+let currentProjectId = null;
 
-    if (target === 'pro') {
-      // Leaving Kid Mode — require PIN if one has been set
-      if (kidPin) {
-        const entered = prompt('🔐 Enter your parent PIN to unlock Pro Mode:');
-        if (entered !== kidPin) {
-          alert('❌ Incorrect PIN. Staying in Kid Mode.');
-          return;
-        }
-        kidPin = null; // PIN consumed — cleared so re-entering kid mode will ask again
-      }
-      currentMode = 'pro';
-      applyModeUI();
-
-    } else if (target === 'kid') {
-      // Entering Kid Mode — offer to set a PIN so parents can lock it
-      const pin = prompt('🧸 Set a 4-digit PIN to lock Kid Mode (so kids can\'t switch to Pro):\n\nLeave blank to skip PIN lock.');
-      if (pin && pin.trim().length > 0) {
-        if (pin.trim().length < 4) {
-          alert('PIN must be at least 4 characters.');
-          return;
-        }
-        kidPin = pin.trim();
-      }
-      currentMode = 'kid';
-      applyModeUI();
+// ── Mode System ──────────────────────────────────────────
+function setMode(target) {
+  if (target === currentMode) return;
+  if (target === 'pro') {
+    // Require PIN to leave Kid Mode if one is set
+    if (kidPin) {
+      const entered = prompt('🔐 Parent PIN required to unlock Pro Mode:');
+      if (entered !== kidPin) { alert('❌ Incorrect PIN. Staying in Kid Mode.'); return; }
+      kidPin = null;
     }
-  }
-
-  function applyModeUI() {
-    document.body.className = currentMode + '-mode';
-    document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
-    document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
-
-    const taskBox = document.getElementById('task');
-    if (currentMode === 'kid') {
-      document.getElementById('uiLogo').innerHTML    = 'HOUSE<span>::</span>OF<span>::</span>AI 🪄';
-      document.getElementById('uiTitle').innerText   = '✨ What do you want to build today?';
-      document.getElementById('uiSubtext').innerText = 'Tell the team what kind of app or game you want. Be as creative as you like!';
-      taskBox.placeholder = 'Example: I want to build a game where a space ninja collects magical pizzas! 🍕🥷';
-      document.getElementById('nameClaude').innerText = '🏗️ The Architect';
-      document.getElementById('nameGpt').innerText    = '💻 The Builder';
-      document.getElementById('nameGemini').innerText = '🕵️‍♂️ The Tester';
-      document.getElementById('submitBtn').textContent = '🚀 BUILD MY APP!';
-    } else {
-      document.getElementById('uiLogo').innerHTML    = 'HOUSE<span>::</span>OF<span>::</span>AI [PRO]';
-      document.getElementById('uiTitle').innerText   = 'ENGINEERING TASK';
-      document.getElementById('uiSubtext').innerText = 'Provide technical specs, architecture requirements, or feature requests.';
-      taskBox.placeholder = 'Example: Build a real-time multiplayer quiz app using a single HTML file with WebSocket simulation via localStorage.';
-      document.getElementById('nameClaude').innerText = 'CLAUDE (Architect)';
-      document.getElementById('nameGpt').innerText    = 'GPT (Engineer)';
-      document.getElementById('nameGemini').innerText = 'GEMINI (QA)';
-      document.getElementById('submitBtn').textContent = '▶ EXECUTE BUILD';
+    currentMode = 'pro';
+  } else {
+    // Entering Kid Mode — optionally lock with a PIN
+    const pin = prompt('🧸 Set a 4-digit parent PIN to lock Kid Mode?\n(Leave blank to skip PIN lock)');
+    if (pin && pin.trim().length > 0) {
+      if (pin.trim().length < 4) { alert('PIN must be at least 4 characters.'); return; }
+      kidPin = pin.trim();
     }
+    currentMode = 'kid';
+  }
+  applyMode();
+}
+
+function applyMode() {
+  document.body.className = currentMode;
+  document.getElementById('btnKid').classList.toggle('active', currentMode === 'kid');
+  document.getElementById('btnPro').classList.toggle('active', currentMode === 'pro');
+  if (currentMode === 'kid') {
+    document.getElementById('heroTitle').innerHTML = 'Turn your idea into a<br/><em>real, playable app.</em>';
+    document.getElementById('taskInput').placeholder = 'Example: A space ninja game where you collect magical pizzas 🍕🥷';
+    document.getElementById('buildBtn').textContent  = '🚀 BUILD MY APP';
+    document.getElementById('stageHeaderText').textContent = '🏗️ The team is building your app…';
+  } else {
+    document.getElementById('heroTitle').innerHTML = 'Describe what to build.<br/><em>We\'ll ship it.</em>';
+    document.getElementById('taskInput').placeholder = 'e.g. Single-file HTML snake game with high score tracking and mobile controls';
+    document.getElementById('buildBtn').textContent  = '▶ EXECUTE BUILD';
+    document.getElementById('stageHeaderText').textContent = 'Pipeline executing…';
+  }
+}
+
+// ── Starter Chips ────────────────────────────────────────
+function useStarter(el) {
+  const text = el.textContent.replace(/^[^\w]+/, '').trim();
+  document.getElementById('taskInput').value = text;
+  document.getElementById('taskInput').focus();
+}
+
+// ── Advanced Options ─────────────────────────────────────
+function toggleAdv() {
+  const fields = document.getElementById('advFields');
+  fields.classList.toggle('open');
+  document.getElementById('advToggle').textContent =
+    fields.classList.contains('open') ? '⚙️ Hide Advanced' : '⚙️ Advanced Options';
+}
+
+// ── Remix ────────────────────────────────────────────────
+function startRemix() {
+  if (!lastBuiltCode) { alert('Build an app first, then remix it!'); return; }
+  isRemixing   = true;
+  remixContext = lastBuiltCode;
+  document.getElementById('remixBanner').classList.add('visible');
+  document.getElementById('buildBtn').classList.add('remix-mode');
+  document.getElementById('buildBtn').textContent = '🪄 REMIX APP';
+  document.getElementById('taskInput').value = '';
+  document.getElementById('taskInput').placeholder = 'What to change? e.g. "Add power-ups and a high score table"';
+  document.getElementById('taskInput').focus();
+  document.getElementById('heroSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelRemix() {
+  isRemixing   = false;
+  remixContext = '';
+  document.getElementById('remixBanner').classList.remove('visible');
+  document.getElementById('buildBtn').classList.remove('remix-mode');
+  document.getElementById('buildBtn').textContent =
+    currentMode === 'kid' ? '🚀 BUILD MY APP' : '▶ EXECUTE BUILD';
+  document.getElementById('taskInput').placeholder =
+    currentMode === 'kid'
+      ? 'Example: A space ninja game where you collect magical pizzas 🍕🥷'
+      : 'e.g. Single-file HTML snake game with high score tracking';
+}
+
+// ── Main Build ───────────────────────────────────────────
+async function runBuild() {
+  const task = document.getElementById('taskInput').value.trim();
+  if (!task) {
+    alert(currentMode === 'kid' ? '✏️ Tell Nym what you want to build first!' : 'Task field cannot be empty.');
+    return;
   }
 
-  // ─────────────────────────────────────────────
-  // UI HELPERS
-  // ─────────────────────────────────────────────
-  function setLoading(on) {
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = on;
-    if (on) {
-      btn.textContent = currentMode === 'kid' ? '✨ ROBOTS WORKING...' : 'EXECUTING...';
-    } else {
-      btn.textContent = currentMode === 'kid' ? '🚀 BUILD MY APP!' : '▶ EXECUTE BUILD';
-    }
-    ['ind-claude', 'ind-gpt', 'ind-gemini'].forEach(id => {
-      document.getElementById(id).classList.toggle('active', on);
-    });
+  document.getElementById('buildBtn').disabled = true;
+  document.getElementById('resultSection').classList.remove('visible');
+  document.getElementById('stageSection').classList.add('visible');
+  setProgress(0); resetStages(); startTimer();
+
+  let fullContext = document.getElementById('contextInput').value.trim();
+  if (isRemixing && remixContext) {
+    fullContext = '[REMIX — modify this existing app based on the user request. Keep it as ONE single HTML file]\n'
+      + remixContext + '\n\n' + fullContext;
   }
 
-  function setAgentBody(agent, text, mode = 'normal') {
-    const el = document.getElementById('body-' + agent);
-    if (!el) return;
-    el.textContent = text;
-    el.className = 'agent-body' + (mode === 'empty' ? ' empty' : mode === 'error' ? ' error' : '');
-  }
-
-  // ─────────────────────────────────────────────
-  // showPanel — fixed to handle panelAction separately
-  // ─────────────────────────────────────────────
-  function showPanel(id, content) {
-    if (!content || !content.trim()) return;
-    const panel = document.getElementById(id);
-    if (!panel) return;
-    panel.classList.add('visible');
-
-    // panelAction's text lives in #bodyAction inside .action-body, not .c-body
-    const bodyId = id === 'panelAction' ? 'bodyAction' : 'body' + id.charAt(5).toUpperCase() + id.slice(6);
-    const body = document.getElementById(bodyId);
-    if (body) body.textContent = content;
-  }
-
-  // Map panel IDs to their content body IDs explicitly — safer than string manipulation
-  const PANEL_BODY_MAP = {
-    panelSummary:  'bodySummary',
-    panelDisagree: 'bodyDisagree',
-    panelDecision: 'bodyDecision',
-    panelAction:   'bodyAction',
+  const payload = {
+    task:         task,
+    context:      fullContext,
+    namespace:    document.getElementById('namespaceInput').value,
+    phase:        document.getElementById('phaseInput').value.trim(),
+    write_memory: false,
+    app_mode:     currentMode,   // ← kid | pro → backend injects tone modifier
   };
 
-  function showPanelById(id, content) {
-    if (!content || !content.trim()) return;
-    const panel = document.getElementById(id);
-    if (!panel) return;
-    panel.classList.add('visible');
-    const bodyEl = document.getElementById(PANEL_BODY_MAP[id]);
-    if (bodyEl) bodyEl.textContent = content;
-  }
+  // Animate stage cards while the single fetch is in flight
+  animateStages();
 
-  function clearAll() {
-    document.getElementById('task').value = '';
-    document.getElementById('context').value = '';
-    document.getElementById('timer').textContent = '';
+  try {
+    const res = await fetch('/consult', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error('Server ' + res.status + ': ' + errText);
+    }
+    const data = await res.json();
+    completeAllStages();
+    setProgress(100);
+    processResults(data, task);
+  } catch (err) {
+    completeAllStages();
+    alert('Build failed: ' + err.message);
+    console.error(err);
+  } finally {
     stopTimer();
-    setProgress(0);
-    document.getElementById('progressWrap').classList.remove('visible');
+    document.getElementById('buildBtn').disabled = false;
+    if (isRemixing) cancelRemix();
+  }
+}
 
-    const sleepTxt = currentMode === 'kid' ? 'Sleeping... 💤' : 'Awaiting prompt.';
-    ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
-    ['panelSummary', 'panelDisagree', 'panelDecision', 'panelAction'].forEach(id => {
-      document.getElementById(id).classList.remove('visible');
-    });
+function processResults(data, originalTask) {
+  const agents    = data.results || [];
+  const claudeRes = (agents[0] && agents[0].response) || '';
+  const gptRes    = (agents[1] && agents[1].response) || '';
+  const geminiRes = (agents[2] && agents[2].response) || '';
+
+  const htmlCode     = extractCode(gptRes);
+  lastBuiltCode      = htmlCode || gptRes;
+  lastBuiltTitle     = deriveTitle(originalTask);
+
+  // App name
+  document.getElementById('resultAppName').textContent = lastBuiltTitle;
+
+  // Agent detail tab
+  document.getElementById('detailClaude').textContent  = claudeRes  || '(no response)';
+  document.getElementById('detailGpt').textContent     = gptRes     || '(no response)';
+  document.getElementById('detailGemini').textContent  = geminiRes  || '(no response)';
+
+  // Code tab
+  document.getElementById('codeOutput').textContent = htmlCode || gptRes;
+
+  // QA tab
+  document.getElementById('qaSummary').textContent    = data.summary           || '—';
+  document.getElementById('qaDisagree').textContent   = data.disagreements     || '—';
+  document.getElementById('qaDecision').textContent   = data.final_decision    || '—';
+  document.getElementById('qaActionable').textContent = data.actionable_prompt || '—';
+
+  // Live preview iframe
+  if (htmlCode) {
+    document.getElementById('previewIframe').srcdoc = htmlCode;
   }
 
-  // ─────────────────────────────────────────────
-  // TIMER
-  // ─────────────────────────────────────────────
-  function startTimer() {
-    elapsedSecs = 0;
-    const timerEl = document.getElementById('timer');
-    timerEl.textContent = '⏱ 0s';
-    timerInterval = setInterval(() => {
-      elapsedSecs++;
-      timerEl.textContent = '⏱ ' + elapsedSecs + 's';
-    }, 1000);
-  }
+  // Save to localStorage
+  currentProjectId = saveProject({
+    title:      lastBuiltTitle,
+    prompt:     originalTask,
+    code:       lastBuiltCode,
+    mode:       currentMode,
+    summary:    data.summary || '',
+    actionable: data.actionable_prompt || '',
+    remixed:    isRemixing,
+  });
 
-  function stopTimer() {
-    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  }
+  // Show results section
+  document.getElementById('resultSection').classList.add('visible');
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // ─────────────────────────────────────────────
-  // PROGRESS BAR (cosmetic — signals pipeline stage)
-  // ─────────────────────────────────────────────
-  function setProgress(pct) {
-    document.getElementById('progressBar').style.width = pct + '%';
-  }
+  // Fire celebration
+  setTimeout(() => triggerFireworks(lastBuiltTitle), 350);
+}
 
-  // ─────────────────────────────────────────────
-  // MAIN CONSULT FUNCTION
-  // Bug fix: app_mode is now correctly sent in the fetch payload.
-  // ─────────────────────────────────────────────
-  async function consult() {
-    const task = document.getElementById('task').value.trim();
-    if (!task) {
-      alert(currentMode === 'kid'
-        ? '✏️ Tell us what you want to build first!'
-        : 'Task field cannot be empty.');
-      return;
-    }
+// ── Code Extraction ──────────────────────────────────────
+function extractCode(src) {
+  if (!src) return null;
+  // 1. ```html ... ```
+  let m = src.match(/```html\s*([\s\S]*?)```/i);
+  if (m && m[1].trim()) return m[1].trim();
+  // 2. any ``` ... ```
+  m = src.match(/```(?:\w*)\s*([\s\S]*?)```/);
+  if (m && m[1].trim()) return m[1].trim();
+  // 3. Raw HTML
+  const t = src.trim();
+  if (/^<!doctype|^<html/i.test(t)) return t;
+  return null;
+}
 
-    setLoading(true);
-    startTimer();
-    document.getElementById('progressWrap').classList.add('visible');
-    setProgress(5);
+// ── Title Derivation ─────────────────────────────────────
+function deriveTitle(prompt) {
+  return prompt.replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ').trim()
+    .split(' ').slice(0, 5)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
 
-    // Reset panels
-    const sleepTxt = currentMode === 'kid' ? '🤔 Thinking...' : 'Processing...';
-    ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, sleepTxt, 'empty'));
-    ['panelSummary', 'panelDisagree', 'panelDecision', 'panelAction'].forEach(id => {
-      document.getElementById(id).classList.remove('visible');
-    });
+// ── Tab Switcher ─────────────────────────────────────────
+function switchTab(id, btnEl) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btnEl.classList.add('active');
+}
 
-    const payload = {
-      task:        task,
-      context:     document.getElementById('context').value.trim(),
-      namespace:   document.getElementById('namespace').value,
-      phase:       document.getElementById('phase').value.trim(),
-      write_memory: false,
-      app_mode:    currentMode,   // ← CRITICAL: kid | pro passed to backend
-    };
+// ── Stage Animations ─────────────────────────────────────
+// These purely animate the UI — the actual build is one fetch call.
+const STAGE_TIMINGS = [
+  { name: 'atlas',  start: 0,    end: 18,  delay: 0    },
+  { name: 'byte',   start: 18,   end: 58,  delay: 1800 },
+  { name: 'scout',  start: 58,   end: 82,  delay: 4500 },
+  { name: 'shield', start: 82,   end: 96,  delay: 7200 },
+];
+let stageTimers = [];
 
-    try {
-      setProgress(15);
-      const res = await fetch('/consult', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
+function resetStages() {
+  stageTimers.forEach(clearTimeout); stageTimers = [];
+  STAGE_TIMINGS.forEach(s => {
+    const el = document.getElementById('stage-' + s.name);
+    el.classList.remove('active', 'done');
+  });
+}
 
-      setProgress(80);
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error('Server error ' + res.status + ': ' + errText);
+function animateStages() {
+  STAGE_TIMINGS.forEach((s, i) => {
+    const t = setTimeout(() => {
+      // Mark previous done
+      if (i > 0) {
+        document.getElementById('stage-' + STAGE_TIMINGS[i-1].name).classList.remove('active');
+        document.getElementById('stage-' + STAGE_TIMINGS[i-1].name).classList.add('done');
       }
+      document.getElementById('stage-' + s.name).classList.add('active');
+      animateProgressTo(s.start, s.end);
+    }, s.delay);
+    stageTimers.push(t);
+  });
+}
 
-      const data = await res.json();
-      setProgress(95);
+function animateProgressTo(from, to) {
+  let v = from;
+  const step = () => {
+    if (v < to) { v = Math.min(v + 0.6, to); setProgress(v); requestAnimationFrame(step); }
+  };
+  requestAnimationFrame(step);
+}
 
-      // ── Populate Agent Cards ──────────────────
-      // results array: [0] = Architect (Claude), [1] = Engineer (GPT), [2] = QA (Gemini)
-      const agents = ['claude', 'gpt', 'gemini'];
-      data.results.forEach((r, i) => {
-        if (r.error) {
-          setAgentBody(agents[i], '⚠️ Error: ' + r.error, 'error');
-        } else {
-          setAgentBody(agents[i], r.response || '(No response)', 'normal');
-        }
-      });
+function completeAllStages() {
+  stageTimers.forEach(clearTimeout); stageTimers = [];
+  STAGE_TIMINGS.forEach(s => {
+    const el = document.getElementById('stage-' + s.name);
+    el.classList.remove('active'); el.classList.add('done');
+  });
+  setProgress(100);
+}
 
-      // ── Populate Consensus Panels ─────────────
-      showPanelById('panelSummary',  data.summary);
-      showPanelById('panelDisagree', data.disagreements);
-      showPanelById('panelDecision', data.final_decision);
+function setProgress(pct) {
+  document.getElementById('progressBar').style.width = pct + '%';
+}
 
-      // Action panel gets the raw builder (GPT) output so extractCode() can find it
-      // We also surface the actionable_prompt as a human-readable note
-      const builderOutput = (data.results[1] && data.results[1].response) || '';
-      const actionNote    = data.actionable_prompt
-        ? '📌 NEXT STEP: ' + data.actionable_prompt + '\n\n' + builderOutput
-        : builderOutput;
-      showPanelById('panelAction', actionNote || data.consensus);
+// ── Timer ────────────────────────────────────────────────
+function startTimer() {
+  elapsedSecs = 0;
+  const el = document.getElementById('timerEl');
+  el.textContent = '⏱ 0s';
+  timerInterval = setInterval(() => { elapsedSecs++; el.textContent = '⏱ ' + elapsedSecs + 's'; }, 1000);
+}
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('timerEl').textContent = '⏱ ' + elapsedSecs + 's';
+}
 
-      setProgress(100);
+// ── Action Buttons ───────────────────────────────────────
+function playApp() {
+  const code = lastBuiltCode;
+  if (!code) { alert('Build an app first!'); return; }
+  const html = extractCode(code) || code;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if (!win) alert('Pop-up blocked! Please allow pop-ups for this site.');
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
 
-    } catch (err) {
-      ['claude', 'gpt', 'gemini'].forEach(a => setAgentBody(a, '⚠️ ' + err.message, 'error'));
-      console.error('Consult error:', err);
-    } finally {
-      setLoading(false);
-      stopTimer();
-      setTimeout(() => setProgress(0), 1500);
-    }
-  }
+function downloadApp() {
+  const code = lastBuiltCode;
+  if (!code) { alert('Build an app first!'); return; }
+  const html     = extractCode(code) || code;
+  const fileName = (lastBuiltTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'my_app') + '.html';
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
 
-  // ─────────────────────────────────────────────
-  // CODE EXTRACTION
-  // Bug fix: regex was truncated in the original file.
-  // Searches builder output (body-gpt) for ```html ... ``` block.
-  // Falls back to any ``` ... ``` block, then raw text.
-  // ─────────────────────────────────────────────
-  function extractCode() {
-    // Primary source: the Builder's (GPT) agent card
-    const builderText = document.getElementById('body-gpt').textContent || '';
+function copyCode() {
+  const code = document.getElementById('codeOutput').textContent;
+  if (!code || code.startsWith('// Code will')) { alert('No code to copy yet.'); return; }
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  }).catch(() => alert('Clipboard unavailable — copy manually from the Code tab.'));
+}
 
-    // 1. Try ```html ... ``` (what the engineer is instructed to output)
-    let match = builderText.match(/```html\s*([\s\S]*?)```/i);
-    if (match && match[1].trim()) return match[1].trim();
+function clearAll() {
+  document.getElementById('taskInput').value = '';
+  document.getElementById('contextInput').value = '';
+  document.getElementById('timerEl').textContent = '';
+  stopTimer();
+  document.getElementById('stageSection').classList.remove('visible');
+  document.getElementById('resultSection').classList.remove('visible');
+  resetStages(); setProgress(0); cancelRemix();
+  lastBuiltCode = ''; lastBuiltTitle = '';
+}
 
-    // 2. Try generic ``` ... ``` (fallback if language tag missing)
-    match = builderText.match(/```(?:\w*)\s*([\s\S]*?)```/);
-    if (match && match[1].trim()) return match[1].trim();
+function resetToHome() {
+  clearAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-    // 3. If the entire text looks like raw HTML (starts with <), use it as-is
-    const trimmed = builderText.trim();
-    if (trimmed.startsWith('<') && trimmed.includes('</html>')) return trimmed;
+// ═══════════════════════════════════════════════════════
+// FIREWORKS ENGINE
+// ═══════════════════════════════════════════════════════
+let fwCanvas, fwCtx, fwParticles = [], fwAF;
 
-    // 4. Last resort — check the action panel body
-    const actionText = document.getElementById('bodyAction').textContent || '';
-    match = actionText.match(/```html\s*([\s\S]*?)```/i);
-    if (match && match[1].trim()) return match[1].trim();
+function triggerFireworks(appTitle) {
+  const overlay = document.getElementById('fwOverlay');
+  fwCanvas = document.getElementById('fwCanvas');
+  fwCtx    = fwCanvas.getContext('2d');
+  resizeFW();
+  fwParticles = [];
+  document.getElementById('celebText').textContent =
+    (appTitle ? appTitle + ' is' : 'Your app is') + ' Ready! 🎉';
+  overlay.classList.add('active');
+  launchBurst(); setTimeout(launchBurst, 550); setTimeout(launchBurst, 1050); setTimeout(launchBurst, 1550);
+  fwAF = requestAnimationFrame(drawFW);
+  setTimeout(stopFireworks, 2800);
+}
 
-    return null;
-  }
+function stopFireworks() {
+  document.getElementById('fwOverlay').classList.remove('active');
+  if (fwAF) { cancelAnimationFrame(fwAF); fwAF = null; }
+  fwParticles = [];
+}
 
-  // ─────────────────────────────────────────────
-  // MAGIC ACTION BUTTONS
-  // ─────────────────────────────────────────────
-  function playApp() {
-    const code = extractCode();
-    if (!code) {
-      alert(currentMode === 'kid'
-        ? '😅 Hmm, we couldn\'t find the app code yet! Make sure the Builder finished.'
-        : 'No HTML code block found in Builder output. Check the Engineer card.');
-      return;
-    }
-    const blob = new Blob([code], { type: 'text/html' });
-    const url  = URL.createObjectURL(blob);
-    const win  = window.open(url, '_blank');
-    if (!win) alert('Pop-up blocked! Please allow pop-ups for this site and try again.');
-    // Revoke after short delay to free memory
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  }
+function resizeFW() {
+  if (fwCanvas) { fwCanvas.width = window.innerWidth; fwCanvas.height = window.innerHeight; }
+}
+window.addEventListener('resize', resizeFW);
 
-  function downloadApp() {
-    const code = extractCode();
-    if (!code) {
-      alert('No code found to download yet.');
-      return;
-    }
-    const task     = document.getElementById('task').value.trim();
-    const fileName = (task.slice(0, 30).replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'my_app') + '.html';
-    const blob     = new Blob([code], { type: 'text/html' });
-    const a        = document.createElement('a');
-    a.href         = URL.createObjectURL(blob);
-    a.download     = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  }
-
-  function copyCode() {
-    const code = extractCode();
-    if (!code) { alert('No code found to copy yet.'); return; }
-    navigator.clipboard.writeText(code).then(() => {
-      const btn = document.getElementById('copyBtn');
-      btn.textContent = '✅ Copied!';
-      setTimeout(() => { btn.textContent = '⧉ Copy Code'; }, 2000);
-    }).catch(() => {
-      alert('Clipboard copy failed. Please select and copy the code manually from the Builder card.');
+function launchBurst() {
+  const cx = fwCanvas.width  * (0.2 + Math.random() * 0.6);
+  const cy = fwCanvas.height * (0.15 + Math.random() * 0.4);
+  const palette = ['#7c3aed','#a78bfa','#10b981','#f59e0b','#f43f5e','#06b6d4','#fff','#fbbf24'];
+  const color   = palette[Math.floor(Math.random() * palette.length)];
+  const count   = 55 + Math.floor(Math.random() * 30);
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count;
+    const speed = 2 + Math.random() * 5.5;
+    fwParticles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      alpha: 1, color,
+      r:     1.5 + Math.random() * 2.5,
+      grav:  0.055 + Math.random() * 0.04,
+      decay: 0.014 + Math.random() * 0.012,
     });
   }
-</script>
+}
 
+function drawFW() {
+  fwCtx.fillStyle = 'rgba(0,0,0,0.18)';
+  fwCtx.fillRect(0, 0, fwCanvas.width, fwCanvas.height);
+  fwParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += p.grav; p.alpha -= p.decay;
+    if (p.alpha <= 0) return;
+    fwCtx.save();
+    fwCtx.globalAlpha = Math.max(p.alpha, 0);
+    fwCtx.beginPath();
+    fwCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    fwCtx.fillStyle = p.color;
+    fwCtx.fill();
+    fwCtx.restore();
+  });
+  fwParticles = fwParticles.filter(p => p.alpha > 0);
+  fwAF = requestAnimationFrame(drawFW);
+}
+
+// ═══════════════════════════════════════════════════════
+// PROJECT PERSISTENCE (localStorage)
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'nymblelogic_v1_projects';
+
+function loadProjects() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function saveProjects(list) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) { console.warn(e); }
+}
+
+function saveProject({ title, prompt, code, mode, summary, actionable, remixed }) {
+  const projects = loadProjects();
+
+  // If remixing existing project — add prior state as a version
+  if (remixed && currentProjectId) {
+    const existing = projects.find(p => p.id === currentProjectId);
+    if (existing) {
+      if (!existing.versions) existing.versions = [];
+      existing.versions.push({
+        vNum:   (existing.versions.length + 1),
+        prompt: existing.prompt,
+        code:   existing.code,
+        ts:     existing.updatedAt,
+      });
+      existing.prompt    = prompt;
+      existing.code      = code;
+      existing.updatedAt = Date.now();
+      saveProjects(projects);
+      return existing.id;
+    }
+  }
+
+  // New project
+  const id = 'p_' + Date.now();
+  projects.unshift({ id, title, prompt, code, mode, summary, actionable, versions: [], createdAt: Date.now(), updatedAt: Date.now() });
+  if (projects.length > 50) projects.splice(50);
+  saveProjects(projects);
+  return id;
+}
+
+function loadProject(project, versionIndex) {
+  let code   = project.code;
+  let title  = project.title;
+  let prompt = project.prompt;
+
+  if (versionIndex !== undefined && project.versions && project.versions[versionIndex]) {
+    const v = project.versions[versionIndex];
+    code = v.code; prompt = v.prompt;
+    title = project.title + ' (V' + v.vNum + ')';
+  }
+
+  lastBuiltCode  = code;
+  lastBuiltTitle = title;
+  currentProjectId = project.id;
+
+  document.getElementById('resultAppName').textContent = title;
+  document.getElementById('taskInput').value           = prompt;
+  document.getElementById('codeOutput').textContent    = code;
+
+  const html = extractCode(code) || code;
+  if (html) document.getElementById('previewIframe').srcdoc = html;
+
+  document.getElementById('qaSummary').textContent    = project.summary    || '—';
+  document.getElementById('qaActionable').textContent = project.actionable || '—';
+
+  document.getElementById('resultSection').classList.add('visible');
+  closeProjects();
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Drawer ────────────────────────────────────────────────
+function openProjects() {
+  renderProjectsList();
+  document.getElementById('projectsDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('visible');
+}
+function closeProjects() {
+  document.getElementById('projectsDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('visible');
+}
+
+function renderProjectsList() {
+  const list     = document.getElementById('projectsList');
+  const projects = loadProjects();
+  if (!projects.length) {
+    list.innerHTML = '<div class="projects-empty">🐇 No projects yet!<br/>Build something and it\'ll appear here.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  projects.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'proj-item';
+    const ts = new Date(p.updatedAt).toLocaleDateString();
+
+    let versHtml = '';
+    if (p.versions && p.versions.length > 0) {
+      versHtml = '<div class="proj-versions">';
+      p.versions.forEach((v, idx) => {
+        versHtml += `<span class="ver-chip" data-idx="${idx}" data-pid="${p.id}">V${v.vNum}</span>`;
+      });
+      versHtml += `<span class="ver-chip curr">V${p.versions.length + 1} ★</span></div>`;
+    }
+
+    div.innerHTML = `
+      <div class="proj-name">${esc(p.title)}
+        <button class="proj-del" data-pid="${p.id}" title="Delete">🗑</button>
+      </div>
+      <div class="proj-meta">
+        <span class="proj-badge">${p.mode === 'kid' ? '🧸 Kid' : '💼 Pro'}</span>
+        <span>${ts}</span>
+      </div>${versHtml}`;
+
+    // Load latest on main click
+    div.addEventListener('click', (e) => {
+      if (e.target.classList.contains('ver-chip') && !e.target.classList.contains('curr')) return;
+      if (e.target.classList.contains('proj-del')) return;
+      loadProject(p);
+    });
+    // Version chip clicks
+    div.querySelectorAll('.ver-chip:not(.curr)').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        loadProject(p, parseInt(chip.dataset.idx));
+      });
+    });
+    // Delete button
+    div.querySelector('.proj-del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete "' + p.title + '"?')) return;
+      const updated = loadProjects().filter(x => x.id !== p.id);
+      saveProjects(updated);
+      renderProjectsList();
+    });
+
+    list.appendChild(div);
+  });
+}
+
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Boot ─────────────────────────────────────────────────
+applyMode();
+</script>
 </body>
 </html>
