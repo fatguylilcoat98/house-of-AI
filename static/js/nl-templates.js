@@ -1021,7 +1021,7 @@ function del(id){tasks=tasks.filter(x=>x.id!==id);save();render();}
 function setFil(f,btn){fil=f;document.querySelectorAll('.fil').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
 function render(){
   const visible=tasks.filter(t=>fil==='all'?true:fil==='active'?!t.done:t.done);
-  document.getElementById('list').innerHTML=visible.map(t=>`<div class="task${t.done?' done':''}"><input type="checkbox" class="chk"${t.done?' checked':''} onchange="toggle(${t.id})"/><span class="task-text">${t.text}</span><button class="del" onclick="del(${t.id})">🗑</button></div>`).join('');
+  document.getElementById('list').innerHTML=visible.map(t=>\`<div class="task${t.done?' done':''}"><input type="checkbox" class="chk"${t.done?' checked':''} onchange="toggle(${t.id})"/><span class="task-text">${t.text}</span><button class="del" onclick="del(${t.id})">🗑</button></div>\`).join('');
   const left=tasks.filter(x=>!x.done).length;
   document.getElementById('count').textContent=left+' task'+(left===1?'':'s')+' remaining';
 }
@@ -1055,11 +1055,7 @@ function addNote(){notes.unshift({id:Date.now(),text:'',color:COLORS[Math.floor(
 function delNote(id){notes=notes.filter(n=>n.id!==id);save();render();}
 function update(id,val){const n=notes.find(x=>x.id===id);if(n){n.text=val;save();}}
 function render(){
-  document.getElementById('grid').innerHTML=notes.map(n=>`
-<div class="note" style="background:${n.color}">
-  <textarea placeholder="Write something…" onblur="update(${n.id},this.value)">${n.text}</textarea>
-  <div class="note-footer"><span>${new Date(n.id).toLocaleDateString()}</span><button class="del-note" onclick="delNote(${n.id})">🗑</button></div>
-</div>`).join('');
+  document.getElementById('grid').innerHTML=notes.map(n=>\`<div class=\"note\" style=\"background:${n.color}\"><textarea placeholder=\"Write something…\" onblur=\"update(${n.id},this.value)\">${n.text}</textarea><div class=\"note-footer\"><span>${new Date(n.id).toLocaleDateString()}</span><button class=\"del-note\" onclick=\"delNote(${n.id})\">🗑</button></div></div>\`).join('');
 }
 if(!notes.length)addNote();else render();
 </script></body></html>`
@@ -1152,7 +1148,7 @@ function save(){localStorage.setItem('nl_habits',JSON.stringify(habits));}
 function add(){const t=document.getElementById('inp').value.trim();if(!t)return;habits.push({id:Date.now(),name:t,streak:0,lastDone:'',doneToday:false});document.getElementById('inp').value='';save();render();}
 function toggle(id){const h=habits.find(x=>x.id===id);if(!h)return;h.doneToday=!h.doneToday;if(h.doneToday){if(h.lastDone!==TODAY){h.streak++;h.lastDone=TODAY;}}else{if(h.lastDone===TODAY){h.streak=Math.max(0,h.streak-1);h.lastDone='';}}save();render();}
 function del(id){habits=habits.filter(x=>x.id!==id);save();render();}
-function render(){document.getElementById('list').innerHTML=habits.map(h=>`<div class="habit"><input type="checkbox" class="chk-box"${h.doneToday?' checked':''} onchange="toggle(${h.id})"/><div class="hab-info"><div class="hab-name">${h.name}</div><div class="hab-streak">🔥 ${h.streak} day streak</div></div><button class="del-h" onclick="del(${h.id})">🗑</button></div>`).join('');}
+function render(){document.getElementById('list').innerHTML=habits.map(h=>\`<div class="habit"><input type="checkbox" class="chk-box"${h.doneToday?' checked':''} onchange="toggle(${h.id})"/><div class="hab-info"><div class="hab-name">${h.name}</div><div class="hab-streak">🔥 ${h.streak} day streak</div></div><button class="del-h" onclick="del(${h.id})">🗑</button></div>\`).join('');}
 render();
 </script></body></html>`
     },
@@ -1202,7 +1198,7 @@ function render(){
   document.getElementById('totIn').textContent='$'+inc.toFixed(2);
   document.getElementById('totEx').textContent='$'+exp.toFixed(2);
   document.getElementById('balance').textContent='$'+(inc-exp).toFixed(2);
-  document.getElementById('list').innerHTML=txs.map(t=>`<div class="tx"><span class="tx-type">${t.type==='income'?'💚':'🔴'}</span><span class="tx-desc">${t.desc}</span><span class="tx-amt ${t.type}-amt">${t.type==='income'?'+':'-'}$${t.amt.toFixed(2)}</span><button class="tx-del" onclick="del(${t.id})">✕</button></div>`).join('');
+  document.getElementById('list').innerHTML=txs.map(t=>\`<div class="tx"><span class="tx-type">${t.type==='income'?'💚':'🔴'}</span><span class="tx-desc">${t.desc}</span><span class="tx-amt ${t.type}-amt">${t.type==='income'?'+':'-'}$${t.amt.toFixed(2)}</span><button class="tx-del" onclick="del(${t.id})">✕</button></div>\`).join('');
 }
 render();
 </script></body></html>`
@@ -1334,7 +1330,7 @@ h1{font-size:1.6rem;font-weight:900;color:#1e293b;margin-bottom:16px;}
 let data=JSON.parse(localStorage.getItem('nl_kanban')||'{"todo":["Design layout","Write tests"],"prog":["Build feature"],"done":[]}');
 let dragging=null;
 function save(){localStorage.setItem('nl_kanban',JSON.stringify(data));}
-function render(){['todo','prog','done'].forEach(col=>{document.getElementById(col+'-cards').innerHTML=data[col].map((t,i)=>`<div class="card" draggable="true" ondragstart="drag(event,'${col}',${i})">${t}<button class="card-del" onclick="delCard('${col}',${i})">✕</button></div>`).join('');});}
+function render(){['todo','prog','done'].forEach(col=>{document.getElementById(col+'-cards').innerHTML=data[col].map((t,i)=>\`<div class="card" draggable="true" ondragstart="drag(event,'${col}',${i})">${t}<button class="card-del" onclick="delCard('${col}',${i})">✕</button></div>\`).join('');});}
 function addCard(col){const t=prompt('Task name:');if(t)data[col].unshift(t);save();render();}
 function delCard(col,i){data[col].splice(i,1);save();render();}
 function drag(e,col,i){dragging={col,i};e.dataTransfer.effectAllowed='move';}
