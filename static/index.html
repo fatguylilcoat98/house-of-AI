@@ -556,7 +556,7 @@ footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex;
             <span style="font-size:0.78rem;font-weight:700;color:var(--muted);margin-left:12px;">Live App Preview</span>
             <button class="btn-sec" style="margin-left:auto;padding:5px 12px;font-size:0.78rem;" onclick="playApp()">↗ New Tab</button>
           </div>
-          <iframe id="previewIframe" class="preview-iframe" sandbox="allow-scripts allow-same-origin" title="App Preview"></iframe>
+          <iframe id="previewIframe" class="preview-iframe" sandbox="allow-scripts" title="App Preview"></iframe>
         </div>
       </div>
       <!-- Code -->
@@ -780,6 +780,58 @@ function processResults(data, originalTask) {
   setTimeout(() => triggerFireworks(lastBuiltTitle), 350);
   if (nymIsActive()) setTimeout(() => NYM.trigger.buildSuccess(), 300);
 }
+// ── Build utility helpers ────────────────────────────────────
+function setProgress(pct) {
+  const bar = document.getElementById('progressBar');
+  if (bar) bar.style.width = pct + '%';
+}
+
+const STAGE_IDS = ['stage-atlas', 'stage-byte', 'stage-scout', 'stage-shield'];
+
+function resetStages() {
+  STAGE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active', 'done');
+  });
+}
+
+function animateStages() {
+  let i = 0;
+  function next() {
+    if (i > 0) {
+      const prev = document.getElementById(STAGE_IDS[i - 1]);
+      if (prev) { prev.classList.remove('active'); prev.classList.add('done'); }
+    }
+    if (i < STAGE_IDS.length) {
+      const cur = document.getElementById(STAGE_IDS[i]);
+      if (cur) cur.classList.add('active');
+      i++;
+      window._stageTimer = setTimeout(next, 8000);
+    }
+  }
+  clearTimeout(window._stageTimer);
+  next();
+}
+
+function completeAllStages() {
+  clearTimeout(window._stageTimer);
+  STAGE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('active'); el.classList.add('done'); }
+  });
+}
+
+function startTimer() {
+  elapsedSecs = 0;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => { elapsedSecs++; }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
 async function runBuild() {
   const task = document.getElementById('taskInput').value.trim();
   if (!task) {
