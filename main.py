@@ -1,25 +1,25 @@
 """
 main.py
-House of AI — The Developer Council
+NymbleLogic — House of AI
 Built by Christopher Hughes & The Good Neighbor Guard
 
-Full pipeline: Architect (Claude) → Senior Engineer (GPT) → QA Tester (Gemini) → Synthesizer
-Includes strict safety governors and a highly educational Kid Mode.
+Pipeline: Architect (Claude) → Builder (GPT) → Scout QA (Gemini) → Fix Loop → Synthesizer
 """
 
 import os
+import re
 import asyncio
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
+import json
 
-# ── consensus engine (memory_engine stubs are inside consensus_engine.py) ──
 from consensus_engine import run_consensus_pipeline
 
-app = FastAPI(title="House of AI")
+app = FastAPI(title="NymbleLogic — House of AI")
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,22 +30,25 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Config — Render environment variables
+# Config
 # ---------------------------------------------------------------------------
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
 
+MAX_FIX_ATTEMPTS = 2  # Scout → fix loop max retries
+
 # ---------------------------------------------------------------------------
-# Safety Governor & Mode Modifiers
+# Safety Governor
 # ---------------------------------------------------------------------------
 SAFETY_GOVERNOR = (
     "\n\nCRITICAL SAFETY RULE: You are a system built under the Good Neighbor Guard ethos. "
     "You strictly build software applications. You MUST NEVER generate, encourage, or assist with "
     "adult, sexual, graphic real-world violence, illegal, or highly dangerous content. "
     "HOWEVER, cartoon violence, arcade game mechanics (like throwing objects, lasers, popping balloons, "
-    "or silly enemies), and fantasy elements are 100% ALLOWED and encouraged. Do not falsely flag "
-    "harmless game mechanics as safety violations. If the user asks for a game, build the game."
+    "or silly enemies), and fantasy elements are 100% ALLOWED and encouraged. "
+    "Do not falsely flag harmless game mechanics as safety violations. "
+    "If the user asks for a game, build the game."
 )
 
 KID_MODE_MODIFIER = (
@@ -63,7 +66,7 @@ PRO_MODE_MODIFIER = (
 )
 
 # ---------------------------------------------------------------------------
-# Base Agent Personas
+# Agent Personas
 # ---------------------------------------------------------------------------
 BASE_ARCHITECT = (
     "You are Atlas the Architect. You receive a user prompt that may include a "
@@ -74,45 +77,55 @@ BASE_ARCHITECT = (
     "Do NOT write code. Do NOT pad with explanations. Be direct and specific."
 )
 
-# Byte the Builder — optimized for template-backed generation.
-# Priority: customize known-good templates safely. Build from scratch only when no template matched.
 BASE_ENGINEER = (
     "You are Byte the Builder — Senior Lead Developer for NymbleLogic. "
-    "\n\nYour PRIMARY RULE: Output ONE single self-contained HTML file. "
-    "ALL CSS inside <style>. ALL JS inside <script> at bottom of <body>. "
-    "NO external CDN links. NO imports. Inline everything. "
-    "Wrap output in a single ```html ... ``` block. No explanations outside the block. "
-    "\n\nIF a [NYMBLELOGIC TEMPLATE] spec is present in your context: "
-    "1. The template is already working. PRESERVE all logic listed under DO NOT TOUCH. "
-    "2. ONLY customize the fields listed under SAFE TO CUSTOMIZE. "
-    "3. Apply the user's requested changes (colors, content, theme, assets). "
-    "4. Do NOT rewrite working mechanics from scratch — modify, not replace. "
-    "5. Keep the win/lose/draw overlay logic exactly as specified. "
-    "\n\nIF no template spec is present: "
-    "Build a complete, working, polished single-file HTML app from scratch. "
-    "Use vanilla JS only. Make it fully functional — no placeholder UI. "
-    "\n\nQUALITY BAR: The output must be immediately playable or usable. "
-    "No broken buttons. No missing game logic. No empty screens."
+    "\n\nYour PRIMARY RULE: Output ONE complete, self-contained HTML file. "
+    "ALL CSS inside <style>. ALL JS inside <script> at the bottom of <body>. "
+    "NO external CDN links. NO imports. Inline EVERYTHING. "
+    "Wrap your ENTIRE output in a SINGLE ```html ... ``` block — nothing before or after. "
+    "\n\nCOMPLETENESS IS MANDATORY: "
+    "- The file must be 100% complete. Never truncate or use '...' placeholders. "
+    "- Every button must have a working onclick handler. "
+    "- Every game must have full win/lose/draw detection and display. "
+    "- Every UI element must render correctly on first load. "
+    "- Test mentally: could a user open this file and immediately use it? If not, fix it. "
+    "\n\nIF a [NYMBLELOGIC TEMPLATE] spec is present: "
+    "1. Preserve all logic listed under DO NOT TOUCH. "
+    "2. Only customize fields listed under SAFE TO CUSTOMIZE. "
+    "3. Do NOT rewrite working mechanics — modify, not replace. "
+    "\n\nIF no template spec: Build complete, polished single-file HTML from scratch. "
+    "Use vanilla JS only. Make it fully functional — no placeholder UI, no empty states. "
+    "\n\nQUALITY BAR: Immediately playable or usable. No broken buttons. No missing logic. No empty screens."
 )
 
 BASE_QA = (
     "You are Scout the Tester — QA engineer for NymbleLogic. "
-    "Review the code from Byte the Builder. Be fast and specific. "
+    "Review the HTML/JS code from Byte the Builder. Be fast and ruthless. "
     "\n\nCheck for: "
-    "1. Broken game logic or missing win/lose/draw states. "
-    "2. JavaScript errors that would prevent the app from running. "
-    "3. Buttons or interactions that do nothing. "
-    "4. Infinite loops or performance issues. "
-    "\n\nReturn: "
-    "- VERDICT: PASS or FAIL "
-    "- CRITICAL BUGS: (list or NONE) "
-    "- FIXES: (exact code patches only — no full rewrites unless necessary) "
-    "\n\nIf the code passes, say PASS and stop. Do not pad."
+    "1. Missing or broken win/lose/draw states in games. "
+    "2. JavaScript errors that would crash or freeze the app. "
+    "3. Buttons or interactions that have no handler or do nothing. "
+    "4. Infinite loops or logic that would freeze the browser. "
+    "5. Incomplete rendering — empty screens, missing UI on load. "
+    "\n\nRespond in EXACTLY this format: "
+    "VERDICT: PASS or FAIL "
+    "CRITICAL BUGS: (numbered list, or NONE) "
+    "FIXES: (for each bug, provide the EXACT replacement code snippet — no full rewrites unless <20 lines total) "
+    "\n\nIf PASS: write 'VERDICT: PASS' and nothing else. Do not pad."
+)
+
+BASE_FIXER = (
+    "You are Byte the Builder in FIX MODE. "
+    "You are given: the original HTML app code AND a QA report listing critical bugs and fixes. "
+    "\n\nYour job: Apply ONLY the listed fixes to the code. "
+    "Do NOT rewrite the whole app. Do NOT change anything not listed in the fixes. "
+    "Output the COMPLETE corrected HTML file in a single ```html ... ``` block. "
+    "The file must be 100% complete — never truncate."
 )
 
 
-def build_agent_prompt(base_prompt: str, app_mode: str) -> str:
-    prompt = base_prompt + SAFETY_GOVERNOR
+def build_agent_prompt(base: str, app_mode: str) -> str:
+    prompt = base + SAFETY_GOVERNOR
     if app_mode == "kid":
         prompt += KID_MODE_MODIFIER
     else:
@@ -126,10 +139,10 @@ def build_agent_prompt(base_prompt: str, app_mode: str) -> str:
 class TaskRequest(BaseModel):
     task: str
     context: str = ""
-    namespace: str = "house_of_ai"
+    namespace: str = "nymblelogic"
     phase: str = ""
-    write_memory: bool = False   # Default False — memory_engine is optional
-    app_mode: str = "kid"        # Passed from frontend toggle
+    write_memory: bool = False
+    app_mode: str = "kid"
 
 
 class AgentResponse(BaseModel):
@@ -147,11 +160,28 @@ class HouseResponse(BaseModel):
     actionable_prompt: str = ""
     memory_items: list[str] = []
     memory_writes: list[dict] = []
+    fix_attempts: int = 0  # How many Scout fix loops ran
 
 
-class MemorySearchRequest(BaseModel):
-    query: str
-    namespace: str = "house_of_ai"
+# ---------------------------------------------------------------------------
+# Code Extractor
+# ---------------------------------------------------------------------------
+def extract_html(text: str) -> str:
+    """Pull the first ```html ... ``` block. Falls back to raw text if none found."""
+    match = re.search(r"```html\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    # Fallback: if the text starts with <!DOCTYPE or <html, use it directly
+    stripped = text.strip()
+    if stripped.lower().startswith("<!doctype") or stripped.lower().startswith("<html"):
+        return stripped
+    return text.strip()
+
+
+def scout_passed(qa_response: str) -> bool:
+    """Returns True if Scout gave a PASS verdict."""
+    first_line = qa_response.strip().splitlines()[0] if qa_response.strip() else ""
+    return "PASS" in first_line.upper() and "FAIL" not in first_line.upper()
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +193,7 @@ async def call_claude(
     try:
         messages = []
         if context:
-            messages.append({"role": "user", "content": f"[CONTEXT]\n{context}"})
+            messages.append({"role": "user",      "content": f"[CONTEXT]\n{context}"})
             messages.append({"role": "assistant", "content": "Understood. I have reviewed the context."})
         messages.append({"role": "user", "content": task})
 
@@ -183,21 +213,19 @@ async def call_claude(
             timeout=120,
         )
         r.raise_for_status()
-        return AgentResponse(
-            agent="Architect (Claude)",
-            response=r.json()["content"][0]["text"]
-        )
+        return AgentResponse(agent="Atlas (Architect)", response=r.json()["content"][0]["text"])
     except Exception as e:
-        return AgentResponse(agent="Architect (Claude)", response="", error=str(e))
+        return AgentResponse(agent="Atlas (Architect)", response="", error=str(e))
 
 
 async def call_gpt(
-    task: str, context: str, system_prompt: str, client: httpx.AsyncClient
+    task: str, context: str, system_prompt: str, client: httpx.AsyncClient,
+    agent_label: str = "Byte (Builder)"
 ) -> AgentResponse:
     try:
         messages = [{"role": "system", "content": system_prompt}]
         if context:
-            messages.append({"role": "user", "content": f"[CONTEXT]\n{context}"})
+            messages.append({"role": "user",      "content": f"[CONTEXT]\n{context}"})
             messages.append({"role": "assistant", "content": "Understood. I have reviewed the context."})
         messages.append({"role": "user", "content": task})
 
@@ -208,35 +236,30 @@ async def call_gpt(
                 "Content-Type": "application/json",
             },
             json={
-                "model": "gpt-4o-mini",
-                "max_tokens": 4096,
+                "model": "gpt-4o",          # ← upgraded from gpt-4o-mini for quality
+                "max_tokens": 8192,         # ← doubled to prevent truncation
                 "messages": messages,
             },
-            timeout=120,
+            timeout=180,
         )
         r.raise_for_status()
         return AgentResponse(
-            agent="Senior Engineer (GPT)",
+            agent=agent_label,
             response=r.json()["choices"][0]["message"]["content"]
         )
     except Exception as e:
-        return AgentResponse(agent="Senior Engineer (GPT)", response="", error=str(e))
+        return AgentResponse(agent=agent_label, response="", error=str(e))
 
 
 async def call_gemini(
     task: str, context: str, system_prompt: str, client: httpx.AsyncClient
 ) -> AgentResponse:
-    """
-    Calls Gemini via REST — avoids the google-genai SDK sync/async conflict
-    that caused the event loop to hang in the original code.
-    """
     try:
         full_prompt = system_prompt + "\n\n"
         if context:
             full_prompt += f"[CONTEXT]\n{context}\n\n"
         full_prompt += task
 
-        # Use REST directly — no SDK threading issues
         r = await client.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}",
             headers={"Content-Type": "application/json"},
@@ -249,51 +272,213 @@ async def call_gemini(
         r.raise_for_status()
         data = r.json()
         text = data["candidates"][0]["content"]["parts"][0]["text"]
-        return AgentResponse(agent="QA Tester (Gemini)", response=text)
+        return AgentResponse(agent="Scout (QA Tester)", response=text)
     except Exception as e:
-        return AgentResponse(agent="QA Tester (Gemini)", response="", error=str(e))
+        return AgentResponse(agent="Scout (QA Tester)", response="", error=str(e))
 
 
 # ---------------------------------------------------------------------------
-# Routes
+# Scout Fix Loop
+# ---------------------------------------------------------------------------
+async def run_scout_fix_loop(
+    task: str,
+    initial_code: str,
+    qa_report: str,
+    app_mode: str,
+    client: httpx.AsyncClient,
+) -> tuple[str, str, int]:
+    """
+    If Scout gives a FAIL, feed the bugs + code back to GPT (as Fixer).
+    Returns (final_code, final_qa_report, attempts_used).
+    """
+    code = initial_code
+    qa   = qa_report
+    attempts = 0
+
+    for attempt in range(MAX_FIX_ATTEMPTS):
+        if scout_passed(qa):
+            break
+
+        attempts += 1
+        fixer_prompt = build_agent_prompt(BASE_FIXER, app_mode)
+        fix_task = (
+            f"Original request: {task}\n\n"
+            f"QA REPORT:\n{qa}\n\n"
+            f"CURRENT CODE:\n```html\n{code}\n```\n\n"
+            "Apply the listed fixes and return the complete corrected HTML file."
+        )
+
+        fixed_res = await call_gpt(fix_task, "", fixer_prompt, client, agent_label="Byte (Fixer)")
+        if fixed_res.error or not fixed_res.response:
+            break  # Don't loop on API error
+
+        fixed_code = extract_html(fixed_res.response)
+        if not fixed_code:
+            break
+
+        # Re-run Scout on the fixed code
+        qa_prompt = build_agent_prompt(BASE_QA, app_mode)
+        re_qa = await call_gemini(
+            f"Review this corrected code:\n```html\n{fixed_code}\n```",
+            "",
+            qa_prompt,
+            client,
+        )
+        code = fixed_code
+        qa   = re_qa.response if re_qa.response else qa
+
+    return code, qa, attempts
+
+
+# ---------------------------------------------------------------------------
+# SSE Stage Events Helper
+# ---------------------------------------------------------------------------
+def sse_event(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+# ---------------------------------------------------------------------------
+# Streaming Build Endpoint
+# ---------------------------------------------------------------------------
+@app.post("/consult/stream")
+async def consult_stream(req: TaskRequest):
+    """
+    Server-Sent Events endpoint — pushes stage updates to the frontend
+    so stage cards advance in real time instead of on a dumb timer.
+    """
+    if not req.task.strip():
+        raise HTTPException(status_code=400, detail="Task cannot be empty.")
+
+    architect_prompt = build_agent_prompt(BASE_ARCHITECT, req.app_mode)
+    engineer_prompt  = build_agent_prompt(BASE_ENGINEER,  req.app_mode)
+    qa_prompt        = build_agent_prompt(BASE_QA,        req.app_mode)
+    full_context     = req.context or ""
+
+    async def event_stream():
+        async with httpx.AsyncClient() as client:
+
+            # ── Stage 1: Atlas ──────────────────────────────────────────
+            yield sse_event("stage", {"stage": "atlas", "status": "active"})
+            claude_res = await call_claude(req.task, full_context, architect_prompt, client)
+            yield sse_event("stage", {"stage": "atlas", "status": "done"})
+            yield sse_event("agent", {"agent": "atlas", "response": claude_res.response, "error": claude_res.error})
+
+            # ── Stage 2: Byte ───────────────────────────────────────────
+            yield sse_event("stage", {"stage": "byte", "status": "active"})
+            engineer_context = full_context
+            if claude_res.response:
+                engineer_context += f"\n\n[ARCHITECT PLAN]\n{claude_res.response}"
+            gpt_res = await call_gpt(req.task, engineer_context, engineer_prompt, client)
+            raw_code = extract_html(gpt_res.response)
+            yield sse_event("stage", {"stage": "byte", "status": "done"})
+            yield sse_event("agent", {"agent": "byte", "response": gpt_res.response, "error": gpt_res.error})
+
+            # ── Stage 3: Scout ──────────────────────────────────────────
+            yield sse_event("stage", {"stage": "scout", "status": "active"})
+            qa_context = engineer_context + (f"\n\n[ENGINEER CODE]\n{gpt_res.response}" if gpt_res.response else "")
+            gemini_res = await call_gemini(req.task, qa_context, qa_prompt, client)
+            yield sse_event("stage", {"stage": "scout", "status": "done"})
+            yield sse_event("agent", {"agent": "scout", "response": gemini_res.response, "error": gemini_res.error})
+
+            # ── Stage 4: Fix Loop (if Scout failed) ─────────────────────
+            fix_attempts = 0
+            final_code   = raw_code
+            final_qa     = gemini_res.response
+
+            if not scout_passed(gemini_res.response) and raw_code:
+                yield sse_event("stage", {"stage": "shield", "status": "active"})
+                yield sse_event("fix",   {"message": "Scout found bugs — Byte is patching…"})
+                final_code, final_qa, fix_attempts = await run_scout_fix_loop(
+                    req.task, raw_code, gemini_res.response, req.app_mode, client
+                )
+                yield sse_event("stage", {"stage": "shield", "status": "done"})
+            else:
+                yield sse_event("stage", {"stage": "shield", "status": "done"})
+
+            # ── Stage 5: PM Synthesis ────────────────────────────────────
+            results = [claude_res, gpt_res, gemini_res]
+            try:
+                consensus_data = await run_consensus_pipeline(
+                    task=req.task,
+                    claude_response=claude_res.response,
+                    gpt_response=final_code,   # Send final (fixed) code to PM
+                    gemini_response=final_qa,
+                    client=client,
+                    namespace=req.namespace,
+                    phase=req.phase,
+                    write_memory=req.write_memory,
+                )
+            except Exception as e:
+                consensus_data = {
+                    "raw": f"Synthesis error: {e}",
+                    "summary": "", "disagreements": "",
+                    "final_decision": "", "actionable_prompt": "",
+                    "memory_items": [], "memory_writes": [],
+                }
+
+            # ── Final payload ─────────────────────────────────────────
+            payload = {
+                "results": [
+                    {"agent": r.agent, "response": r.response, "error": r.error}
+                    for r in results
+                ],
+                "final_code":       final_code,
+                "consensus":        consensus_data["raw"],
+                "summary":          consensus_data["summary"],
+                "disagreements":    consensus_data["disagreements"],
+                "final_decision":   consensus_data["final_decision"],
+                "actionable_prompt":consensus_data["actionable_prompt"],
+                "memory_items":     consensus_data["memory_items"],
+                "memory_writes":    consensus_data["memory_writes"],
+                "fix_attempts":     fix_attempts,
+            }
+            yield sse_event("complete", payload)
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+# ---------------------------------------------------------------------------
+# Non-streaming fallback (keeps backward compat)
 # ---------------------------------------------------------------------------
 @app.post("/consult", response_model=HouseResponse)
 async def consult(req: TaskRequest):
     if not req.task.strip():
         raise HTTPException(status_code=400, detail="Task cannot be empty.")
 
-    # Build mode-aware prompts — app_mode flows from frontend toggle
     architect_prompt = build_agent_prompt(BASE_ARCHITECT, req.app_mode)
     engineer_prompt  = build_agent_prompt(BASE_ENGINEER,  req.app_mode)
     qa_prompt        = build_agent_prompt(BASE_QA,        req.app_mode)
-
-    full_context = req.context or ""
+    full_context     = req.context or ""
 
     async with httpx.AsyncClient() as client:
-        # Step 1 — Architect designs the plan (Claude)
         claude_res = await call_claude(req.task, full_context, architect_prompt, client)
 
-        # Step 2 — Engineer writes the code based on the plan (GPT)
         engineer_context = full_context
         if claude_res.response:
             engineer_context += f"\n\n[ARCHITECT PLAN]\n{claude_res.response}"
         gpt_res = await call_gpt(req.task, engineer_context, engineer_prompt, client)
 
-        # Step 3 — QA Tester reviews the code (Gemini)
-        qa_context = engineer_context
-        if gpt_res.response:
-            qa_context += f"\n\n[ENGINEER CODE]\n{gpt_res.response}"
+        qa_context = engineer_context + (f"\n\n[ENGINEER CODE]\n{gpt_res.response}" if gpt_res.response else "")
         gemini_res = await call_gemini(req.task, qa_context, qa_prompt, client)
+
+        raw_code     = extract_html(gpt_res.response)
+        final_code   = raw_code
+        final_qa     = gemini_res.response
+        fix_attempts = 0
+
+        if not scout_passed(gemini_res.response) and raw_code:
+            final_code, final_qa, fix_attempts = await run_scout_fix_loop(
+                req.task, raw_code, gemini_res.response, req.app_mode, client
+            )
 
         results = [claude_res, gpt_res, gemini_res]
 
-        # Step 4 — Project Manager synthesizes final output
         try:
             consensus_data = await run_consensus_pipeline(
                 task=req.task,
                 claude_response=claude_res.response,
-                gpt_response=gpt_res.response,
-                gemini_response=gemini_res.response,
+                gpt_response=final_code,
+                gemini_response=final_qa,
                 client=client,
                 namespace=req.namespace,
                 phase=req.phase,
@@ -301,13 +486,10 @@ async def consult(req: TaskRequest):
             )
         except Exception as e:
             consensus_data = {
-                "raw":               f"Consensus engine error: {e}",
-                "summary":           "",
-                "disagreements":     "",
-                "final_decision":    "",
-                "actionable_prompt": "",
-                "memory_items":      [],
-                "memory_writes":     [],
+                "raw": f"Synthesis error: {e}",
+                "summary": "", "disagreements": "",
+                "final_decision": "", "actionable_prompt": "",
+                "memory_items": [], "memory_writes": [],
             }
 
     return HouseResponse(
@@ -319,25 +501,36 @@ async def consult(req: TaskRequest):
         actionable_prompt=consensus_data["actionable_prompt"],
         memory_items=consensus_data["memory_items"],
         memory_writes=consensus_data["memory_writes"],
+        fix_attempts=fix_attempts,
     )
 
 
+# ---------------------------------------------------------------------------
+# TTS — Extended for Kid Mode
+# ---------------------------------------------------------------------------
+KID_VOICES = ["nova", "shimmer"]   # Warmer voices for kids
+PRO_VOICES = ["onyx", "echo"]
 
-# ---------------------------------------------------------------------------
-# Optional TTS endpoint — used by Nym in Kid Mode
-# Fails gracefully if OPENAI_API_KEY not set
-# ---------------------------------------------------------------------------
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "alloy"
+    voice: str = ""
+    app_mode: str = "kid"
 
 @app.post("/tts")
 async def tts_endpoint(req: TTSRequest):
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=503, detail="TTS not configured.")
-    if not req.text or not req.text.strip():
+    text = (req.text or "").strip()
+    if not text:
         raise HTTPException(status_code=400, detail="Text required.")
-    text = req.text.strip()[:300]  # Cap length
+
+    text = text[:600]  # Raised cap from 300 → 600 chars
+
+    # Auto-select voice if not specified
+    voice = req.voice
+    if not voice:
+        voice = KID_VOICES[0] if req.app_mode == "kid" else PRO_VOICES[0]
+
     async with httpx.AsyncClient() as client:
         try:
             r = await client.post(
@@ -346,7 +539,7 @@ async def tts_endpoint(req: TTSRequest):
                     "Authorization": f"Bearer {OPENAI_API_KEY}",
                     "Content-Type": "application/json",
                 },
-                json={"model": "tts-1", "input": text, "voice": req.voice},
+                json={"model": "tts-1", "input": text, "voice": voice},
                 timeout=30,
             )
             r.raise_for_status()
@@ -355,12 +548,18 @@ async def tts_endpoint(req: TTSRequest):
         except Exception as e:
             raise HTTPException(status_code=502, detail=f"TTS error: {e}")
 
+
+# ---------------------------------------------------------------------------
+# Health + Static
+# ---------------------------------------------------------------------------
 @app.get("/health")
 async def health():
-    return {"status": "House of AI live", "safety_layer": "active"}
+    return {
+        "status": "NymbleLogic — House of AI live",
+        "safety_layer": "active",
+        "fix_loop": f"max {MAX_FIX_ATTEMPTS} attempts",
+    }
 
-
-# Serve frontend — index.html must be in a /static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
