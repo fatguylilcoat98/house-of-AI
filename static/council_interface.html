@@ -911,18 +911,45 @@
 
             container.innerHTML = '';
 
+            // CRITICAL FIX: Initialize default providers if none provided
+            if (!providers || Object.keys(providers).length === 0) {
+                providers = {
+                    'claude': { name: 'claude', status: 'unknown', online: false, latency: null, error: null },
+                    'gpt4': { name: 'gpt4', status: 'unknown', online: false, latency: null, error: null },
+                    'gemini': { name: 'gemini', status: 'unknown', online: false, latency: null, error: null },
+                    'grok': { name: 'grok', status: 'unknown', online: false, latency: null, error: null },
+                    'perplexity': { name: 'perplexity', status: 'unknown', online: false, latency: null, error: null }
+                };
+            }
+
             for (const [provider, status] of Object.entries(providers)) {
-                const statusColor = status.status === 'online' ? '#28a745' : '#dc3545';
-                const statusIcon = status.status === 'online' ? '✅' : '❌';
-                const responseTime = status.response_time_ms ? ` ${status.response_time_ms}ms` : '';
+                // CRITICAL FIX: Null/undefined guard with safe fallback
+                if (!status) {
+                    console.warn(`Provider ${provider} status is undefined - using safe fallback`);
+                    status = { name: provider, status: 'error', online: false, latency: null, error: 'Status undefined' };
+                }
+
+                // CRITICAL FIX: Ensure all required properties exist
+                const safeStatus = {
+                    name: status.name || provider,
+                    status: status.status || 'unknown',
+                    online: status.status === 'online' || status.online === true,
+                    latency: status.response_time_ms || status.latency || null,
+                    error: status.error_message || status.error || null
+                };
+
+                const statusColor = safeStatus.online ? '#28a745' : '#dc3545';
+                const statusIcon = safeStatus.online ? '✅' : '❌';
+                const responseTime = safeStatus.latency ? ` ${safeStatus.latency}ms` : '';
 
                 container.innerHTML += `
                     <div class="member-card" style="border-left: 4px solid ${statusColor};">
                         <div class="member-name">${provider.charAt(0).toUpperCase() + provider.slice(1)}</div>
                         <div class="member-role">${roles[provider] || 'AI Assistant'}</div>
                         <div class="member-status" style="color: ${statusColor};">
-                            ${statusIcon} ${status.status}${responseTime}
+                            ${statusIcon} ${safeStatus.status}${responseTime}
                         </div>
+                        ${safeStatus.error ? `<div style="color: #dc3545; font-size: 11px;">Error: ${safeStatus.error}</div>` : ''}
                     </div>
                 `;
             }

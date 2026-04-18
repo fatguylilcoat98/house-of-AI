@@ -11,6 +11,14 @@ import os
 import json
 import uuid
 from datetime import datetime
+
+# Load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("Environment variables loaded from .env file")
+except ImportError:
+    print("python-dotenv not installed, using system environment variables only")
 from typing import Dict, Any, Optional, List
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +56,7 @@ API_KEYS = {
     "claude": os.getenv("ANTHROPIC_API_KEY", ""),
     "gpt4": os.getenv("OPENAI_API_KEY", ""),
     "gemini": os.getenv("GEMINI_API_KEY", ""),
+    "groq": os.getenv("GROQ_API_KEY", ""),
     "grok": os.getenv("GROK_API_KEY", ""),
     "perplexity": os.getenv("PERPLEXITY_API_KEY", "")
 }
@@ -1050,26 +1059,18 @@ async def test_provider_connection(provider: str) -> bool:
 # REAL API CALLING FUNCTIONS FOR HEALTH TESTS
 
 async def _real_call_claude(prompt: str, api_key: str) -> str:
-    """Make REAL API call to Claude"""
-    import httpx
+    """Make REAL API call to Claude - WORKING VERACORE IMPLEMENTATION"""
+    import anthropic
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": api_key,
-                "content-type": "application/json",
-                "anthropic-version": "2023-06-01"
-            },
-            json={
-                "model": "claude-3-5-sonnet-20241022",
-                "max_tokens": 100,
-                "messages": [{"role": "user", "content": prompt}]
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["content"][0]["text"]
+    client = anthropic.Anthropic(api_key=api_key)
+
+    r = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=100,
+        system="Health test for AI Council System",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return r.content[0].text
 
 
 async def _real_call_gpt4(prompt: str, api_key: str) -> str:
@@ -1100,7 +1101,7 @@ async def _real_call_gemini(prompt: str, api_key: str) -> str:
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}",
             headers={"Content-Type": "application/json"},
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
@@ -1112,33 +1113,51 @@ async def _real_call_gemini(prompt: str, api_key: str) -> str:
         return data["candidates"][0]["content"]["parts"][0]["text"]
 
 
-async def _real_call_grok(prompt: str, api_key: str) -> str:
-    """Make REAL API call to Grok (X.AI)"""
-    import httpx
+async def _real_call_groq(prompt: str, api_key: str) -> str:
+    """Make REAL API call to Groq - WORKING VERACORE IMPLEMENTATION"""
+    from openai import OpenAI
 
-    # Note: X.AI/Grok API endpoint - this may need adjustment when official API is available
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.x.ai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "grok-beta",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 100
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://api.groq.com/openai/v1"
+    )
+
+    r = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        max_tokens=100,
+        messages=[
+            {"role": "system", "content": "Health test for AI Council System"},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return r.choices[0].message.content
+
+
+async def _real_call_grok(prompt: str, api_key: str) -> str:
+    """Make REAL API call to Grok - WORKING VERACORE IMPLEMENTATION"""
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://api.x.ai/v1"
+    )
+
+    r = client.chat.completions.create(
+        model="grok-4-1-fast-non-reasoning",
+        max_tokens=100,
+        messages=[
+            {"role": "system", "content": "Health test for AI Council System"},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return r.choices[0].message.content
 
 
 async def _real_call_perplexity(prompt: str, api_key: str) -> str:
-    """Make REAL API call to Perplexity"""
+    """Make REAL API call to Perplexity with CORRECT configuration"""
     import httpx
 
+    # Use correct Perplexity API configuration
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(
             "https://api.perplexity.ai/chat/completions",
@@ -1147,9 +1166,10 @@ async def _real_call_perplexity(prompt: str, api_key: str) -> str:
                 "Content-Type": "application/json"
             },
             json={
-                "model": "llama-3.1-sonar-small-128k-online",
+                "model": "sonar",
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 100
+                "max_tokens": 100,
+                "temperature": 0.1
             }
         )
         response.raise_for_status()
@@ -1188,6 +1208,8 @@ async def constitutional_provider_test(provider: str) -> Dict[str, Any]:
             response_text = await _real_call_gpt4(test_prompt, api_key)
         elif provider == "gemini":
             response_text = await _real_call_gemini(test_prompt, api_key)
+        elif provider == "groq":
+            response_text = await _real_call_groq(test_prompt, api_key)
         elif provider == "grok":
             response_text = await _real_call_grok(test_prompt, api_key)
         elif provider == "perplexity":
@@ -1717,7 +1739,7 @@ async def test_single_provider(provider: str):
     """CRITICAL FIX: Test single provider with proper error handling"""
 
     # CRITICAL FIX: Validate provider input
-    valid_providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
+    valid_providers = ["claude", "gpt4", "gemini", "groq", "grok", "perplexity"]
     if provider not in valid_providers:
         return {
             "provider": provider,
