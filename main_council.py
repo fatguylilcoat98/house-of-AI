@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.3.0"  # Full Mode Null Reference Fix + Defensive Session Handling
+APP_VERSION = "v1.3.1"  # Handoff Export Null Reference Fix
 
 app = FastAPI(
     title="Constitutional AI Council System",
@@ -2371,11 +2371,11 @@ async def create_handoff_packet(request: HandoffPacketRequest):
             "next_steps": synthesis_data.get("open_questions", []),
             "open_questions": synthesis_data.get("open_questions", []),
 
-            # Raw data for reference
-            "original_request": session_data["user_input"],
+            # Raw data for reference - DEFENSIVE NULL CHECKING
+            "original_request": session_data.get("user_input", "") if session_data else "",
             "council_outputs": {
-                "round1": session_data.get("round1_responses", []),
-                "round2": session_data.get("round2_responses", [])
+                "round1": session_data.get("round1_responses", []) if session_data else [],
+                "round2": session_data.get("round2_responses", []) if session_data else []
             },
             "provider_perspectives": synthesis_data.get("provider_perspectives", {}),
             "system_context": packet_builder.export_state() if request.include_full_context else None,
