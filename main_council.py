@@ -586,13 +586,13 @@ async def get_pending_handoffs():
 # Static Files & Root
 # ---------------------------------------------------------------------------
 
-# Serve static files (will create clean UI later)
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+# Serve static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
     """Root endpoint - serve main interface"""
-    return {"message": "AI Council System - Clean Architecture", "version": "1.0.0"}
+    return FileResponse("static/council_interface.html")
 
 
 @app.get("/api/health")
