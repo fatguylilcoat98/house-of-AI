@@ -589,20 +589,73 @@
                     Edit System State
                 </button>
 
-                <!-- 🔴 FIX #6: PROVIDER STATUS PANEL -->
-                <div class="section-title" style="margin-top: 30px;">🤖 Council Members & Provider Status</div>
+                <!-- 🏛️ CONSTITUTIONAL PROVIDER HEALTH PANEL -->
+                <div class="section-title" style="margin-top: 30px;">🤖 Council Members & Provider Health</div>
+
+                <!-- Constitutional Provider Test Controls -->
+                <div class="provider-test-controls" style="margin-bottom: 15px; padding: 12px; background: #e8f4fd; border-radius: 6px; border: 1px solid #007bff;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🏛️ Constitutional Health Tests</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <button onclick="testProvider('claude')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Claude
+                        </button>
+                        <button onclick="testProvider('gpt4')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test GPT-4
+                        </button>
+                        <button onclick="testProvider('gemini')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Gemini
+                        </button>
+                        <button onclick="testProvider('grok')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Grok
+                        </button>
+                        <button onclick="testProvider('perplexity')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Perplexity
+                        </button>
+                        <button onclick="testAllProviders()" class="test-btn" style="background: #007bff; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">
+                            🏛️ Test All
+                        </button>
+                    </div>
+                </div>
+
                 <div class="council-members" id="councilMembers">
                     <!-- Dynamic provider status will be loaded here -->
                 </div>
 
-                <!-- 🔴 FIX #7: COST + CALL TRACKING -->
+                <!-- Constitutional Test Results -->
+                <div id="testResults" style="display: none; margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🏛️ Health Test Results</div>
+                    <div id="testOutput" style="font-size: 13px; font-family: monospace;">
+                        <!-- Test results will appear here -->
+                    </div>
+                </div>
+
+                <!-- 🏛️ CONSTITUTIONAL SESSION LOGGING -->
                 <div class="session-stats" id="sessionStats" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
-                    <div style="font-weight: 600; margin-bottom: 10px;">📊 Session Statistics</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
-                        <div>Total calls: <span id="totalCalls">0</span></div>
-                        <div>Estimated cost: <span id="estimatedCost">$0.00</span></div>
-                        <div>Processing time: <span id="processingTime">0ms</span></div>
-                        <div>Execution mode: <span id="executionModeUsed">-</span></div>
+                    <div style="font-weight: 600; margin-bottom: 10px;">📊 Constitutional Session Logging</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 10px;">
+                        <div><strong>Total calls:</strong> <span id="totalCalls">0</span></div>
+                        <div><strong>Successful:</strong> <span id="successfulCalls">0</span></div>
+                        <div><strong>Failed:</strong> <span id="failedCalls">0</span></div>
+                        <div><strong>Cost:</strong> <span id="estimatedCost">$0.00</span></div>
+                        <div><strong>Time:</strong> <span id="processingTime">0ms</span></div>
+                        <div><strong>Mode:</strong> <span id="executionModeUsed">-</span></div>
+                    </div>
+
+                    <!-- Constitutional Call Details -->
+                    <div id="callDetails" style="display: none;">
+                        <div style="font-weight: 600; margin: 10px 0 5px 0; padding-top: 10px; border-top: 1px solid #dee2e6;">🏛️ Call Logs</div>
+                        <div id="callLogsList" style="font-size: 11px;">
+                            <!-- Constitutional call logs will appear here -->
+                        </div>
+                        <button onclick="toggleCallDetails()" style="background: #6c757d; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 8px;">
+                            Hide Details
+                        </button>
+                    </div>
+
+                    <div id="showCallDetails" style="margin-top: 8px;">
+                        <button onclick="toggleCallDetails()" style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Show Call Details
+                        </button>
                     </div>
                 </div>
             </div>
@@ -881,10 +934,54 @@
         }
 
         function updateSessionStats(stats) {
+            // Constitutional session statistics
             document.getElementById('totalCalls').textContent = stats.total_calls || 0;
-            document.getElementById('estimatedCost').textContent = `$${stats.estimated_cost || '0.00'}`;
+            document.getElementById('successfulCalls').textContent = stats.successful_calls || 0;
+            document.getElementById('failedCalls').textContent = stats.failed_calls || 0;
+            document.getElementById('estimatedCost').textContent = `$${(stats.total_estimated_cost || 0).toFixed(4)}`;
             document.getElementById('processingTime').textContent = `${stats.processing_time_ms || 0}ms`;
             document.getElementById('executionModeUsed').textContent = stats.execution_mode || '-';
+
+            // Constitutional call logging details
+            if (stats.call_logs && stats.call_logs.length > 0) {
+                const callLogsList = document.getElementById('callLogsList');
+                let logsHTML = '';
+
+                stats.call_logs.forEach(log => {
+                    const statusColor = log.success ? '#28a745' : '#dc3545';
+                    const statusIcon = log.success ? '✅' : '❌';
+                    const complianceIcon = log.constitutional_compliance ? '🏛️' : '⚠️';
+
+                    logsHTML += `
+                        <div style="margin: 4px 0; padding: 6px; background: ${log.success ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; align-items: center;">
+                                <div style="color: ${statusColor}; font-weight: 600;">
+                                    ${statusIcon} ${complianceIcon} ${log.provider}
+                                </div>
+                                <div>R${log.round} • ${log.latency_ms}ms</div>
+                                <div>~${log.token_usage.total_tokens}tok</div>
+                                <div>$${log.estimated_cost.toFixed(4)}</div>
+                            </div>
+                            ${!log.success ? `<div style="color: #dc3545; font-size: 10px; margin-top: 2px;">Failed: Check provider health</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                callLogsList.innerHTML = logsHTML;
+            }
+        }
+
+        function toggleCallDetails() {
+            const details = document.getElementById('callDetails');
+            const showButton = document.getElementById('showCallDetails');
+
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                showButton.style.display = 'none';
+            } else {
+                details.style.display = 'none';
+                showButton.style.display = 'block';
+            }
         }
 
         function displayStructuredSynthesis(synthesis) {
@@ -1155,6 +1252,93 @@
             document.getElementById('branchSelect').innerHTML = '<option value="master">master</option>';
             document.querySelector('input[name="shareScope"][value="diff"]').checked = true;
             updateScopeOptions();
+        }
+
+        // 🏛️ CONSTITUTIONAL PROVIDER HEALTH TESTING
+
+        async function testProvider(provider) {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+
+            testResults.style.display = 'block';
+            testOutput.innerHTML = `<div style="color: #007bff;">🏛️ Testing ${provider}...</div>`;
+
+            try {
+                const response = await fetch(`/api/providers/test/${provider}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                const statusColor = data.success ? '#28a745' : '#dc3545';
+                const statusIcon = data.success ? '✅' : '❌';
+
+                testOutput.innerHTML = `
+                    <div style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${provider.toUpperCase()} - ${data.success ? 'OPERATIONAL' : 'FAILED'}</div>
+                    <div><strong>Latency:</strong> ${data.latency_ms}ms</div>
+                    <div><strong>Sample Output:</strong></div>
+                    <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin: 5px 0;">${data.sample_output || 'No sample available'}</div>
+                    ${data.error ? `<div style="color: #dc3545;"><strong>Error:</strong> ${data.error}</div>` : ''}
+                    <div style="color: #6c757d; font-size: 11px;">Constitutional Test: ${data.constitutional_test ? 'COMPLIANT' : 'NON-COMPLIANT'}</div>
+                `;
+
+                // Update provider status in the main panel
+                updateProviderStatus();
+
+            } catch (error) {
+                testOutput.innerHTML = `
+                    <div style="color: #dc3545; font-weight: 600;">❌ ${provider.toUpperCase()} - TEST FAILED</div>
+                    <div style="color: #dc3545;"><strong>Error:</strong> ${error.message}</div>
+                `;
+            }
+        }
+
+        async function testAllProviders() {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+
+            testResults.style.display = 'block';
+            testOutput.innerHTML = `<div style="color: #007bff;">🏛️ Testing all providers...</div>`;
+
+            try {
+                const response = await fetch('/api/providers/test/all', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                let resultsHTML = `
+                    <div style="font-weight: 600; margin-bottom: 10px;">🏛️ CONSTITUTIONAL HEALTH SUMMARY</div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Online:</strong> ${data.summary.online}/${data.summary.total_providers}
+                        <strong>Average Latency:</strong> ${Math.round(data.summary.average_latency)}ms
+                    </div>
+                `;
+
+                for (const [provider, result] of Object.entries(data.results)) {
+                    const statusColor = result.success ? '#28a745' : '#dc3545';
+                    const statusIcon = result.success ? '✅' : '❌';
+
+                    resultsHTML += `
+                        <div style="margin: 8px 0; padding: 6px; background: ${result.success ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                            <div style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${provider.toUpperCase()} - ${result.success ? 'OPERATIONAL' : 'FAILED'}</div>
+                            ${result.latency_ms ? `<div><strong>Latency:</strong> ${result.latency_ms}ms</div>` : ''}
+                            ${result.error ? `<div style="color: #dc3545; font-size: 12px;">Error: ${result.error}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                testOutput.innerHTML = resultsHTML;
+
+                // Update provider status in the main panel
+                updateProviderStatus();
+
+            } catch (error) {
+                testOutput.innerHTML = `
+                    <div style="color: #dc3545; font-weight: 600;">❌ ALL PROVIDERS TEST FAILED</div>
+                    <div style="color: #dc3545;"><strong>Error:</strong> ${error.message}</div>
+                `;
+            }
         }
 
         function displayCouncilResults(session, synthesis, repoShareInfo = null) {

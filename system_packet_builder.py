@@ -28,25 +28,33 @@ class ConstitutionCore:
                 "Good Neighbor Guard ethos - build for others' benefit",
                 "Truth and transparency in all outputs",
                 "Respect user autonomy and choice",
+                "House of AI is the council chamber - not a build system",
+                "Claude Code remains the only build system",
+                "Sole Carrier Rule: Models do not share native memory",
                 "Minimize harm, maximize utility"
             ],
             decision_principles=[
-                "Evidence-based reasoning",
-                "Consider multiple perspectives",
-                "Flag assumptions clearly",
-                "Preserve nuance and complexity"
+                "Evidence-based reasoning - VERIFIED/OPINION/UNKNOWN classification",
+                "Truth over agreement - challenge incorrect claims",
+                "Preserve disagreement - no fake consensus",
+                "Flag assumptions clearly - do not guess",
+                "Stay in assigned lanes - respect role boundaries",
+                "Independent reasoning - no cross-seat assumptions"
             ],
             constraints=[
-                "No cross-AI memory assumptions",
-                "Tag claim provenance",
-                "Preserve original voices",
-                "Maintain sole carrier rule"
+                "SOLE CARRIER RULE: Only session packet information is valid",
+                "VOICE INTEGRITY: Speak only for yourself, no simulation",
+                "NO ASSUMPTION: Do not assume other seats verified anything",
+                "CLAIM PROVENANCE: Tag as MEASURED/INFERRED/ASSUMED/GENERATED",
+                "REPO VISIBILITY: Only shared repo context is valid",
+                "UNCERTAINTY DEFAULT: If unclear, say UNKNOWN"
             ],
             priorities=[
-                "Accuracy over speed",
-                "Clarity over cleverness",
-                "Utility over elegance",
-                "Transparency over efficiency"
+                "Truth before agreement",
+                "Safety before flow",
+                "Clarity before speed",
+                "Verification before trust",
+                "Council escalation for significant decisions"
             ]
         )
 
@@ -210,11 +218,40 @@ class SystemPacketBuilder:
         user_input: str,
         round_number: int = 1,
         previous_outputs: Optional[Dict[str, Any]] = None,
-        custom_goal: Optional[SessionGoal] = None
+        custom_goal: Optional[SessionGoal] = None,
+        repo_context: Optional[Dict[str, Any]] = None
     ) -> SystemPacket:
-        """Build a complete system packet"""
+        """Build a complete constitutional system packet"""
+
+        # CONSTITUTIONAL REQUIREMENT: Every packet must include all core components
+        if not user_input.strip():
+            raise ValueError("CONSTITUTIONAL VIOLATION: No user prompt provided")
+
+        if not self.constitution:
+            raise ValueError("CONSTITUTIONAL VIOLATION: No Constitution Core loaded")
+
+        if not self.system_state:
+            raise ValueError("CONSTITUTIONAL VIOLATION: No Active System State")
 
         session_goal = custom_goal or SessionGoal.from_input(user_input)
+
+        # Build constitutional metadata
+        constitutional_metadata = {
+            "builder_version": "1.0.0-CONSTITUTIONAL",
+            "packet_size": len(user_input),
+            "constitutional_compliance": True,
+            "sole_carrier_rule_active": True,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # Add repo analysis requirements if repo context present
+        if repo_context:
+            constitutional_metadata.update({
+                "repo_context_included": True,
+                "repo_analysis_injection": "You are analyzing shared repository context. Do not assume missing files exist. Do not infer behavior outside provided code. Flag unknowns instead of guessing.",
+                "repo_metadata": repo_context.get("repo_share_metadata", {}),
+                "read_only_status": True
+            })
 
         packet = SystemPacket(
             packet_id=str(uuid.uuid4()),
@@ -225,13 +262,37 @@ class SystemPacketBuilder:
             user_input=user_input,
             round_number=round_number,
             previous_outputs=previous_outputs,
-            metadata={
-                "builder_version": "1.0",
-                "packet_size": len(user_input)
-            }
+            metadata=constitutional_metadata
         )
 
+        # CONSTITUTIONAL VALIDATION: Ensure packet completeness
+        self._validate_constitutional_packet(packet, repo_context)
+
         return packet
+
+    def _validate_constitutional_packet(self, packet: SystemPacket, repo_context: Optional[Dict[str, Any]] = None):
+        """Validate packet meets constitutional requirements"""
+
+        required_components = [
+            ("Constitution Core", packet.constitution),
+            ("Active System State", packet.system_state),
+            ("Session Goal", packet.session_goal),
+            ("User Prompt", packet.user_input)
+        ]
+
+        missing = [name for name, component in required_components if not component]
+
+        if missing:
+            raise ValueError(f"CONSTITUTIONAL VIOLATION: Missing required components: {', '.join(missing)}")
+
+        # Validate repo context if present
+        if repo_context and not repo_context.get("repo_share_metadata"):
+            raise ValueError("CONSTITUTIONAL VIOLATION: Repo context provided without proper metadata")
+
+    def add_repo_context(self, repo_context: Dict[str, Any]):
+        """Add repository context to the next packet build"""
+        # This method referenced in main_council.py
+        self._pending_repo_context = repo_context
 
     def export_state(self) -> Dict[str, Any]:
         """Export current builder state"""
