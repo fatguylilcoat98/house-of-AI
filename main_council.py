@@ -44,7 +44,14 @@ from builder_instance_manager import (
 HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
-app = FastAPI(title="AI Council System - Clean Architecture")
+# Version tracking for deployment verification
+APP_VERSION = "v1.2.0"  # Real API Integration + Council Execution Fix
+
+app = FastAPI(
+    title="Constitutional AI Council System",
+    version=APP_VERSION,
+    description=f"Real API Integration with Constitutional Governance (Build: {APP_VERSION})"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -2614,6 +2621,18 @@ async def root():
     return FileResponse("static/council_interface.html")
 
 
+@app.get("/api/version")
+async def get_version():
+    """Get current deployment version"""
+    return {
+        "version": APP_VERSION,
+        "title": "Constitutional AI Council System",
+        "api_integration": "REAL",
+        "council_execution": "REAL",
+        "timestamp": datetime.now().isoformat(),
+        "deployment_status": "live"
+    }
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
@@ -2623,6 +2642,7 @@ async def health_check():
 
     return {
         "status": "healthy",
+        "version": APP_VERSION,
         "api_keys": api_status,
         "components": {
             "packet_builder": "ready",

@@ -457,8 +457,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏛️ AI Council System</h1>
-            <p>Coordinated multi-AI analysis with System Packet Builder, 2-round execution, and synthesis</p>
+            <h1>🏛️ Constitutional AI Council System</h1>
+            <p>Real API Integration with Constitutional Governance</p>
+            <div id="versionDisplay" style="margin-top: 8px; padding: 4px 12px; background: #e3f2fd; border-radius: 4px; font-size: 0.9em; color: #1565c0;">
+                Loading version...
+            </div>
         </div>
 
         <div class="council-grid">
@@ -760,6 +763,22 @@
     <script>
         let currentSession = null;
         let currentSynthesis = null;
+
+        // Load and display version information
+        async function loadVersion() {
+            try {
+                const response = await fetch('/api/version');
+                const versionData = await response.json();
+                document.getElementById('versionDisplay').innerHTML = `
+                    📦 ${versionData.version} | API: ${versionData.api_integration} | Council: ${versionData.council_execution}
+                `;
+            } catch (error) {
+                document.getElementById('versionDisplay').innerHTML = '📦 Version: Unknown';
+            }
+        }
+
+        // Load version on page load
+        document.addEventListener('DOMContentLoaded', loadVersion);
 
         function showTab(tabName) {
             // Hide all content
