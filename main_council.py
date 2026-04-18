@@ -1770,6 +1770,7 @@ async def get_provider_status():
 
 # CONSTITUTIONAL CONSTITUTIONAL PROVIDER HEALTH PANEL
 
+
 @app.post("/api/providers/test/{provider}")
 async def test_single_provider(provider: str):
     """CRITICAL FIX: Test single provider with proper error handling"""
