@@ -45,12 +45,12 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.3.2"  # Frontend JavaScript Null Reference Fix
+APP_VERSION = "v1.3.3"  # House of AI Branding Update
 
 app = FastAPI(
-    title="Constitutional AI Council System",
+    title="House of AI Council",
     version=APP_VERSION,
-    description=f"Real API Integration with Constitutional Governance (Build: {APP_VERSION})"
+    description=f"Constitutional AI Governance with Real API Integration (Build: {APP_VERSION})"
 )
 
 app.add_middleware(
@@ -2648,7 +2648,7 @@ async def get_version():
     """Get current deployment version"""
     return {
         "version": APP_VERSION,
-        "title": "Constitutional AI Council System",
+        "title": "House of AI Council",
         "api_integration": "REAL",
         "council_execution": "REAL",
         "timestamp": datetime.now().isoformat(),
