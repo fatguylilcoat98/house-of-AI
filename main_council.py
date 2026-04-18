@@ -17,6 +17,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
+import subprocess
+import os
+from pathlib import Path
 
 from system_packet_builder import (
     SystemPacketBuilder, ConstitutionCore, ActiveSystemState, SessionGoal
@@ -66,6 +69,10 @@ provider_status: Dict[str, ProviderStatus] = {}
 session_stats: Dict[str, Dict[str, Any]] = {}
 saved_insights: Dict[str, Dict[str, Any]] = {}
 
+# Repo sharing system
+repo_shares: Dict[str, RepoShareSession] = {}
+available_repos: Dict[str, str] = {}  # repo_name -> repo_path mapping
+
 # Initialize provider status
 for provider in ["claude", "gpt4", "gemini", "grok", "perplexity"]:
     provider_status[provider] = ProviderStatus(
@@ -84,6 +91,7 @@ class CouncilRequest(BaseModel):
     custom_constitution: Optional[Dict[str, Any]] = None
     execution_mode: str = "full"  # "safe" (1 round) or "full" (2 rounds)
     selected_providers: Optional[List[str]] = None  # ["claude", "gpt4", etc]
+    repo_share_id: Optional[str] = None  # Include repo context in session
 
 
 class StateUpdateRequest(BaseModel):
@@ -123,6 +131,28 @@ class ProviderStatus(BaseModel):
     response_time_ms: Optional[int] = None
     error_message: Optional[str] = None
     last_check: datetime
+
+
+class RepoShareRequest(BaseModel):
+    repo_path: str
+    branch: str = "master"
+    scope_type: str  # "selected_files", "selected_folder", "diff", "full_repo"
+    scope_data: Optional[Dict[str, Any]] = None  # files/folders/diff options
+    description: str = ""
+
+
+class RepoShareSession(BaseModel):
+    share_id: str
+    repo_name: str
+    repo_path: str
+    branch: str
+    scope_type: str
+    scope_data: Dict[str, Any]
+    snapshot_timestamp: datetime
+    file_count: int
+    total_size_bytes: int
+    read_only_status: bool = True
+    created_at: datetime
 
 
 class RegisterInstanceRequest(BaseModel):
@@ -179,8 +209,22 @@ async def execute_council_session(request: CouncilRequest):
             session_goal = SessionGoal(**request.session_goal)
             packet_builder.add_session_goal(session_goal)
 
-        # Build full system packet with ALL context
+        # 🔥 REPO SHARE INTEGRATION - Inject repo context if provided
+        repo_context = None
+        if request.repo_share_id and request.repo_share_id in repo_shares:
+            try:
+                repo_content = build_repo_content_packet(repo_shares[request.repo_share_id])
+                repo_context = {
+                    "repo_share_metadata": repo_shares[request.repo_share_id].dict(),
+                    "repo_content": repo_content
+                }
+            except Exception as e:
+                print(f"Warning: Failed to load repo context: {e}")
+
+        # Build full system packet with ALL context (including repo if shared)
         system_packet = packet_builder.build_packet(request.user_input)
+        if repo_context:
+            system_packet.add_repo_context(repo_context)
 
         # 🔴 FIX #3: PROVIDER STATUS CHECK
         active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok", "perplexity"]
@@ -238,6 +282,10 @@ async def execute_council_session(request: CouncilRequest):
             "provider_status": {p: provider_status[p].dict() for p in active_providers},
             "session_stats": session_stats[session_id],
             "system_packet_confirmed": True,  # Confirms full context was injected
+            "repo_share_info": {
+                "repo_shared": bool(request.repo_share_id),
+                "share_metadata": repo_shares[request.repo_share_id].dict() if request.repo_share_id and request.repo_share_id in repo_shares else None
+            },
             "sole_carrier_warning": "Models do not share memory. Only information provided in this session is considered valid."
         }
 
@@ -245,6 +293,190 @@ async def execute_council_session(request: CouncilRequest):
         # 🔴 FIX #10: ERROR HANDLING
         await handle_session_error(session_id, str(e), request)
         raise HTTPException(status_code=500, detail=f"Council execution failed: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# REPO SHARE HELPER FUNCTIONS
+# ---------------------------------------------------------------------------
+
+def build_repo_share_session(
+    share_id: str,
+    repo_name: str,
+    repo_path: str,
+    branch: str,
+    scope_type: str,
+    scope_data: Dict[str, Any]
+) -> RepoShareSession:
+    """Build a repo share session with metadata"""
+
+    file_count = 0
+    total_size = 0
+
+    try:
+        if scope_type == "full_repo":
+            # Count all files in repo
+            for root, dirs, files in os.walk(repo_path):
+                # Skip .git and common ignore directories
+                dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', '.venv']]
+
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    try:
+                        file_count += 1
+                        total_size += os.path.getsize(file_path)
+                    except (OSError, IOError):
+                        continue
+
+        elif scope_type == "selected_files":
+            # Count selected files
+            files = scope_data.get("files", [])
+            for file_path in files:
+                full_path = os.path.join(repo_path, file_path)
+                if os.path.exists(full_path):
+                    file_count += 1
+                    try:
+                        total_size += os.path.getsize(full_path)
+                    except (OSError, IOError):
+                        continue
+
+        elif scope_type == "selected_folder":
+            # Count files in selected folder
+            folder_path = scope_data.get("folder", "")
+            full_folder_path = os.path.join(repo_path, folder_path)
+            if os.path.exists(full_folder_path):
+                for root, dirs, files in os.walk(full_folder_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        try:
+                            file_count += 1
+                            total_size += os.path.getsize(file_path)
+                        except (OSError, IOError):
+                            continue
+
+        elif scope_type == "diff":
+            # For diffs, estimate based on changed files
+            file_count = len(scope_data.get("changed_files", []))
+            total_size = file_count * 1000  # Rough estimate
+
+    except Exception as e:
+        print(f"Error calculating repo metrics: {e}")
+
+    return RepoShareSession(
+        share_id=share_id,
+        repo_name=repo_name,
+        repo_path=repo_path,
+        branch=branch,
+        scope_type=scope_type,
+        scope_data=scope_data,
+        snapshot_timestamp=datetime.now(),
+        file_count=file_count,
+        total_size_bytes=total_size,
+        read_only_status=True,
+        created_at=datetime.now()
+    )
+
+
+def build_repo_content_packet(share: RepoShareSession) -> Dict[str, Any]:
+    """Build the actual content packet from repo share session"""
+
+    content = {
+        "files": {},
+        "structure": {},
+        "metadata": {
+            "repo_name": share.repo_name,
+            "branch": share.branch,
+            "scope_type": share.scope_type,
+            "snapshot_time": share.snapshot_timestamp.isoformat(),
+            "read_only": True
+        }
+    }
+
+    try:
+        if share.scope_type == "selected_files":
+            # Read selected files
+            files = share.scope_data.get("files", [])
+            for file_path in files:
+                full_path = os.path.join(share.repo_path, file_path)
+                if os.path.exists(full_path):
+                    try:
+                        with open(full_path, 'r', encoding='utf-8') as f:
+                            content["files"][file_path] = f.read()
+                    except (UnicodeDecodeError, IOError):
+                        content["files"][file_path] = "[Binary file - content not readable]"
+
+        elif share.scope_type == "selected_folder":
+            # Read all files in selected folder
+            folder_path = share.scope_data.get("folder", "")
+            full_folder_path = os.path.join(share.repo_path, folder_path)
+            if os.path.exists(full_folder_path):
+                for root, dirs, files in os.walk(full_folder_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        relative_path = os.path.relpath(file_path, share.repo_path)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as f:
+                                content["files"][relative_path] = f.read()
+                        except (UnicodeDecodeError, IOError):
+                            content["files"][relative_path] = "[Binary file - content not readable]"
+
+        elif share.scope_type == "diff":
+            # Get git diff
+            try:
+                base_ref = share.scope_data.get("base_ref", "HEAD~1")
+                result = subprocess.run(
+                    ["git", "diff", base_ref, "--name-only"],
+                    cwd=share.repo_path,
+                    capture_output=True,
+                    text=True
+                )
+
+                if result.returncode == 0:
+                    changed_files = result.stdout.strip().split('\n')
+                    content["metadata"]["changed_files"] = changed_files
+
+                    # Get the actual diff
+                    diff_result = subprocess.run(
+                        ["git", "diff", base_ref],
+                        cwd=share.repo_path,
+                        capture_output=True,
+                        text=True
+                    )
+
+                    if diff_result.returncode == 0:
+                        content["diff"] = diff_result.stdout
+
+            except Exception as e:
+                content["diff_error"] = str(e)
+
+        elif share.scope_type == "full_repo":
+            # Limited full repo scan (max 50 files for safety)
+            file_count = 0
+            for root, dirs, files in os.walk(share.repo_path):
+                # Skip .git and common ignore directories
+                dirs[:] = [d for d in dirs if d not in ['.git', 'node_modules', '__pycache__', '.venv']]
+
+                for file in files:
+                    if file_count >= 50:
+                        content["metadata"]["truncated"] = True
+                        break
+
+                    file_path = os.path.join(root, file)
+                    relative_path = os.path.relpath(file_path, share.repo_path)
+
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content["files"][relative_path] = f.read()
+                        file_count += 1
+                    except (UnicodeDecodeError, IOError):
+                        content["files"][relative_path] = "[Binary file - content not readable]"
+
+                if file_count >= 50:
+                    break
+
+    except Exception as e:
+        content["error"] = str(e)
+
+    return content
 
 
 # Supporting functions for enhanced council execution
@@ -437,6 +669,152 @@ async def list_sessions():
         })
 
     return {"sessions": sessions}
+
+
+# ---------------------------------------------------------------------------
+# 🔥 REPO SHARE SYSTEM - Read-Only Repository Access
+# ---------------------------------------------------------------------------
+
+@app.get("/api/repos/available")
+async def get_available_repos():
+    """Get list of available repositories for sharing"""
+    # Scan common repo locations
+    common_locations = [
+        "C:\\Users\\Stang\\authenticity-detection-framework",
+        "C:\\Users\\Stang\\Downloads\\house-of-AI-council-clean",
+        "C:\\Users\\Stang\\Downloads\\house-of-AI-main"
+    ]
+
+    available_repos.clear()
+
+    for location in common_locations:
+        if os.path.exists(location) and os.path.exists(os.path.join(location, ".git")):
+            repo_name = os.path.basename(location)
+            available_repos[repo_name] = location
+
+    return {
+        "repos": [
+            {"name": name, "path": path, "exists": os.path.exists(path)}
+            for name, path in available_repos.items()
+        ]
+    }
+
+
+@app.get("/api/repos/{repo_name}/branches")
+async def get_repo_branches(repo_name: str):
+    """Get available branches for a repository"""
+    if repo_name not in available_repos:
+        raise HTTPException(status_code=404, detail="Repository not found")
+
+    repo_path = available_repos[repo_name]
+
+    try:
+        # Get list of branches
+        result = subprocess.run(
+            ["git", "branch", "-a"],
+            cwd=repo_path,
+            capture_output=True,
+            text=True
+        )
+
+        branches = []
+        if result.returncode == 0:
+            for line in result.stdout.strip().split('\n'):
+                branch = line.strip().replace('* ', '').replace('remotes/origin/', '')
+                if branch and not branch.startswith('HEAD') and branch not in branches:
+                    branches.append(branch)
+
+        return {"repo": repo_name, "branches": branches or ["master", "main"]}
+
+    except Exception as e:
+        return {"repo": repo_name, "branches": ["master", "main"], "error": str(e)}
+
+
+@app.post("/api/repos/share")
+async def create_repo_share(request: RepoShareRequest):
+    """Create a read-only repo share session"""
+    if not os.path.exists(request.repo_path):
+        raise HTTPException(status_code=404, detail="Repository path not found")
+
+    try:
+        share_id = str(uuid.uuid4())
+        repo_name = os.path.basename(request.repo_path)
+
+        # Create repo share session
+        share_session = build_repo_share_session(
+            share_id,
+            repo_name,
+            request.repo_path,
+            request.branch,
+            request.scope_type,
+            request.scope_data or {}
+        )
+
+        repo_shares[share_id] = share_session
+
+        return {
+            "status": "success",
+            "share_id": share_id,
+            "session": share_session.dict(),
+            "message": f"Repo share created: {share_session.file_count} files, {share_session.total_size_bytes} bytes"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create repo share: {str(e)}")
+
+
+@app.get("/api/repos/share/{share_id}")
+async def get_repo_share(share_id: str):
+    """Get repo share session details"""
+    if share_id not in repo_shares:
+        raise HTTPException(status_code=404, detail="Repo share not found")
+
+    return {"share": repo_shares[share_id].dict()}
+
+
+@app.get("/api/repos/share/{share_id}/content")
+async def get_repo_share_content(share_id: str):
+    """Get the actual content from a repo share session"""
+    if share_id not in repo_shares:
+        raise HTTPException(status_code=404, detail="Repo share not found")
+
+    share = repo_shares[share_id]
+
+    try:
+        content_packet = build_repo_content_packet(share)
+        return {
+            "share_id": share_id,
+            "metadata": {
+                "repo_name": share.repo_name,
+                "branch": share.branch,
+                "scope_type": share.scope_type,
+                "snapshot_timestamp": share.snapshot_timestamp.isoformat(),
+                "file_count": share.file_count,
+                "read_only_status": share.read_only_status
+            },
+            "content": content_packet
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get repo content: {str(e)}")
+
+
+@app.get("/api/repos/shares")
+async def list_repo_shares():
+    """List all active repo shares"""
+    return {
+        "shares": [
+            {
+                "share_id": share_id,
+                "repo_name": share.repo_name,
+                "branch": share.branch,
+                "scope_type": share.scope_type,
+                "created_at": share.created_at.isoformat(),
+                "file_count": share.file_count
+            }
+            for share_id, share in repo_shares.items()
+        ]
+    }
 
 
 # ---------------------------------------------------------------------------

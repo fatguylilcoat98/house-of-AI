@@ -503,6 +503,80 @@
                     ⚠️ Models do not share memory. Only information provided in this session is considered valid.
                 </div>
 
+                <!-- 🔥 REPO SHARE PANEL -->
+                <div class="section-title" style="margin-top: 30px;">📂 Repo Share (Read-Only)</div>
+                <div class="repo-share-panel" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+
+                    <!-- Repo Selection -->
+                    <div class="repo-controls" style="margin-bottom: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Repository:</label>
+                                <select id="repoSelect" onchange="loadRepoBranches()" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                                    <option value="">Select Repository...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Branch:</label>
+                                <select id="branchSelect" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                                    <option value="master">master</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scope Selection -->
+                    <div class="scope-controls" style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Share Scope:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="selected_files" onchange="updateScopeOptions()" style="margin: 0;">
+                                <span>📄 Selected Files</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="selected_folder" onchange="updateScopeOptions()" style="margin: 0;">
+                                <span>📁 Selected Folder</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="diff" onchange="updateScopeOptions()" checked style="margin: 0;">
+                                <span>🔄 Changed Files / Diff</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="full_repo" onchange="updateScopeOptions()" style="margin: 0;">
+                                <span>🗂️ Full Repo Snapshot</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Scope-specific options -->
+                    <div id="scopeOptions" style="margin-bottom: 15px;">
+                        <!-- Dynamic scope options will appear here -->
+                    </div>
+
+                    <!-- Share Controls -->
+                    <div class="share-controls" style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-small" onclick="createRepoShare()" id="shareRepoBtn" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                            📂 Create Repo Share
+                        </button>
+                        <button class="btn-small" onclick="clearRepoShare()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                            🗑️ Clear
+                        </button>
+                    </div>
+
+                    <!-- Active Share Display -->
+                    <div id="activeRepoShare" style="display: none; margin-top: 15px; padding: 12px; background: #e8f4fd; border-radius: 6px; border-left: 4px solid #007bff;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">📂 Active Repo Share</div>
+                        <div id="shareMetadata" style="font-size: 13px;">
+                            <!-- Share metadata will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Read-only warning -->
+                    <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 4px; font-size: 12px; color: #856404;">
+                        🔒 <strong>Read-Only Mode:</strong> No edit, commit, or push actions available. Claude Code remains the only build system.
+                    </div>
+                </div>
+
                 <div class="section-title" style="margin-top: 30px;">📊 Active System State</div>
                 <div class="system-state" id="systemState">
                     <div class="system-state-item"><strong>Project:</strong> <span id="projectName">New Council Session</span></div>
@@ -702,7 +776,8 @@
                     body: JSON.stringify({
                         user_input: userInput,
                         execution_mode: executionMode,
-                        selected_providers: getSelectedProviders()
+                        selected_providers: getSelectedProviders(),
+                        repo_share_id: currentRepoShareId  // 🔥 Include repo share if active
                     })
                 });
 
@@ -728,7 +803,7 @@
                     updateSessionStats(data.session_stats);
 
                     // 🔴 Display results with enhanced formatting
-                    displayCouncilResults(data.session, data.synthesis);
+                    displayCouncilResults(data.session, data.synthesis, data.repo_share_info);
                     displayStructuredSynthesis(data.synthesis);
                     displayHandoffOptions(data.session_id);
 
@@ -897,14 +972,212 @@
         // Initialize provider status on page load
         let currentSessionId = null;
 
-        // Load initial provider status
+        // Load initial provider status and repos
         document.addEventListener('DOMContentLoaded', function() {
             updateProviderStatus();
+            loadAvailableRepos();
+            updateScopeOptions(); // Initialize scope options
         });
 
-        function displayCouncilResults(session, synthesis) {
+        // 🔥 REPO SHARE FUNCTIONS
+
+        let currentRepoShareId = null;
+
+        async function loadAvailableRepos() {
+            try {
+                const response = await fetch('/api/repos/available');
+                const data = await response.json();
+
+                const select = document.getElementById('repoSelect');
+                select.innerHTML = '<option value="">Select Repository...</option>';
+
+                data.repos.forEach(repo => {
+                    const option = document.createElement('option');
+                    option.value = repo.name;
+                    option.textContent = `${repo.name} ${!repo.exists ? '(missing)' : ''}`;
+                    option.disabled = !repo.exists;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load repos:', error);
+            }
+        }
+
+        async function loadRepoBranches() {
+            const repoName = document.getElementById('repoSelect').value;
+            if (!repoName) return;
+
+            try {
+                const response = await fetch(`/api/repos/${repoName}/branches`);
+                const data = await response.json();
+
+                const select = document.getElementById('branchSelect');
+                select.innerHTML = '';
+
+                data.branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch;
+                    option.textContent = branch;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load branches:', error);
+            }
+        }
+
+        function updateScopeOptions() {
+            const scope = document.querySelector('input[name="shareScope"]:checked').value;
+            const container = document.getElementById('scopeOptions');
+
+            container.innerHTML = '';
+
+            if (scope === 'selected_files') {
+                container.innerHTML = `
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Files to Share:</label>
+                    <textarea id="selectedFiles" placeholder="Enter file paths, one per line&#10;Example:&#10;src/main.py&#10;config/settings.json"
+                        style="width: 100%; height: 80px; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; resize: vertical;"></textarea>
+                `;
+            } else if (scope === 'selected_folder') {
+                container.innerHTML = `
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Folder to Share:</label>
+                    <input type="text" id="selectedFolder" placeholder="Enter folder path (e.g., src/, docs/)"
+                        style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                `;
+            } else if (scope === 'diff') {
+                container.innerHTML = `
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Diff Base:</label>
+                    <select id="diffBase" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                        <option value="HEAD~1">Last commit (HEAD~1)</option>
+                        <option value="HEAD~5">5 commits ago</option>
+                        <option value="main">main branch</option>
+                        <option value="master">master branch</option>
+                    </select>
+                `;
+            } else if (scope === 'full_repo') {
+                container.innerHTML = `
+                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 13px; color: #856404;">
+                        ⚠️ <strong>Warning:</strong> Full repo sharing includes all files. Large repos may be truncated to 50 files for performance.
+                    </div>
+                `;
+            }
+        }
+
+        async function createRepoShare() {
+            const repoSelect = document.getElementById('repoSelect');
+            const branchSelect = document.getElementById('branchSelect');
+            const scope = document.querySelector('input[name="shareScope"]:checked').value;
+
+            if (!repoSelect.value) {
+                alert('Please select a repository');
+                return;
+            }
+
+            const shareBtn = document.getElementById('shareRepoBtn');
+            shareBtn.disabled = true;
+            shareBtn.textContent = 'Creating Share...';
+
+            try {
+                // Get repo path from available repos
+                const reposResponse = await fetch('/api/repos/available');
+                const reposData = await reposResponse.json();
+                const selectedRepo = reposData.repos.find(r => r.name === repoSelect.value);
+
+                if (!selectedRepo) {
+                    throw new Error('Selected repository not found');
+                }
+
+                // Build scope data
+                let scopeData = {};
+
+                if (scope === 'selected_files') {
+                    const filesText = document.getElementById('selectedFiles').value;
+                    scopeData.files = filesText.split('\n').filter(f => f.trim()).map(f => f.trim());
+                } else if (scope === 'selected_folder') {
+                    scopeData.folder = document.getElementById('selectedFolder').value.trim();
+                } else if (scope === 'diff') {
+                    scopeData.base_ref = document.getElementById('diffBase').value;
+                }
+
+                // Create repo share
+                const response = await fetch('/api/repos/share', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        repo_path: selectedRepo.path,
+                        branch: branchSelect.value,
+                        scope_type: scope,
+                        scope_data: scopeData,
+                        description: `${scope} share of ${repoSelect.value}/${branchSelect.value}`
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentRepoShareId = data.share_id;
+                    displayActiveRepoShare(data.session);
+                    alert(`Repo share created successfully! ${data.message}`);
+                } else {
+                    throw new Error(data.detail || 'Failed to create repo share');
+                }
+
+            } catch (error) {
+                alert(`Error creating repo share: ${error.message}`);
+            } finally {
+                shareBtn.disabled = false;
+                shareBtn.textContent = '📂 Create Repo Share';
+            }
+        }
+
+        function displayActiveRepoShare(shareSession) {
+            const container = document.getElementById('activeRepoShare');
+            const metadata = document.getElementById('shareMetadata');
+
+            metadata.innerHTML = `
+                <div><strong>Repo:</strong> ${shareSession.repo_name}</div>
+                <div><strong>Branch:</strong> ${shareSession.branch}</div>
+                <div><strong>Scope:</strong> ${shareSession.scope_type.replace('_', ' ')}</div>
+                <div><strong>Files:</strong> ${shareSession.file_count}</div>
+                <div><strong>Size:</strong> ${(shareSession.total_size_bytes / 1024).toFixed(1)} KB</div>
+                <div><strong>Created:</strong> ${new Date(shareSession.created_at).toLocaleString()}</div>
+                <div><strong>Status:</strong> <span style="color: #28a745;">🔒 Read-Only</span></div>
+            `;
+
+            container.style.display = 'block';
+        }
+
+        function clearRepoShare() {
+            currentRepoShareId = null;
+            document.getElementById('activeRepoShare').style.display = 'none';
+            document.getElementById('repoSelect').value = '';
+            document.getElementById('branchSelect').innerHTML = '<option value="master">master</option>';
+            document.querySelector('input[name="shareScope"][value="diff"]').checked = true;
+            updateScopeOptions();
+        }
+
+        function displayCouncilResults(session, synthesis, repoShareInfo = null) {
             const output = document.getElementById('councilOutput');
             let html = '';
+
+            // 🔥 Show repo share metadata if included
+            if (repoShareInfo && repoShareInfo.repo_shared && repoShareInfo.share_metadata) {
+                const meta = repoShareInfo.share_metadata;
+                html += `
+                    <div class="repo-metadata" style="margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">📂 Repository Context Included</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                            <div><strong>Repo:</strong> ${meta.repo_name}</div>
+                            <div><strong>Branch:</strong> ${meta.branch}</div>
+                            <div><strong>Scope:</strong> ${meta.scope_type.replace('_', ' ')}</div>
+                            <div><strong>Files:</strong> ${meta.file_count}</div>
+                            <div><strong>Snapshot:</strong> ${new Date(meta.snapshot_timestamp).toLocaleString()}</div>
+                            <div><strong>Status:</strong> <span style="color: #28a745;">🔒 Read-Only</span></div>
+                        </div>
+                    </div>
+                `;
+            }
 
             // Round 1 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 1: Independent Analysis</div>';
