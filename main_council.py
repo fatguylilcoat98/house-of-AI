@@ -1871,7 +1871,7 @@ async def test_single_provider(provider: str):
         }
 
 
-@app.post("/api/providers/test/all")
+@app.post("/api/providers/test-all")
 async def test_all_providers():
     """Constitutional requirement: Test all providers simultaneously"""
 
