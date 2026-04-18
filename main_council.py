@@ -73,6 +73,20 @@ saved_insights: Dict[str, Dict[str, Any]] = {}
 repo_shares: Dict[str, RepoShareSession] = {}
 available_repos: Dict[str, str] = {}  # repo_name -> repo_path mapping
 
+# 🚨 CONSTITUTIONAL PATCH SYSTEMS
+constitutional_patches = {
+    "red_flags": {},  # PATCH 1: RED FLAG PROTOCOL
+    "rule_violations": {},  # PATCH 2: RULE VIOLATION RESPONSE
+    "evaluation_assessments": {},  # PATCH 3: EVALUABILITY AWARENESS
+    "suspicious_outputs": {},  # PATCH 4: MIRROR OUTPUT DETECTION
+    "two_seat_validations": {},  # PATCH 5: TWO-SEAT RULE
+    "dispatcher_logs": {},  # PATCH 6: DISPATCHER DISCIPLINE
+    "handoff_confirmations": {},  # PATCH 7: HANDOFF CONFIRMATION
+    "repo_completeness_warnings": {},  # PATCH 8: REPO COMPLETENESS WARNING
+    "challenge_controls": {},  # PATCH 9: PROPORTIONAL CHALLENGE CONTROL
+    "idea_preservation_triggers": {}  # PATCH 10: IDEA PRESERVATION TRIGGER
+}
+
 # 🏛️ CONSTITUTIONAL REPO SAFEGUARDS
 CONSTITUTIONAL_REPO_LIMITS = {
     "max_file_size_bytes": 100 * 1024,  # 100KB per file
@@ -158,6 +172,76 @@ class RepoShareSession(BaseModel):
     total_size_bytes: int
     read_only_status: bool = True
     created_at: datetime
+
+
+# 🚨 CONSTITUTIONAL PATCH MODELS
+
+class RedFlagAlert(BaseModel):
+    """PATCH 1: RED FLAG PROTOCOL"""
+    flag_id: str
+    issuing_seat: str
+    objection: str
+    reasoning: str
+    risk_level: str  # "high", "critical", "safety"
+    requires_acknowledgment: bool = True
+    timestamp: datetime
+    acknowledged: bool = False
+    acknowledged_by: Optional[str] = None
+    acknowledged_at: Optional[datetime] = None
+
+
+class RuleViolation(BaseModel):
+    """PATCH 2: RULE VIOLATION RESPONSE"""
+    violation_id: str
+    rule_violated: str
+    description: str
+    violating_output: str
+    seat_involved: str
+    severity: str  # "critical", "moderate", "minor"
+    marked_unreliable: bool = True
+    timestamp: datetime
+
+
+class EvaluationAssessment(BaseModel):
+    """PATCH 3: EVALUABILITY AWARENESS"""
+    assessment_id: str
+    evaluation_method: str
+    inputs_complete: bool
+    evaluator_independent: bool
+    validity_confirmed: bool
+    confidence_level: str  # "high", "moderate", "low", "invalid"
+    downgrade_reason: Optional[str] = None
+
+
+class SuspiciousOutput(BaseModel):
+    """PATCH 4: MIRROR OUTPUT DETECTION"""
+    detection_id: str
+    output_pattern: str  # "perfect_pass", "zero_failures", "unusually_clean"
+    suspicion_reason: str
+    requires_verification: bool = True
+    verified: bool = False
+    verified_by: Optional[str] = None
+
+
+class TwoSeatValidation(BaseModel):
+    """PATCH 5: TWO-SEAT RULE"""
+    validation_id: str
+    action_type: str  # "production_code", "decision_logic", "external_output"
+    reviewing_seats: List[str]
+    approvals_received: int
+    approvals_required: int = 2
+    approved: bool = False
+    self_review_excluded: bool = True
+
+
+class HandoffConfirmation(BaseModel):
+    """PATCH 7: HANDOFF CONFIRMATION"""
+    handoff_id: str
+    sender_definition: Dict[str, Any]
+    receiver_confirmed_receipt: bool = False
+    receiver_confirmed_understanding: bool = False
+    confirmation_timestamp: Optional[datetime] = None
+    ready_for_execution: bool = False
 
 
 class RegisterInstanceRequest(BaseModel):
@@ -636,6 +720,292 @@ def build_repo_content_packet(share: RepoShareSession) -> Dict[str, Any]:
     return content
 
 
+# 🚨 CONSTITUTIONAL PATCH ENFORCEMENT FUNCTIONS
+
+def issue_red_flag(seat: str, objection: str, reasoning: str, risk_level: str = "high") -> str:
+    """PATCH 1: RED FLAG PROTOCOL - Issue structured escalation"""
+
+    flag_id = str(uuid.uuid4())
+
+    red_flag = RedFlagAlert(
+        flag_id=flag_id,
+        issuing_seat=seat,
+        objection=objection,
+        reasoning=reasoning,
+        risk_level=risk_level,
+        timestamp=datetime.now()
+    )
+
+    constitutional_patches["red_flags"][flag_id] = red_flag
+
+    # Log the red flag for session tracking
+    print(f"🚨 RED FLAG ISSUED by {seat}: {objection}")
+    print(f"🚨 REASONING: {reasoning}")
+    print(f"🚨 RISK LEVEL: {risk_level}")
+    print(f"🚨 REQUIRES EXPLICIT USER ACKNOWLEDGMENT")
+
+    return flag_id
+
+
+def acknowledge_red_flag(flag_id: str, acknowledged_by: str) -> bool:
+    """PATCH 1: Acknowledge red flag to proceed"""
+
+    if flag_id not in constitutional_patches["red_flags"]:
+        return False
+
+    red_flag = constitutional_patches["red_flags"][flag_id]
+    red_flag.acknowledged = True
+    red_flag.acknowledged_by = acknowledged_by
+    red_flag.acknowledged_at = datetime.now()
+
+    return True
+
+
+def mark_rule_violation(rule: str, description: str, output: str, seat: str, severity: str = "moderate") -> str:
+    """PATCH 2: RULE VIOLATION RESPONSE - Mark output as unreliable"""
+
+    violation_id = str(uuid.uuid4())
+
+    violation = RuleViolation(
+        violation_id=violation_id,
+        rule_violated=rule,
+        description=description,
+        violating_output=output,
+        seat_involved=seat,
+        severity=severity,
+        timestamp=datetime.now()
+    )
+
+    constitutional_patches["rule_violations"][violation_id] = violation
+
+    # Mark output as unreliable
+    print(f"⚠️ RULE VIOLATION DETECTED: {rule}")
+    print(f"⚠️ OUTPUT MARKED UNRELIABLE: {seat}")
+    print(f"⚠️ SEVERITY: {severity}")
+
+    return violation_id
+
+
+def assess_evaluability(method: str, inputs_complete: bool, evaluator_independent: bool) -> Dict[str, Any]:
+    """PATCH 3: EVALUABILITY AWARENESS - Prevent false confidence"""
+
+    assessment_id = str(uuid.uuid4())
+    validity = inputs_complete and evaluator_independent
+
+    if not validity:
+        confidence = "invalid"
+        downgrade_reason = []
+        if not inputs_complete:
+            downgrade_reason.append("incomplete inputs")
+        if not evaluator_independent:
+            downgrade_reason.append("evaluator not independent")
+        downgrade_reason = ", ".join(downgrade_reason)
+    elif inputs_complete and evaluator_independent:
+        confidence = "high"
+        downgrade_reason = None
+    else:
+        confidence = "low"
+        downgrade_reason = "evaluation basis unclear"
+
+    assessment = EvaluationAssessment(
+        assessment_id=assessment_id,
+        evaluation_method=method,
+        inputs_complete=inputs_complete,
+        evaluator_independent=evaluator_independent,
+        validity_confirmed=validity,
+        confidence_level=confidence,
+        downgrade_reason=downgrade_reason
+    )
+
+    constitutional_patches["evaluation_assessments"][assessment_id] = assessment
+
+    return {
+        "assessment_id": assessment_id,
+        "confidence": confidence,
+        "valid": validity,
+        "warning": downgrade_reason
+    }
+
+
+def detect_mirror_output(output_text: str, pattern_type: str) -> Optional[str]:
+    """PATCH 4: MIRROR OUTPUT DETECTION - Detect suspiciously perfect results"""
+
+    suspicion_triggers = {
+        "perfect_pass": ["100% pass", "all tests pass", "zero failures", "perfect score"],
+        "zero_failures": ["no failures", "0 errors", "zero issues", "no problems found"],
+        "unusually_clean": ["flawless", "perfect", "no issues whatsoever", "completely clean"]
+    }
+
+    output_lower = output_text.lower()
+    triggers = suspicion_triggers.get(pattern_type, [])
+
+    for trigger in triggers:
+        if trigger in output_lower:
+            detection_id = str(uuid.uuid4())
+
+            suspicious = SuspiciousOutput(
+                detection_id=detection_id,
+                output_pattern=pattern_type,
+                suspicion_reason=f"Detected trigger phrase: '{trigger}'",
+                timestamp=datetime.now()
+            )
+
+            constitutional_patches["suspicious_outputs"][detection_id] = suspicious
+
+            print(f"🔍 SUSPICIOUS OUTPUT DETECTED: {pattern_type}")
+            print(f"🔍 TRIGGER: {trigger}")
+            print(f"🔍 REQUIRES INDEPENDENT VERIFICATION")
+
+            return detection_id
+
+    return None
+
+
+def enforce_two_seat_rule(action_type: str, reviewing_seats: List[str], exclude_self: str = None) -> Dict[str, Any]:
+    """PATCH 5: TWO-SEAT RULE - Enforce multi-seat validation"""
+
+    validation_id = str(uuid.uuid4())
+
+    # Exclude self-review if specified
+    valid_reviewers = [seat for seat in reviewing_seats if seat != exclude_self] if exclude_self else reviewing_seats
+
+    validation = TwoSeatValidation(
+        validation_id=validation_id,
+        action_type=action_type,
+        reviewing_seats=valid_reviewers,
+        approvals_received=len(valid_reviewers),
+        approvals_required=2,
+        approved=len(valid_reviewers) >= 2
+    )
+
+    constitutional_patches["two_seat_validations"][validation_id] = validation
+
+    result = {
+        "validation_id": validation_id,
+        "approved": validation.approved,
+        "approvals": len(valid_reviewers),
+        "required": 2,
+        "blocked": not validation.approved
+    }
+
+    if not validation.approved:
+        print(f"🛑 TWO-SEAT RULE: {action_type} requires 2 independent reviews")
+        print(f"🛑 CURRENT APPROVALS: {len(valid_reviewers)}/2")
+        print(f"🛑 BLOCKED until requirement satisfied")
+
+    return result
+
+
+def log_dispatcher_discipline(session_id: str, scope_boundary: Optional[str],
+                             what_not_to_touch: Optional[str], definition_of_done: Optional[str],
+                             council_review_required: Optional[bool]) -> Dict[str, Any]:
+    """PATCH 6: DISPATCHER DISCIPLINE - Log missing support fields"""
+
+    missing_fields = []
+    if not scope_boundary:
+        missing_fields.append("scope_boundary")
+    if not what_not_to_touch:
+        missing_fields.append("what_not_to_touch")
+    if not definition_of_done:
+        missing_fields.append("definition_of_done")
+    if council_review_required is None:
+        missing_fields.append("council_review_required")
+
+    log_entry = {
+        "session_id": session_id,
+        "scope_boundary": scope_boundary,
+        "what_not_to_touch": what_not_to_touch,
+        "definition_of_done": definition_of_done,
+        "council_review_required": council_review_required,
+        "missing_fields": missing_fields,
+        "dispatcher_discipline_complete": len(missing_fields) == 0,
+        "timestamp": datetime.now().isoformat()
+    }
+
+    constitutional_patches["dispatcher_logs"][session_id] = log_entry
+
+    if missing_fields:
+        print(f"📋 DISPATCHER DISCIPLINE: Missing fields: {', '.join(missing_fields)}")
+
+    return log_entry
+
+
+def check_repo_completeness(shared_content: Dict[str, Any], references_found: List[str]) -> List[str]:
+    """PATCH 8: REPO COMPLETENESS WARNING - Detect missing file references"""
+
+    shared_files = set(shared_content.get("files", {}).keys())
+    missing_references = []
+
+    for ref in references_found:
+        # Check if reference points to a file not in shared content
+        if ref not in shared_files and not any(ref.startswith(f) for f in shared_files):
+            missing_references.append(ref)
+
+    if missing_references:
+        warning_id = str(uuid.uuid4())
+        warning = {
+            "warning_id": warning_id,
+            "missing_files": missing_references,
+            "message": "This analysis may be incomplete due to missing repository context",
+            "shared_files_count": len(shared_files),
+            "timestamp": datetime.now().isoformat()
+        }
+
+        constitutional_patches["repo_completeness_warnings"][warning_id] = warning
+
+        print(f"⚠️ REPO COMPLETENESS WARNING: {len(missing_references)} missing references")
+        print(f"⚠️ Analysis may be incomplete due to missing repository context")
+
+        return missing_references
+
+    return []
+
+
+def classify_issue_severity(issue_description: str) -> str:
+    """PATCH 9: PROPORTIONAL CHALLENGE CONTROL - Classify issue severity"""
+
+    critical_keywords = ["crash", "security", "data loss", "corruption", "failure", "break", "critical"]
+    moderate_keywords = ["bug", "error", "issue", "problem", "concern", "risk", "warning"]
+
+    issue_lower = issue_description.lower()
+
+    if any(keyword in issue_lower for keyword in critical_keywords):
+        return "critical"
+    elif any(keyword in issue_lower for keyword in moderate_keywords):
+        return "moderate"
+    else:
+        return "minor"
+
+
+def trigger_idea_preservation(exchange_count: int, concept_refined: bool, actionable_state: bool) -> bool:
+    """PATCH 10: IDEA PRESERVATION TRIGGER - Detect when ideas should be captured"""
+
+    should_trigger = (
+        exchange_count >= 3 or
+        (concept_refined and actionable_state)
+    )
+
+    if should_trigger:
+        trigger_id = str(uuid.uuid4())
+        trigger_data = {
+            "trigger_id": trigger_id,
+            "exchange_count": exchange_count,
+            "concept_refined": concept_refined,
+            "actionable_state": actionable_state,
+            "prompt_message": "This looks important. Do you want to capture it before we move on?",
+            "timestamp": datetime.now().isoformat()
+        }
+
+        constitutional_patches["idea_preservation_triggers"][trigger_id] = trigger_data
+
+        print(f"💡 IDEA PRESERVATION TRIGGER: Important concept detected")
+        print(f"💡 This looks important. Do you want to capture it before we move on?")
+
+        return True
+
+    return False
+
+
 # Supporting functions for enhanced council execution
 async def update_provider_status(providers: List[str]):
     """Test provider connectivity and update status"""
@@ -976,12 +1346,12 @@ CONSTITUTIONAL RESPONSE REQUIREMENTS:
     return create_constitutional_session_object(combined_responses, "FULL", system_packet, round1_session.responses)
 
 
-async def make_constitutional_api_call(provider: str, prompt: str) -> str:
-    """Make API call with constitutional compliance"""
+async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, Any]:
+    """Make API call with constitutional compliance and patch enforcement"""
 
-    # For now, return mock constitutional response
-    # This will be replaced with actual API calls to each provider
-    return f"""
+    try:
+        # Mock constitutional response with patch awareness
+        response_text = f"""
 [CONSTITUTIONAL RESPONSE FROM {provider.upper()}]
 
 LANE PERSPECTIVE: {provider} analysis complete
@@ -999,6 +1369,71 @@ CONSTITUTIONAL COMPLIANCE: Following sole carrier rule, voice integrity maintain
 
 [END {provider.upper()} CONSTITUTIONAL RESPONSE]
 """
+
+        # 🚨 PATCH 4: MIRROR OUTPUT DETECTION
+        suspicious_detection = detect_mirror_output(response_text, "perfect_pass")
+
+        # 🚨 PATCH 3: EVALUABILITY AWARENESS
+        evaluation = assess_evaluability(
+            method="mock_api_response",
+            inputs_complete=True,
+            evaluator_independent=True
+        )
+
+        # 🚨 PATCH 2: Check for rule violations (mock check)
+        violation_id = None
+        if "100% success" in response_text.lower():
+            violation_id = mark_rule_violation(
+                rule="Realistic Assessment Rule",
+                description="Response claims unrealistic perfect success",
+                output=response_text[:100] + "...",
+                seat=provider,
+                severity="moderate"
+            )
+
+        # Check for red flag conditions (mock check)
+        red_flag_id = None
+        if provider == "grok" and "critical" in prompt.lower():
+            red_flag_id = issue_red_flag(
+                seat=provider,
+                objection="High risk operation detected in prompt",
+                reasoning="Critical operations require additional review for system safety",
+                risk_level="high"
+            )
+
+        return {
+            "response": response_text,
+            "constitutional_patches": {
+                "suspicious_output": suspicious_detection,
+                "evaluation_assessment": evaluation,
+                "rule_violation": violation_id,
+                "red_flag_issued": red_flag_id,
+                "patch_compliance": True
+            },
+            "provider": provider,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        # 🚨 PATCH 2: Mark as rule violation on error
+        violation_id = mark_rule_violation(
+            rule="API Reliability Rule",
+            description=f"Provider API call failed: {str(e)}",
+            output=f"ERROR: {str(e)}",
+            seat=provider,
+            severity="critical"
+        )
+
+        return {
+            "response": f"CONSTITUTIONAL API FAILURE: {str(e)}",
+            "constitutional_patches": {
+                "rule_violation": violation_id,
+                "patch_compliance": False,
+                "error": True
+            },
+            "provider": provider,
+            "timestamp": datetime.now().isoformat()
+        }
 
 
 def create_constitutional_session_object(responses: Dict[str, Any], mode: str, system_packet, round1_responses=None):
@@ -1239,6 +1674,67 @@ async def list_sessions():
         })
 
     return {"sessions": sessions}
+
+
+# 🚨 CONSTITUTIONAL PATCH API ENDPOINTS
+
+@app.get("/api/constitutional/red-flags")
+async def get_red_flags():
+    """Get all active red flags requiring acknowledgment"""
+    active_flags = {
+        flag_id: flag.dict() for flag_id, flag in constitutional_patches["red_flags"].items()
+        if not flag.acknowledged
+    }
+
+    return {
+        "active_red_flags": active_flags,
+        "count": len(active_flags),
+        "requires_acknowledgment": len(active_flags) > 0
+    }
+
+
+@app.post("/api/constitutional/red-flags/{flag_id}/acknowledge")
+async def acknowledge_red_flag_endpoint(flag_id: str, acknowledged_by: str):
+    """Acknowledge a red flag to proceed with operation"""
+
+    success = acknowledge_red_flag(flag_id, acknowledged_by)
+
+    if success:
+        return {
+            "status": "acknowledged",
+            "flag_id": flag_id,
+            "acknowledged_by": acknowledged_by,
+            "timestamp": datetime.now().isoformat()
+        }
+    else:
+        raise HTTPException(status_code=404, detail="Red flag not found")
+
+
+@app.get("/api/constitutional/status")
+async def get_constitutional_status():
+    """Get overall constitutional patch status"""
+
+    status = {
+        "patch_systems_active": True,
+        "red_flags_pending": len([f for f in constitutional_patches["red_flags"].values() if not f.acknowledged]),
+        "rule_violations_total": len(constitutional_patches["rule_violations"]),
+        "suspicious_outputs_unverified": len([s for s in constitutional_patches["suspicious_outputs"].values() if not s.verified]),
+        "blocked_actions": len([v for v in constitutional_patches["two_seat_validations"].values() if not v.approved]),
+        "constitutional_compliance": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+    # Overall health assessment
+    critical_issues = (
+        status["red_flags_pending"] +
+        len([v for v in constitutional_patches["rule_violations"].values() if v.severity == "critical"]) +
+        status["blocked_actions"]
+    )
+
+    status["system_health"] = "critical" if critical_issues > 0 else "healthy"
+    status["requires_attention"] = critical_issues > 0
+
+    return status
 
 
 # ---------------------------------------------------------------------------
