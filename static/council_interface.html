@@ -471,9 +471,37 @@
                     <textarea id="userInput" placeholder="Enter your request for the AI council to analyze..."></textarea>
                 </div>
 
+                <!-- 🔴 FIX #2: ROUND CONTROL -->
+                <div class="execution-control" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">Execution Mode:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="executionMode" value="safe" style="margin: 0;">
+                            <span>🛡️ Safe Mode (1 round)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="executionMode" value="full" checked style="margin: 0;">
+                            <span>🔄 Full Mode (2 rounds with cross-review)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 🔴 FIX #3: CROSS-TALK CONFIRMATION -->
+                <div id="roundProgress" class="round-progress" style="display: none; margin: 15px 0; padding: 12px; background: #e8f4fd; border-radius: 6px; border-left: 4px solid #007bff;">
+                    <div id="roundStatus">🔄 Preparing council session...</div>
+                    <div class="progress-bar" style="background: #e9ecef; border-radius: 10px; height: 8px; margin-top: 8px;">
+                        <div id="progressFill" style="background: #007bff; height: 100%; border-radius: 10px; width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
                 <button class="btn" onclick="executeCouncil()" id="executeBtn">
                     Execute Council Session
                 </button>
+
+                <!-- 🔴 FIX #9: SOLE CARRIER WARNING -->
+                <div class="sole-carrier-warning" style="margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 6px; border: 1px solid #ffeaa7; font-size: 12px; color: #856404;">
+                    ⚠️ Models do not share memory. Only information provided in this session is considered valid.
+                </div>
 
                 <div class="section-title" style="margin-top: 30px;">📊 Active System State</div>
                 <div class="system-state" id="systemState">
@@ -487,32 +515,20 @@
                     Edit System State
                 </button>
 
-                <div class="section-title" style="margin-top: 30px;">🤖 Council Members</div>
-                <div class="council-members">
-                    <div class="member-card">
-                        <div class="member-name">Claude</div>
-                        <div class="member-role">Architecture & Systems Design</div>
-                        <div class="member-status">Ready</div>
-                    </div>
-                    <div class="member-card">
-                        <div class="member-name">GPT-4</div>
-                        <div class="member-role">Structure & Implementation</div>
-                        <div class="member-status">Ready</div>
-                    </div>
-                    <div class="member-card">
-                        <div class="member-name">Gemini</div>
-                        <div class="member-role">User Experience & Interface</div>
-                        <div class="member-status">Ready</div>
-                    </div>
-                    <div class="member-card">
-                        <div class="member-name">Grok</div>
-                        <div class="member-role">Stress Testing & Edge Cases</div>
-                        <div class="member-status">Ready</div>
-                    </div>
-                    <div class="member-card">
-                        <div class="member-name">Perplexity</div>
-                        <div class="member-role">Adversarial Analysis & Research</div>
-                        <div class="member-status">Ready</div>
+                <!-- 🔴 FIX #6: PROVIDER STATUS PANEL -->
+                <div class="section-title" style="margin-top: 30px;">🤖 Council Members & Provider Status</div>
+                <div class="council-members" id="councilMembers">
+                    <!-- Dynamic provider status will be loaded here -->
+                </div>
+
+                <!-- 🔴 FIX #7: COST + CALL TRACKING -->
+                <div class="session-stats" id="sessionStats" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">📊 Session Statistics</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                        <div>Total calls: <span id="totalCalls">0</span></div>
+                        <div>Estimated cost: <span id="estimatedCost">$0.00</span></div>
+                        <div>Processing time: <span id="processingTime">0ms</span></div>
+                        <div>Execution mode: <span id="executionModeUsed">-</span></div>
                     </div>
                 </div>
             </div>
@@ -529,6 +545,22 @@
                 </div>
 
                 <div id="responses" class="response-content active">
+                    <!-- 🔴 FIX #5: SAVE / CAPTURE BUTTONS -->
+                    <div class="save-controls" id="saveControls" style="display: none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">💾 Save & Capture</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-small" onclick="saveItem('insight')" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                💡 Save Insight
+                            </button>
+                            <button class="btn-small" onclick="saveItem('decision')" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                ⚖️ Save Decision
+                            </button>
+                            <button class="btn-small" onclick="saveItem('feature')" style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                🚀 Save Feature
+                            </button>
+                        </div>
+                    </div>
+
                     <div id="councilOutput">
                         <div class="loading">
                             Ready for council session. Enter your request and click "Execute Council Session" to begin.
@@ -537,9 +569,30 @@
                 </div>
 
                 <div id="synthesis" class="response-content">
+                    <!-- Enhanced synthesis with no fake merging -->
                     <div id="synthesisOutput">
                         <div class="loading">
                             Synthesis will appear after council execution.
+                        </div>
+                    </div>
+
+                    <!-- 🔴 FIX #4: NO FAKE SYNTHESIS - Structured display -->
+                    <div id="structuredSynthesis" style="display: none;">
+                        <div class="synthesis-section">
+                            <h4 style="color: #28a745; margin: 15px 0 8px 0;">✅ Agreements</h4>
+                            <div id="agreementsList"></div>
+                        </div>
+                        <div class="synthesis-section">
+                            <h4 style="color: #dc3545; margin: 15px 0 8px 0;">⚠️ Conflicts</h4>
+                            <div id="conflictsList"></div>
+                        </div>
+                        <div class="synthesis-section">
+                            <h4 style="color: #ffc107; margin: 15px 0 8px 0;">❓ Open Questions</h4>
+                            <div id="openQuestionsList"></div>
+                        </div>
+                        <div class="synthesis-section">
+                            <h4 style="color: #6f42c1; margin: 15px 0 8px 0;">🎭 Provider Perspectives</h4>
+                            <div id="providerPerspectives"></div>
                         </div>
                     </div>
                 </div>
@@ -604,18 +657,39 @@
                 return;
             }
 
+            // 🔴 Get execution mode from radio buttons
+            const executionMode = document.querySelector('input[name="executionMode"]:checked').value;
+
             const executeBtn = document.getElementById('executeBtn');
             const output = document.getElementById('councilOutput');
+            const roundProgress = document.getElementById('roundProgress');
+            const roundStatus = document.getElementById('roundStatus');
+            const progressFill = document.getElementById('progressFill');
 
             executeBtn.disabled = true;
             executeBtn.textContent = 'Executing Council Session...';
 
+            // 🔴 Show round progress
+            roundProgress.style.display = 'block';
+            progressFill.style.width = '10%';
+
+            // 🔴 Update provider status first
+            await updateProviderStatus();
+
+            // 🔴 FIX #3: CROSS-TALK CONFIRMATION
+            if (executionMode === 'full') {
+                roundStatus.textContent = '🔄 Round 1: Independent analysis...';
+                progressFill.style.width = '30%';
+            } else {
+                roundStatus.textContent = '🛡️ Safe Mode: Single round execution...';
+                progressFill.style.width = '50%';
+            }
+
             output.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    Executing AI council session...<br>
-                    Round 1: Independent analysis...<br>
-                    Round 2: Cross-review...
+                    Executing ${executionMode === 'full' ? 'Full' : 'Safe'} Mode council session...<br>
+                    Please wait while the AI council processes your request...
                 </div>
             `;
 
@@ -626,23 +700,53 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        user_input: userInput
+                        user_input: userInput,
+                        execution_mode: executionMode,
+                        selected_providers: getSelectedProviders()
                     })
                 });
 
                 const data = await response.json();
 
                 if (data.status === 'success') {
+                    // 🔴 Show cross-review phase for full mode
+                    if (executionMode === 'full') {
+                        roundStatus.textContent = '🔄 Round 2: Cross-review in progress...';
+                        progressFill.style.width = '70%';
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulation
+                    }
+
+                    roundStatus.textContent = '✅ Council session completed!';
+                    progressFill.style.width = '100%';
+
+                    // Store session data
                     currentSession = data.session;
                     currentSynthesis = data.synthesis;
+                    currentSessionId = data.session_id;
+
+                    // 🔴 Update session statistics
+                    updateSessionStats(data.session_stats);
+
+                    // 🔴 Display results with enhanced formatting
                     displayCouncilResults(data.session, data.synthesis);
-                    displaySynthesis(data.synthesis);
-                    displayHandoffOptions(data.session.session_id);
+                    displayStructuredSynthesis(data.synthesis);
+                    displayHandoffOptions(data.session_id);
+
+                    // 🔴 Show save controls
+                    document.getElementById('saveControls').style.display = 'block';
+
+                    // Hide progress after completion
+                    setTimeout(() => {
+                        roundProgress.style.display = 'none';
+                    }, 2000);
+
                 } else {
                     throw new Error(data.detail || 'Council execution failed');
                 }
 
             } catch (error) {
+                roundStatus.textContent = '❌ Council session failed';
+                roundProgress.style.display = 'none';
                 output.innerHTML = `
                     <div class="ai-response error">
                         <div class="ai-name">⚠️ Error</div>
@@ -654,6 +758,149 @@
                 executeBtn.textContent = 'Execute Council Session';
             }
         }
+
+        // 🔴 NEW SUPPORTING FUNCTIONS FOR ENHANCED FUNCTIONALITY
+
+        async function updateProviderStatus() {
+            try {
+                const response = await fetch('/api/providers/status');
+                const data = await response.json();
+                displayProviderStatus(data.providers);
+            } catch (error) {
+                console.error('Failed to update provider status:', error);
+            }
+        }
+
+        function displayProviderStatus(providers) {
+            const container = document.getElementById('councilMembers');
+            const roles = {
+                'claude': 'Architecture & Systems Design',
+                'gpt4': 'Structure & Implementation',
+                'gemini': 'User Experience & Interface',
+                'grok': 'Stress Testing & Edge Cases',
+                'perplexity': 'Adversarial Analysis & Research'
+            };
+
+            container.innerHTML = '';
+
+            for (const [provider, status] of Object.entries(providers)) {
+                const statusColor = status.status === 'online' ? '#28a745' : '#dc3545';
+                const statusIcon = status.status === 'online' ? '✅' : '❌';
+                const responseTime = status.response_time_ms ? ` ${status.response_time_ms}ms` : '';
+
+                container.innerHTML += `
+                    <div class="member-card" style="border-left: 4px solid ${statusColor};">
+                        <div class="member-name">${provider.charAt(0).toUpperCase() + provider.slice(1)}</div>
+                        <div class="member-role">${roles[provider] || 'AI Assistant'}</div>
+                        <div class="member-status" style="color: ${statusColor};">
+                            ${statusIcon} ${status.status}${responseTime}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function getSelectedProviders() {
+            // For now, return all providers. Could be enhanced with checkboxes later.
+            return ['claude', 'gpt4', 'gemini', 'grok', 'perplexity'];
+        }
+
+        function updateSessionStats(stats) {
+            document.getElementById('totalCalls').textContent = stats.total_calls || 0;
+            document.getElementById('estimatedCost').textContent = `$${stats.estimated_cost || '0.00'}`;
+            document.getElementById('processingTime').textContent = `${stats.processing_time_ms || 0}ms`;
+            document.getElementById('executionModeUsed').textContent = stats.execution_mode || '-';
+        }
+
+        function displayStructuredSynthesis(synthesis) {
+            const container = document.getElementById('structuredSynthesis');
+            const loadingContainer = document.getElementById('synthesisOutput');
+
+            // Hide loading and show structured
+            loadingContainer.style.display = 'none';
+            container.style.display = 'block';
+
+            // Display agreements
+            const agreementsList = document.getElementById('agreementsList');
+            agreementsList.innerHTML = synthesis.agreements && synthesis.agreements.length > 0
+                ? synthesis.agreements.map(item => `<div class="synthesis-item">${item}</div>`).join('')
+                : '<div class="synthesis-item">No clear agreements identified</div>';
+
+            // Display conflicts
+            const conflictsList = document.getElementById('conflictsList');
+            conflictsList.innerHTML = synthesis.conflicts && synthesis.conflicts.length > 0
+                ? synthesis.conflicts.map(item => `<div class="synthesis-item">${item}</div>`).join('')
+                : '<div class="synthesis-item">No major conflicts detected</div>';
+
+            // Display open questions
+            const openQuestionsList = document.getElementById('openQuestionsList');
+            openQuestionsList.innerHTML = synthesis.open_questions && synthesis.open_questions.length > 0
+                ? synthesis.open_questions.map(item => `<div class="synthesis-item">${item}</div>`).join('')
+                : '<div class="synthesis-item">No outstanding questions</div>';
+
+            // Display provider perspectives
+            const providerPerspectives = document.getElementById('providerPerspectives');
+            if (synthesis.provider_perspectives) {
+                let perspectivesHTML = '';
+                for (const [provider, perspective] of Object.entries(synthesis.provider_perspectives)) {
+                    perspectivesHTML += `
+                        <div class="provider-perspective">
+                            <strong>${provider.charAt(0).toUpperCase() + provider.slice(1)}:</strong>
+                            <div class="perspective-content">${typeof perspective === 'string' ? perspective : JSON.stringify(perspective)}</div>
+                        </div>
+                    `;
+                }
+                providerPerspectives.innerHTML = perspectivesHTML;
+            } else {
+                providerPerspectives.innerHTML = '<div class="synthesis-item">Individual perspectives not available</div>';
+            }
+        }
+
+        async function saveItem(type) {
+            if (!currentSessionId) {
+                alert('No active session to save from');
+                return;
+            }
+
+            const title = prompt(`Enter title for this ${type}:`);
+            if (!title) return;
+
+            const content = prompt(`Enter ${type} content or description:`);
+            if (!content) return;
+
+            try {
+                const response = await fetch('/api/insights/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        title: title,
+                        content: content,
+                        session_id: currentSessionId,
+                        tags: []
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} saved successfully!`);
+                } else {
+                    alert(`Failed to save ${type}: ${data.detail}`);
+                }
+            } catch (error) {
+                alert(`Error saving ${type}: ${error.message}`);
+            }
+        }
+
+        // Initialize provider status on page load
+        let currentSessionId = null;
+
+        // Load initial provider status
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProviderStatus();
+        });
 
         function displayCouncilResults(session, synthesis) {
             const output = document.getElementById('councilOutput');

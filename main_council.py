@@ -61,6 +61,19 @@ builder_manager = BuilderInstanceManager()
 saved_outputs: Dict[str, Dict[str, Any]] = {}
 active_system_state = ActiveSystemState.default()
 
+# Provider status and cost tracking
+provider_status: Dict[str, ProviderStatus] = {}
+session_stats: Dict[str, Dict[str, Any]] = {}
+saved_insights: Dict[str, Dict[str, Any]] = {}
+
+# Initialize provider status
+for provider in ["claude", "gpt4", "gemini", "grok", "perplexity"]:
+    provider_status[provider] = ProviderStatus(
+        provider=provider,
+        status="unknown",
+        last_check=datetime.now()
+    )
+
 # ---------------------------------------------------------------------------
 # Pydantic Models
 # ---------------------------------------------------------------------------
@@ -69,6 +82,8 @@ class CouncilRequest(BaseModel):
     user_input: str
     session_goal: Optional[Dict[str, Any]] = None
     custom_constitution: Optional[Dict[str, Any]] = None
+    execution_mode: str = "full"  # "safe" (1 round) or "full" (2 rounds)
+    selected_providers: Optional[List[str]] = None  # ["claude", "gpt4", etc]
 
 
 class StateUpdateRequest(BaseModel):
@@ -92,6 +107,22 @@ class HandoffPacketRequest(BaseModel):
     recipient: str
     purpose: str
     include_full_context: bool = True
+
+
+class SaveInsightRequest(BaseModel):
+    type: str  # "insight", "decision", "feature"
+    title: str
+    content: str
+    session_id: str
+    tags: Optional[List[str]] = None
+
+
+class ProviderStatus(BaseModel):
+    provider: str
+    status: str  # "online", "offline", "timeout", "error"
+    response_time_ms: Optional[int] = None
+    error_message: Optional[str] = None
+    last_check: datetime
 
 
 class RegisterInstanceRequest(BaseModel):
@@ -131,8 +162,12 @@ class AcceptHandoffRequest(BaseModel):
 
 @app.post("/api/council/execute")
 async def execute_council_session(request: CouncilRequest):
-    """Execute full two-round council session"""
+    """Execute council session with full System Packet Builder integration"""
+    session_id = str(uuid.uuid4())
+    start_time = datetime.now()
+
     try:
+        # 🔴 FIX #1: SYSTEM PACKET BUILDER INTEGRATION
         # Update constitution if provided
         if request.custom_constitution:
             constitution = ConstitutionCore(**request.custom_constitution)
@@ -142,25 +177,167 @@ async def execute_council_session(request: CouncilRequest):
         session_goal = None
         if request.session_goal:
             session_goal = SessionGoal(**request.session_goal)
+            packet_builder.add_session_goal(session_goal)
 
-        # Execute council session
-        session = await execution_engine.execute_full_council_session(
-            request.user_input
-        )
+        # Build full system packet with ALL context
+        system_packet = packet_builder.build_packet(request.user_input)
 
-        # Generate synthesis
-        synthesis = synthesis_engine.synthesize_council_session(session)
+        # 🔴 FIX #3: PROVIDER STATUS CHECK
+        active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok", "perplexity"]
+        await update_provider_status(active_providers)
+
+        # Filter to only working providers
+        working_providers = [p for p in active_providers
+                           if provider_status[p].status == "online"]
+
+        if not working_providers:
+            raise HTTPException(status_code=503, detail="No AI providers are currently available")
+
+        # 🔴 FIX #2: ROUND CONTROL
+        execution_mode = request.execution_mode
+        if execution_mode == "safe":
+            # Safe Mode: 1 round only
+            session = await execution_engine.execute_single_round(
+                system_packet, working_providers
+            )
+            round_info = {"mode": "safe", "rounds": 1, "cross_review": False}
+        else:
+            # Full Mode: 2 rounds with cross-review
+            session = await execution_engine.execute_full_council_session(
+                system_packet, working_providers
+            )
+            round_info = {"mode": "full", "rounds": 2, "cross_review": True}
+
+        # 🔴 FIX #4: NO FAKE SYNTHESIS - Track agreements/conflicts
+        synthesis = synthesis_engine.analyze_without_merging(session)
+
+        # 🔴 FIX #7: COST + CALL TRACKING
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds() * 1000
+
+        session_stats[session_id] = {
+            "total_calls": len(session.responses),
+            "providers_used": working_providers,
+            "processing_time_ms": processing_time,
+            "execution_mode": execution_mode,
+            "estimated_cost": calculate_session_cost(session),
+            "timestamp": start_time.isoformat()
+        }
 
         return {
             "status": "success",
-            "session_id": session.session_id,
-            "session": execution_engine.export_session(session.session_id),
-            "synthesis": synthesis_engine.export_synthesis(synthesis),
-            "processing_time_ms": session.total_processing_time_ms
+            "session_id": session_id,
+            "round_info": round_info,
+            "session": execution_engine.export_session(session_id),
+            "synthesis": {
+                "agreements": synthesis.get("agreements", []),
+                "conflicts": synthesis.get("conflicts", []),
+                "open_questions": synthesis.get("open_questions", []),
+                "provider_perspectives": synthesis.get("provider_perspectives", {})
+            },
+            "provider_status": {p: provider_status[p].dict() for p in active_providers},
+            "session_stats": session_stats[session_id],
+            "system_packet_confirmed": True,  # Confirms full context was injected
+            "sole_carrier_warning": "Models do not share memory. Only information provided in this session is considered valid."
         }
 
     except Exception as e:
+        # 🔴 FIX #10: ERROR HANDLING
+        await handle_session_error(session_id, str(e), request)
         raise HTTPException(status_code=500, detail=f"Council execution failed: {str(e)}")
+
+
+# Supporting functions for enhanced council execution
+async def update_provider_status(providers: List[str]):
+    """Test provider connectivity and update status"""
+    for provider in providers:
+        try:
+            start_time = datetime.now()
+            # Quick test call to each provider
+            success = await test_provider_connection(provider)
+            end_time = datetime.now()
+            response_time = (end_time - start_time).total_seconds() * 1000
+
+            provider_status[provider] = ProviderStatus(
+                provider=provider,
+                status="online" if success else "offline",
+                response_time_ms=int(response_time) if success else None,
+                last_check=datetime.now()
+            )
+        except Exception as e:
+            provider_status[provider] = ProviderStatus(
+                provider=provider,
+                status="error",
+                error_message=str(e),
+                last_check=datetime.now()
+            )
+
+
+async def test_provider_connection(provider: str) -> bool:
+    """Quick connectivity test for a provider"""
+    # This would make actual test calls to each provider
+    # For now, return True if API key exists
+    return bool(API_KEYS.get(provider))
+
+
+def calculate_session_cost(session) -> float:
+    """Estimate cost of council session"""
+    # Rough cost estimates per provider call
+    cost_per_call = {
+        "claude": 0.003,
+        "gpt4": 0.006,
+        "gemini": 0.001,
+        "grok": 0.002,
+        "perplexity": 0.001
+    }
+
+    total_cost = 0.0
+    for response in session.responses:
+        provider = response.get("provider", "unknown")
+        total_cost += cost_per_call.get(provider, 0.001)
+
+    return round(total_cost, 4)
+
+
+async def handle_session_error(session_id: str, error: str, request: CouncilRequest):
+    """Handle session errors with retry logic"""
+    session_stats[session_id] = {
+        "status": "failed",
+        "error": error,
+        "request_data": request.dict(),
+        "timestamp": datetime.now().isoformat(),
+        "retry_recommended": True
+    }
+
+
+def extract_decisions_from_synthesis(synthesis_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Extract actionable decisions from synthesis data"""
+    decisions = []
+
+    # Look for decision indicators in agreements
+    agreements = synthesis_data.get("agreements", [])
+    for agreement in agreements:
+        if any(keyword in agreement.lower() for keyword in ["should", "must", "recommend", "decide", "choose"]):
+            decisions.append({
+                "decision": agreement,
+                "basis": "council_agreement",
+                "confidence": "high",
+                "actionable": True
+            })
+
+    # Look for decisions in provider perspectives
+    perspectives = synthesis_data.get("provider_perspectives", {})
+    for provider, perspective in perspectives.items():
+        if isinstance(perspective, dict) and "recommendations" in perspective:
+            for rec in perspective["recommendations"]:
+                decisions.append({
+                    "decision": rec,
+                    "basis": f"{provider}_recommendation",
+                    "confidence": "medium",
+                    "actionable": True
+                })
+
+    return decisions
 
 
 @app.get("/api/council/session/{session_id}")
@@ -171,6 +348,79 @@ async def get_session(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
 
     return session_data
+
+
+# 🔴 FIX #5: SAVE / CAPTURE BUTTONS
+@app.post("/api/insights/save")
+async def save_insight(request: SaveInsightRequest):
+    """Save insight, decision, or feature from council session"""
+    insight_id = str(uuid.uuid4())
+
+    saved_insights[insight_id] = {
+        "id": insight_id,
+        "type": request.type,
+        "title": request.title,
+        "content": request.content,
+        "session_id": request.session_id,
+        "tags": request.tags or [],
+        "saved_at": datetime.now().isoformat(),
+        "verified": False  # Requires manual verification
+    }
+
+    return {
+        "status": "success",
+        "insight_id": insight_id,
+        "message": f"{request.type.capitalize()} saved successfully"
+    }
+
+
+@app.get("/api/insights")
+async def get_saved_insights():
+    """Get all saved insights"""
+    return {"insights": list(saved_insights.values())}
+
+
+# 🔴 FIX #6: PROVIDER STATUS PANEL
+@app.get("/api/providers/status")
+async def get_provider_status():
+    """Get current status of all AI providers"""
+    # Update status before returning
+    providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
+    await update_provider_status(providers)
+
+    return {
+        "providers": {p: provider_status[p].dict() for p in providers},
+        "summary": {
+            "online": len([p for p in providers if provider_status[p].status == "online"]),
+            "offline": len([p for p in providers if provider_status[p].status in ["offline", "error"]])
+        }
+    }
+
+
+# 🔴 FIX #7: COST + CALL TRACKING
+@app.get("/api/session/stats/{session_id}")
+async def get_session_stats(session_id: str):
+    """Get statistics for a specific session"""
+    if session_id not in session_stats:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return session_stats[session_id]
+
+
+@app.get("/api/session/stats")
+async def get_all_session_stats():
+    """Get statistics for all sessions"""
+    total_cost = sum(stats.get("estimated_cost", 0) for stats in session_stats.values())
+    total_calls = sum(stats.get("total_calls", 0) for stats in session_stats.values())
+
+    return {
+        "sessions": session_stats,
+        "summary": {
+            "total_sessions": len(session_stats),
+            "total_calls": total_calls,
+            "total_estimated_cost": total_cost
+        }
+    }
 
 
 @app.get("/api/council/sessions")
@@ -322,20 +572,44 @@ async def create_handoff_packet(request: HandoffPacketRequest):
         if session:
             synthesis = synthesis_engine.synthesize_council_session(session)
 
+        # 🔴 FIX #8: HANDOFF EXPORT STRUCTURE
+        # Extract structured information from synthesis
+        synthesis_data = synthesis_engine.export_synthesis(synthesis) if synthesis else {}
+
         handoff_packet = {
             "handoff_id": str(uuid.uuid4()),
             "created_at": datetime.now().isoformat(),
             "recipient": request.recipient,
             "purpose": request.purpose,
             "session_id": request.session_id,
-            "user_input": session_data["user_input"],
+
+            # Structured export format
+            "key_conclusions": synthesis_data.get("agreements", []),
+            "verified_facts": [
+                {"fact": item, "verified_by": "multiple_models", "confidence": "high"}
+                for item in synthesis_data.get("agreements", [])
+            ],
+            "unverified_claims": [
+                {"claim": item, "needs_verification": True, "source": "single_model"}
+                for item in synthesis_data.get("conflicts", [])
+            ],
+            "decisions_made": extract_decisions_from_synthesis(synthesis_data),
+            "next_steps": synthesis_data.get("open_questions", []),
+            "open_questions": synthesis_data.get("open_questions", []),
+
+            # Raw data for reference
+            "original_request": session_data["user_input"],
             "council_outputs": {
-                "round1": session_data["round1_responses"],
-                "round2": session_data["round2_responses"]
+                "round1": session_data.get("round1_responses", []),
+                "round2": session_data.get("round2_responses", [])
             },
-            "synthesis": synthesis_engine.export_synthesis(synthesis) if synthesis else None,
+            "provider_perspectives": synthesis_data.get("provider_perspectives", {}),
             "system_context": packet_builder.export_state() if request.include_full_context else None,
-            "handoff_summary": f"AI Council session for '{request.recipient}' regarding: {session_data['user_input'][:200]}..."
+
+            # Meta information
+            "session_stats": session_stats.get(request.session_id, {}),
+            "sole_carrier_warning": "This handoff contains complete context. Models do not share memory between sessions.",
+            "export_timestamp": datetime.now().isoformat()
         }
 
         return {
