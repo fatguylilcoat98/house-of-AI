@@ -514,4 +514,3 @@ Address conflicts through additional investigation or stakeholder input.
 if __name__ == "__main__":
     # This would typically be called with actual session data
     print("Synthesis Engine initialized - ready for council analysis")
-"""

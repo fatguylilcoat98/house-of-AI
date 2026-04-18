@@ -455,4 +455,3 @@ if __name__ == "__main__":
     # Generate status report
     report = manager.generate_status_report()
     print(json.dumps(report, indent=2))
-"""
