@@ -1573,26 +1573,34 @@ CONSTITUTIONAL RESPONSE REQUIREMENTS:
 async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, Any]:
     """Make API call with constitutional compliance and patch enforcement"""
 
+    import time
+    start_time = time.time()
+
     try:
-        # Mock constitutional response with patch awareness
-        response_text = f"""
-[CONSTITUTIONAL RESPONSE FROM {provider.upper()}]
+        # **REAL API CALL** - Use the same working logic as health checks
+        api_key = API_KEYS.get(provider)
+        if not api_key:
+            raise Exception(f"No API key configured for {provider}")
 
-LANE PERSPECTIVE: {provider} analysis complete
+        print(f"COUNCIL API CALL: Making real API call to {provider}")
 
-VERIFIED FACTS:
-- [This is a mock response for constitutional implementation]
+        # Call the real API using the working health check functions
+        if provider == "claude":
+            response_text = await _real_call_claude(prompt, api_key)
+        elif provider == "gpt4":
+            response_text = await _real_call_gpt4(prompt, api_key)
+        elif provider == "gemini":
+            response_text = await _real_call_gemini(prompt, api_key)
+        elif provider == "grok":
+            response_text = await _real_call_grok(prompt, api_key)
+        elif provider == "perplexity":
+            response_text = await _real_call_perplexity(prompt, api_key)
+        else:
+            raise Exception(f"Unsupported provider: {provider}")
 
-PROFESSIONAL OPINIONS:
-- System requires actual API integration
-
-UNKNOWN ELEMENTS:
-- Real provider API responses not yet implemented
-
-CONSTITUTIONAL COMPLIANCE: Following sole carrier rule, voice integrity maintained.
-
-[END {provider.upper()} CONSTITUTIONAL RESPONSE]
-"""
+        end_time = time.time()
+        latency_ms = int((end_time - start_time) * 1000)
+        print(f"COUNCIL API SUCCESS: {provider} responded in {latency_ms}ms")
 
         # ALERT PATCH 4: MIRROR OUTPUT DETECTION
         suspicious_detection = detect_mirror_output(response_text, "perfect_pass")
@@ -1635,10 +1643,17 @@ CONSTITUTIONAL COMPLIANCE: Following sole carrier rule, voice integrity maintain
                 "patch_compliance": True
             },
             "provider": provider,
+            "latency_ms": latency_ms,
+            "mock": False,  # **REAL API CALL**
             "timestamp": datetime.now().isoformat()
         }
 
     except Exception as e:
+        end_time = time.time()
+        latency_ms = int((end_time - start_time) * 1000)
+
+        print(f"COUNCIL API FAILED: {provider} failed after {latency_ms}ms - {str(e)}")
+
         # ALERT PATCH 2: Mark as rule violation on error
         violation_id = mark_rule_violation(
             rule="API Reliability Rule",
@@ -1649,13 +1664,17 @@ CONSTITUTIONAL COMPLIANCE: Following sole carrier rule, voice integrity maintain
         )
 
         return {
-            "response": f"CONSTITUTIONAL API FAILURE: {str(e)}",
+            "response": f"REAL API CALL FAILED for {provider}: {str(e)}",
             "constitutional_patches": {
                 "rule_violation": violation_id,
                 "patch_compliance": False,
                 "error": True
             },
             "provider": provider,
+            "latency_ms": latency_ms,
+            "mock": False,  # **REAL API CALL FAILED**
+            "failed": True,
+            "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
 
