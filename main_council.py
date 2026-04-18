@@ -22,6 +22,7 @@ except ImportError:
 from typing import Dict, Any, Optional, List
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+import time
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
@@ -38,6 +39,10 @@ from builder_instance_manager import (
     BuilderInstanceManager, InstanceStatus, HandoffType, BuilderInstance
 )
 
+
+# Health check cache to reduce API calls and rate limiting
+HEALTH_CHECK_CACHE = {}
+CACHE_DURATION = 60  # Cache results for 60 seconds
 
 app = FastAPI(title="AI Council System - Clean Architecture")
 
@@ -1096,21 +1101,52 @@ async def _real_call_gpt4(prompt: str, api_key: str) -> str:
 
 
 async def _real_call_gemini(prompt: str, api_key: str) -> str:
-    """Make REAL API call to Gemini"""
+    """Make REAL API call to Gemini with rate limit handling"""
     import httpx
+    import asyncio
+
+    # Rate limit retry configuration
+    max_retries = 3
+    base_delay = 1.0  # Start with 1 second
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}",
-            headers={"Content-Type": "application/json"},
-            json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 100}
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"]
+        for attempt in range(max_retries + 1):
+            try:
+                response = await client.post(
+                    f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}",
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "contents": [{"parts": [{"text": prompt}]}],
+                        "generationConfig": {"maxOutputTokens": 100}
+                    }
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    return data["candidates"][0]["content"]["parts"][0]["text"]
+                elif response.status_code == 429:
+                    # Rate limited - implement exponential backoff
+                    if attempt < max_retries:
+                        delay = base_delay * (2 ** attempt)  # Exponential backoff
+                        print(f"Gemini rate limited, retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        # Final attempt failed, raise the error
+                        response.raise_for_status()
+                else:
+                    # Other error, raise immediately
+                    response.raise_for_status()
+
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429 and attempt < max_retries:
+                    # Rate limited, retry with backoff
+                    delay = base_delay * (2 ** attempt)
+                    await asyncio.sleep(delay)
+                    continue
+                else:
+                    # Re-raise if not rate limit or final attempt
+                    raise
 
 
 async def _real_call_groq(prompt: str, api_key: str) -> str:
