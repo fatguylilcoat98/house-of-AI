@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.3.1"  # Handoff Export Null Reference Fix
+APP_VERSION = "v1.3.2"  # Frontend JavaScript Null Reference Fix
 
 app = FastAPI(
     title="Constitutional AI Council System",

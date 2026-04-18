@@ -1421,17 +1421,22 @@
                 'perplexity': 'Perplexity (Adversarial)'
             };
 
-            aiOrder.forEach(ai => {
-                if (session.round1_responses[ai]) {
-                    const response = session.round1_responses[ai];
-                    const errorClass = response.error ? ' error' : '';
-                    html += `
-                        <div class="ai-response${errorClass}">
-                            <div class="ai-name">${aiNames[ai] || ai}</div>
-                            <div class="ai-text">${response.error || response.response}</div>
-                        </div>
-                    `;
-                }
+            // DEFENSIVE NULL CHECKING for session and round1_responses
+            if (session && session.round1_responses) {
+                aiOrder.forEach(ai => {
+                    if (session.round1_responses[ai]) {
+                        const response = session.round1_responses[ai];
+                        const errorClass = response.error ? ' error' : '';
+                        html += `
+                            <div class="ai-response${errorClass}">
+                                <div class="ai-name">${aiNames[ai] || ai}</div>
+                                <div class="ai-text">${response.error || response.response}</div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                html += `<div style="color: #dc3545;">⚠️ Session data not available for Round 1 responses</div>`;
             });
 
             html += '</div>';
@@ -1439,18 +1444,23 @@
             // Round 2 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 2: Cross-Review</div>';
 
-            aiOrder.forEach(ai => {
-                if (session.round2_responses[ai]) {
-                    const response = session.round2_responses[ai];
-                    const errorClass = response.error ? ' error' : '';
-                    html += `
-                        <div class="ai-response${errorClass}">
-                            <div class="ai-name">${aiNames[ai] || ai} (Cross-Review)</div>
-                            <div class="ai-text">${response.error || response.response}</div>
-                        </div>
-                    `;
-                }
-            });
+            // DEFENSIVE NULL CHECKING for Round 2 responses
+            if (session && session.round2_responses) {
+                aiOrder.forEach(ai => {
+                    if (session.round2_responses[ai]) {
+                        const response = session.round2_responses[ai];
+                        const errorClass = response.error ? ' error' : '';
+                        html += `
+                            <div class="ai-response${errorClass}">
+                                <div class="ai-name">${aiNames[ai] || ai} (Cross-Review)</div>
+                                <div class="ai-text">${response.error || response.response}</div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                html += `<div style="color: #888;">🔄 Round 2 responses not available (Safe Mode or failed execution)</div>`;
+            }
 
             html += '</div>';
 
@@ -1459,7 +1469,7 @@
                 <div class="save-controls">
                     <input type="text" class="save-input" id="saveName" placeholder="Name for this output...">
                     <input type="text" class="save-input" id="saveDescription" placeholder="Description...">
-                    <button class="btn" onclick="saveOutput('${session.session_id}')">Save Output</button>
+                    <button class="btn" onclick="saveOutput('${session && session.session_id ? session.session_id : 'unknown'}')">Save Output</button>
                 </div>
             `;
 
