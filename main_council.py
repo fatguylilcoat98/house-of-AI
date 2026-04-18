@@ -1376,12 +1376,8 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str]):
         "perplexity": "Adversarial Reality Check / Feasibility / External pressure"
     }
 
-    # Constitutional packet prompt with sole carrier rule
-    constitutional_prompt = f"""
-CONSTITUTIONAL GOVERNANCE SESSION - SAFE MODE
-
-ROLE ASSIGNMENT: {role_assignments.get(provider, "General Analysis")}
-
+    # Constitutional packet prompt template (without provider-specific content)
+    constitutional_prompt_template = """
 SOLE CARRIER RULE: Models do not share native memory. Only information included in this session packet is valid for this run.
 
 CONSTITUTIONAL REQUIREMENTS:
@@ -1390,8 +1386,6 @@ CONSTITUTIONAL REQUIREMENTS:
 - Flag VERIFIED FACT vs PROFESSIONAL OPINION vs UNKNOWN
 - Do not assume other council members verified anything
 - Challenge unsupported claims clearly
-
-{system_packet.to_prompt(provider)}
 
 CONSTITUTIONAL RESPONSE REQUIREMENTS:
 - Lead with your lane perspective
@@ -1425,7 +1419,9 @@ CONSTITUTIONAL GOVERNANCE SESSION - SAFE MODE
 ROLE ASSIGNMENT: {role_assignments.get(provider, "General Analysis")}
 PROVIDER VERIFICATION: {provider}
 
-{constitutional_prompt}
+{constitutional_prompt_template}
+
+{system_packet.to_prompt(provider)}
 """
 
             # Constitutional compliance: Each seat responds independently
