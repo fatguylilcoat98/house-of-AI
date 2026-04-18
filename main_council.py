@@ -73,13 +73,8 @@ saved_insights: Dict[str, Dict[str, Any]] = {}
 repo_shares: Dict[str, RepoShareSession] = {}
 available_repos: Dict[str, str] = {}  # repo_name -> repo_path mapping
 
-# Initialize provider status
-for provider in ["claude", "gpt4", "gemini", "grok", "perplexity"]:
-    provider_status[provider] = ProviderStatus(
-        provider=provider,
-        status="unknown",
-        last_check=datetime.now()
-    )
+# Initialize provider status (will be populated when first accessed)
+# Note: ProviderStatus objects created lazily to avoid import order issues
 
 # ---------------------------------------------------------------------------
 # Pydantic Models
@@ -621,10 +616,10 @@ async def get_provider_status():
     await update_provider_status(providers)
 
     return {
-        "providers": {p: provider_status[p].dict() for p in providers},
+        "providers": {p: provider_status[p].dict() for p in providers if p in provider_status},
         "summary": {
-            "online": len([p for p in providers if provider_status[p].status == "online"]),
-            "offline": len([p for p in providers if provider_status[p].status in ["offline", "error"]])
+            "online": len([p for p in providers if p in provider_status and provider_status[p].status == "online"]),
+            "offline": len([p for p in providers if p in provider_status and provider_status[p].status in ["offline", "error"]])
         }
     }
 
