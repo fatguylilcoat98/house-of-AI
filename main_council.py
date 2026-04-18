@@ -1880,7 +1880,20 @@ async def test_all_providers():
 
     for provider in providers:
         try:
-            result = await test_single_provider(provider)
+            # Call the core testing function directly, not the endpoint
+            core_result = await constitutional_provider_test(provider)
+
+            # Format result to match the expected structure
+            result = {
+                "provider": provider,
+                "success": core_result.get("success", False),
+                "mode": core_result.get("mode", "UNKNOWN"),
+                "latency_ms": core_result.get("latency_ms", 0),
+                "error": core_result.get("error"),
+                "api_key_status": "configured" if provider in API_KEYS and API_KEYS[provider] else "missing",
+                "constitutional_test": True,
+                "timestamp": datetime.now().isoformat()
+            }
             results[provider] = result
         except Exception as e:
             results[provider] = {
