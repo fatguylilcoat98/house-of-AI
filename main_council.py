@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.2.0"  # Real API Integration + Council Execution Fix
+APP_VERSION = "v1.3.0"  # Full Mode Null Reference Fix + Defensive Session Handling
 
 app = FastAPI(
     title="Constitutional AI Council System",
@@ -1493,6 +1493,24 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str]):
     # Round 1: Independent analysis (same as safe mode)
     round1_session = await execute_constitutional_safe_mode(system_packet, providers)
 
+    # CRITICAL FIX: Defensive check for Round 1 failure
+    if round1_session is None or not hasattr(round1_session, 'responses'):
+        print("CRITICAL: Round 1 failed completely - aborting Full Mode")
+        # Return minimal session object for failed Round 1
+        failed_responses = {}
+        for provider in providers:
+            failed_responses[provider] = {
+                "response": "Round 1 failed completely - cannot proceed with cross-review",
+                "role": "Failed Seat",
+                "round": 1,
+                "constitutional_compliance": False,
+                "failed": True,
+                "timestamp": datetime.now().isoformat()
+            }
+        return create_constitutional_session_object(failed_responses, "FULL", system_packet, None)
+
+    print(f"Round 1 completed successfully with {len(round1_session.responses)} provider responses")
+
     # Round 2: Constitutional cross-review
     role_assignments = {
         "claude": "Architecture / Systems / Integrity",
@@ -1520,7 +1538,7 @@ CONSTITUTIONAL CROSS-REVIEW REQUIREMENTS:
 - Stay in your lane while reviewing others
 
 ROUND 1 COUNCIL OUTPUTS:
-{json.dumps(round1_session.responses, indent=2)}
+{json.dumps(getattr(round1_session, 'responses', {}) if round1_session else {}, indent=2)}
 
 ORIGINAL SESSION CONTEXT:
 {system_packet.to_prompt(provider)}
@@ -1572,9 +1590,13 @@ CONSTITUTIONAL RESPONSE REQUIREMENTS:
                     "timestamp": datetime.now().isoformat()
                 }
 
-    # Combine rounds for constitutional session
-    combined_responses = {**round1_session.responses, **round2_responses}
-    return create_constitutional_session_object(combined_responses, "FULL", system_packet, round1_session.responses)
+    # Combine rounds for constitutional session - DEFENSIVE NULL CHECK
+    round1_responses = getattr(round1_session, 'responses', {}) if round1_session else {}
+    combined_responses = {**round1_responses, **round2_responses}
+
+    print(f"Full Mode completed: Round 1 ({len(round1_responses)} responses) + Round 2 ({len(round2_responses)} responses)")
+
+    return create_constitutional_session_object(combined_responses, "FULL", system_packet, round1_responses)
 
 
 async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, Any]:
