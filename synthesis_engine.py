@@ -491,6 +491,72 @@ Address conflicts through additional investigation or stakeholder input.
 
         return summary.strip()
 
+    def analyze_without_merging(self, session) -> Dict[str, Any]:
+        """CRITICAL FIX: Analyze session without creating fake consensus"""
+        try:
+            # Extract distinct perspectives
+            provider_perspectives = {}
+            agreements = []
+            conflicts = []
+            open_questions = []
+
+            # Safely extract responses from session object
+            responses_dict = {}
+
+            # Handle different session object structures
+            if hasattr(session, 'responses'):
+                responses_dict = session.responses
+            elif hasattr(session, 'round1_responses'):
+                # Convert round1_responses to standard format
+                for provider, response in session.round1_responses.items():
+                    provider_key = provider.value if hasattr(provider, 'value') else str(provider)
+                    responses_dict[provider_key] = {
+                        'response': response.response_text if hasattr(response, 'response_text') else str(response),
+                        'role': f'{provider_key} analysis',
+                        'round': 1,
+                        'success': not hasattr(response, 'error') or not response.error
+                    }
+
+            # Safely extract responses
+            for provider, response in responses_dict.items():
+                if isinstance(response, dict) and response.get('response'):
+                    provider_perspectives[provider] = {
+                        'response': response.get('response', ''),
+                        'role': response.get('role', 'Unknown'),
+                        'round': response.get('round', 1)
+                    }
+
+                    # Extract agreements (simplified pattern matching)
+                    response_text = response.get('response', '').lower()
+                    if 'agree' in response_text or 'consensus' in response_text:
+                        agreements.append(f"{provider}: Shows agreement indicators")
+
+                    # Extract conflicts
+                    if 'disagree' in response_text or 'conflict' in response_text or 'challenge' in response_text:
+                        conflicts.append(f"{provider}: Shows disagreement indicators")
+
+                    # Extract questions
+                    if '?' in response.get('response', ''):
+                        questions = [q.strip() for q in response.get('response', '').split('?') if q.strip()]
+                        open_questions.extend([f"{provider}: {q}?" for q in questions[:2]])
+
+            return {
+                "agreements": agreements,
+                "conflicts": conflicts,
+                "open_questions": open_questions,
+                "provider_perspectives": provider_perspectives
+            }
+
+        except Exception as e:
+            print(f"⚠️ Synthesis analysis error: {str(e)}")
+            return {
+                "agreements": [],
+                "conflicts": [],
+                "open_questions": [],
+                "provider_perspectives": {},
+                "error": str(e)
+            }
+
     def export_synthesis(self, synthesis: SynthesisResult) -> Dict[str, Any]:
         """Export synthesis result to JSON-serializable format"""
         return {

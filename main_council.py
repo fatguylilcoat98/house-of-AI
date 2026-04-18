@@ -73,7 +73,7 @@ saved_insights: Dict[str, Dict[str, Any]] = {}
 repo_shares: Dict[str, RepoShareSession] = {}
 available_repos: Dict[str, str] = {}  # repo_name -> repo_path mapping
 
-# 🚨 CONSTITUTIONAL PATCH SYSTEMS
+# ALERT CONSTITUTIONAL PATCH SYSTEMS
 constitutional_patches = {
     "red_flags": {},  # PATCH 1: RED FLAG PROTOCOL
     "rule_violations": {},  # PATCH 2: RULE VIOLATION RESPONSE
@@ -87,7 +87,7 @@ constitutional_patches = {
     "idea_preservation_triggers": {}  # PATCH 10: IDEA PRESERVATION TRIGGER
 }
 
-# 🏛️ CONSTITUTIONAL REPO SAFEGUARDS
+# CONSTITUTIONAL CONSTITUTIONAL REPO SAFEGUARDS
 CONSTITUTIONAL_REPO_LIMITS = {
     "max_file_size_bytes": 100 * 1024,  # 100KB per file
     "max_total_files": 50,  # Max 50 files per session
@@ -174,7 +174,7 @@ class RepoShareSession(BaseModel):
     created_at: datetime
 
 
-# 🚨 CONSTITUTIONAL PATCH MODELS
+# ALERT CONSTITUTIONAL PATCH MODELS
 
 class RedFlagAlert(BaseModel):
     """PATCH 1: RED FLAG PROTOCOL"""
@@ -286,7 +286,7 @@ async def execute_council_session(request: CouncilRequest):
     start_time = datetime.now()
 
     try:
-        # 🔴 FIX #1: SYSTEM PACKET BUILDER INTEGRATION
+        # FIX FIX #1: SYSTEM PACKET BUILDER INTEGRATION
         # Update constitution if provided
         if request.custom_constitution:
             constitution = ConstitutionCore(**request.custom_constitution)
@@ -298,7 +298,7 @@ async def execute_council_session(request: CouncilRequest):
             session_goal = SessionGoal(**request.session_goal)
             packet_builder.add_session_goal(session_goal)
 
-        # 🔥 REPO SHARE INTEGRATION - Inject repo context if provided
+        # REPO REPO SHARE INTEGRATION - Inject repo context if provided
         repo_context = None
         if request.repo_share_id and request.repo_share_id in repo_shares:
             try:
@@ -315,7 +315,7 @@ async def execute_council_session(request: CouncilRequest):
         if repo_context:
             system_packet.add_repo_context(repo_context)
 
-        # 🔴 FIX #3: PROVIDER STATUS CHECK
+        # FIX FIX #3: PROVIDER STATUS CHECK
         active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok", "perplexity"]
         await update_provider_status(active_providers)
 
@@ -326,7 +326,7 @@ async def execute_council_session(request: CouncilRequest):
         if not working_providers:
             raise HTTPException(status_code=503, detail="No AI providers are currently available")
 
-        # 🏛️ CONSTITUTIONAL EXECUTION MODES
+        # CONSTITUTIONAL CONSTITUTIONAL EXECUTION MODES
         execution_mode = request.execution_mode
         if execution_mode == "safe":
             # SAFE MODE: 1 round only, raw outputs, no synthesis
@@ -353,10 +353,10 @@ async def execute_council_session(request: CouncilRequest):
                 "constitutional_compliance": True
             }
 
-        # 🔴 FIX #4: NO FAKE SYNTHESIS - Track agreements/conflicts
+        # FIX FIX #4: NO FAKE SYNTHESIS - Track agreements/conflicts
         synthesis = synthesis_engine.analyze_without_merging(session)
 
-        # 🏛️ CONSTITUTIONAL SESSION LOGGING
+        # CONSTITUTIONAL CONSTITUTIONAL SESSION LOGGING
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds() * 1000
 
@@ -422,7 +422,7 @@ async def execute_council_session(request: CouncilRequest):
         }
 
     except Exception as e:
-        # 🔴 FIX #10: ERROR HANDLING
+        # FIX FIX #10: ERROR HANDLING
         await handle_session_error(session_id, str(e), request)
         raise HTTPException(status_code=500, detail=f"Council execution failed: {str(e)}")
 
@@ -720,7 +720,7 @@ def build_repo_content_packet(share: RepoShareSession) -> Dict[str, Any]:
     return content
 
 
-# 🚨 CONSTITUTIONAL PATCH ENFORCEMENT FUNCTIONS
+# ALERT CONSTITUTIONAL PATCH ENFORCEMENT FUNCTIONS
 
 def issue_red_flag(seat: str, objection: str, reasoning: str, risk_level: str = "high") -> str:
     """PATCH 1: RED FLAG PROTOCOL - Issue structured escalation"""
@@ -739,10 +739,10 @@ def issue_red_flag(seat: str, objection: str, reasoning: str, risk_level: str = 
     constitutional_patches["red_flags"][flag_id] = red_flag
 
     # Log the red flag for session tracking
-    print(f"🚨 RED FLAG ISSUED by {seat}: {objection}")
-    print(f"🚨 REASONING: {reasoning}")
-    print(f"🚨 RISK LEVEL: {risk_level}")
-    print(f"🚨 REQUIRES EXPLICIT USER ACKNOWLEDGMENT")
+    print(f"ALERT RED FLAG ISSUED by {seat}: {objection}")
+    print(f"ALERT REASONING: {reasoning}")
+    print(f"ALERT RISK LEVEL: {risk_level}")
+    print(f"ALERT REQUIRES EXPLICIT USER ACKNOWLEDGMENT")
 
     return flag_id
 
@@ -779,9 +779,9 @@ def mark_rule_violation(rule: str, description: str, output: str, seat: str, sev
     constitutional_patches["rule_violations"][violation_id] = violation
 
     # Mark output as unreliable
-    print(f"⚠️ RULE VIOLATION DETECTED: {rule}")
-    print(f"⚠️ OUTPUT MARKED UNRELIABLE: {seat}")
-    print(f"⚠️ SEVERITY: {severity}")
+    print(f"WARNING RULE VIOLATION DETECTED: {rule}")
+    print(f"WARNING OUTPUT MARKED UNRELIABLE: {seat}")
+    print(f"WARNING SEVERITY: {severity}")
 
     return violation_id
 
@@ -852,9 +852,9 @@ def detect_mirror_output(output_text: str, pattern_type: str) -> Optional[str]:
 
             constitutional_patches["suspicious_outputs"][detection_id] = suspicious
 
-            print(f"🔍 SUSPICIOUS OUTPUT DETECTED: {pattern_type}")
-            print(f"🔍 TRIGGER: {trigger}")
-            print(f"🔍 REQUIRES INDEPENDENT VERIFICATION")
+            print(f"DETECTION SUSPICIOUS OUTPUT DETECTED: {pattern_type}")
+            print(f"DETECTION TRIGGER: {trigger}")
+            print(f"DETECTION REQUIRES INDEPENDENT VERIFICATION")
 
             return detection_id
 
@@ -889,9 +889,9 @@ def enforce_two_seat_rule(action_type: str, reviewing_seats: List[str], exclude_
     }
 
     if not validation.approved:
-        print(f"🛑 TWO-SEAT RULE: {action_type} requires 2 independent reviews")
-        print(f"🛑 CURRENT APPROVALS: {len(valid_reviewers)}/2")
-        print(f"🛑 BLOCKED until requirement satisfied")
+        print(f"BLOCKED TWO-SEAT RULE: {action_type} requires 2 independent reviews")
+        print(f"BLOCKED CURRENT APPROVALS: {len(valid_reviewers)}/2")
+        print(f"BLOCKED BLOCKED until requirement satisfied")
 
     return result
 
@@ -925,7 +925,7 @@ def log_dispatcher_discipline(session_id: str, scope_boundary: Optional[str],
     constitutional_patches["dispatcher_logs"][session_id] = log_entry
 
     if missing_fields:
-        print(f"📋 DISPATCHER DISCIPLINE: Missing fields: {', '.join(missing_fields)}")
+        print(f"DISPATCHER DISPATCHER DISCIPLINE: Missing fields: {', '.join(missing_fields)}")
 
     return log_entry
 
@@ -953,8 +953,8 @@ def check_repo_completeness(shared_content: Dict[str, Any], references_found: Li
 
         constitutional_patches["repo_completeness_warnings"][warning_id] = warning
 
-        print(f"⚠️ REPO COMPLETENESS WARNING: {len(missing_references)} missing references")
-        print(f"⚠️ Analysis may be incomplete due to missing repository context")
+        print(f"WARNING REPO COMPLETENESS WARNING: {len(missing_references)} missing references")
+        print(f"WARNING Analysis may be incomplete due to missing repository context")
 
         return missing_references
 
@@ -998,8 +998,8 @@ def trigger_idea_preservation(exchange_count: int, concept_refined: bool, action
 
         constitutional_patches["idea_preservation_triggers"][trigger_id] = trigger_data
 
-        print(f"💡 IDEA PRESERVATION TRIGGER: Important concept detected")
-        print(f"💡 This looks important. Do you want to capture it before we move on?")
+        print(f"IDEA IDEA PRESERVATION TRIGGER: Important concept detected")
+        print(f"IDEA This looks important. Do you want to capture it before we move on?")
 
         return True
 
@@ -1033,64 +1033,193 @@ async def update_provider_status(providers: List[str]):
 
 
 async def test_provider_connection(provider: str) -> bool:
-    """Quick connectivity test for a provider"""
-    # This would make actual test calls to each provider
-    # For now, return True if API key exists
-    return bool(API_KEYS.get(provider))
+    """REAL connectivity test for a provider"""
+    # Check if API key exists first
+    if not API_KEYS.get(provider):
+        return False
+
+    try:
+        # Make actual API call using execution engine
+        test_result = await constitutional_provider_test(provider)
+        return test_result.get("success", False) and test_result.get("mode") == "REAL"
+    except Exception as e:
+        print(f"Provider connection test failed for {provider}: {str(e)}")
+        return False
+
+
+# REAL API CALLING FUNCTIONS FOR HEALTH TESTS
+
+async def _real_call_claude(prompt: str, api_key: str) -> str:
+    """Make REAL API call to Claude"""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "content-type": "application/json",
+                "anthropic-version": "2023-06-01"
+            },
+            json={
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 100,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["content"][0]["text"]
+
+
+async def _real_call_gpt4(prompt: str, api_key: str) -> str:
+    """Make REAL API call to GPT-4"""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "gpt-4",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 100
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
+
+
+async def _real_call_gemini(prompt: str, api_key: str) -> str:
+    """Make REAL API call to Gemini"""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": 100}
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+
+
+async def _real_call_grok(prompt: str, api_key: str) -> str:
+    """Make REAL API call to Grok (X.AI)"""
+    import httpx
+
+    # Note: X.AI/Grok API endpoint - this may need adjustment when official API is available
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            "https://api.x.ai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "grok-beta",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 100
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
+
+
+async def _real_call_perplexity(prompt: str, api_key: str) -> str:
+    """Make REAL API call to Perplexity"""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            "https://api.perplexity.ai/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.1-sonar-small-128k-online",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 100
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
 
 
 async def constitutional_provider_test(provider: str) -> Dict[str, Any]:
-    """Constitutional provider test with sample output"""
+    """REAL Constitutional provider test with actual API calls"""
+    import time
 
-    test_prompt = f"""
-CONSTITUTIONAL HEALTH TEST
+    # Simple health check prompt
+    test_prompt = "Respond with OK"
 
-Role: {provider} health verification
-Task: Respond with your operational status
-
-Requirements:
-1. Confirm you are {provider}
-2. State current operational status
-3. Provide brief capability summary
-4. Flag any limitations or issues
-
-This is a constitutional governance health check.
-"""
+    start_time = time.time()
 
     try:
-        # For now, return mock test responses based on provider
-        # This will be replaced with actual API calls
+        # Check if API key exists
+        api_key = API_KEYS.get(provider)
+        if not api_key:
+            return {
+                "success": False,
+                "mode": "MOCK",
+                "sample": f"API KEY MISSING: {provider} cannot connect",
+                "error": f"No API key configured for {provider}",
+                "constitutional_test": True,
+                "latency_ms": 0
+            }
+
+        # Make REAL API calls based on provider
+        response_text = None
 
         if provider == "claude":
-            sample_output = "CLAUDE OPERATIONAL: Architecture & Systems analysis ready. Constitutional governance compliant. No limitations detected."
+            response_text = await _real_call_claude(test_prompt, api_key)
         elif provider == "gpt4":
-            sample_output = "GPT-4 OPERATIONAL: Structure & Guardrails synthesis ready. Constitutional framework acknowledged. Operating normally."
+            response_text = await _real_call_gpt4(test_prompt, api_key)
         elif provider == "gemini":
-            sample_output = "GEMINI OPERATIONAL: UX & Human Clarity analysis ready. Constitutional requirements understood. No issues detected."
+            response_text = await _real_call_gemini(test_prompt, api_key)
         elif provider == "grok":
-            sample_output = "GROK OPERATIONAL: Stress Testing & Edge Case analysis ready. Constitutional pressure testing available. System nominal."
+            response_text = await _real_call_grok(test_prompt, api_key)
         elif provider == "perplexity":
-            sample_output = "PERPLEXITY OPERATIONAL: Adversarial Reality Check ready. Constitutional feasibility analysis online. External pressure testing available."
+            response_text = await _real_call_perplexity(test_prompt, api_key)
         else:
-            sample_output = f"{provider.upper()} STATUS UNKNOWN: Provider not in constitutional role assignments."
+            raise ValueError(f"Unknown provider: {provider}")
 
-        # Mock success based on API key existence
-        has_api_key = bool(API_KEYS.get(provider))
+        end_time = time.time()
+        real_latency_ms = (end_time - start_time) * 1000
 
         return {
-            "success": has_api_key,
-            "sample": sample_output if has_api_key else f"API KEY MISSING: {provider} cannot connect",
+            "success": True,
+            "mode": "REAL",
+            "sample": response_text,
             "constitutional_test": True,
             "role_verified": True,
-            "error": None if has_api_key else f"No API key configured for {provider}"
+            "latency_ms": real_latency_ms,
+            "api_key_status": "configured",
+            "error": None
         }
 
     except Exception as e:
+        end_time = time.time()
+        error_latency_ms = (end_time - start_time) * 1000
+
         return {
             "success": False,
-            "sample": f"TEST FAILED: {str(e)}",
+            "mode": "REAL",  # Still real attempt, just failed
+            "sample": f"REAL API CALL FAILED: {str(e)}",
             "constitutional_test": True,
             "role_verified": False,
+            "latency_ms": error_latency_ms,
             "error": str(e)
         }
 
@@ -1114,7 +1243,7 @@ def calculate_session_cost(session) -> float:
     return round(total_cost, 4)
 
 
-# 🏛️ CONSTITUTIONAL SESSION LOGGING HELPERS
+# CONSTITUTIONAL CONSTITUTIONAL SESSION LOGGING HELPERS
 
 def get_model_for_provider(provider: str) -> str:
     """Get model identifier for constitutional logging"""
@@ -1172,7 +1301,7 @@ async def handle_session_error(session_id: str, error: str, request: CouncilRequ
     }
 
 
-# 🏛️ CONSTITUTIONAL EXECUTION MODES
+# CONSTITUTIONAL CONSTITUTIONAL EXECUTION MODES
 
 async def execute_constitutional_safe_mode(system_packet, providers: List[str]):
     """
@@ -1216,39 +1345,80 @@ CONSTITUTIONAL RESPONSE REQUIREMENTS:
     session_responses = {}
 
     # Execute single round with constitutional prompts
-    for provider in providers:
+    for current_provider in providers:
+        # CRITICAL FIX: Ensure provider variable is properly assigned
+        if not current_provider:
+            print(f"WARNING CRITICAL: Provider is None or empty, skipping")
+            continue
+
+        provider = current_provider  # Explicit assignment
+        print(f"PROCESSING Processing provider: {provider}")
+
         try:
+            # CRITICAL FIX: Verify provider exists before use
+            if provider not in role_assignments:
+                print(f"WARNING WARNING: Provider {provider} not in role assignments")
+                role_assignments[provider] = "General Analysis"
+
+            # Build constitutional prompt with provider assignment verification
+            provider_prompt = f"""
+CONSTITUTIONAL GOVERNANCE SESSION - SAFE MODE
+
+ROLE ASSIGNMENT: {role_assignments.get(provider, "General Analysis")}
+PROVIDER VERIFICATION: {provider}
+
+{constitutional_prompt}
+"""
+
             # Constitutional compliance: Each seat responds independently
-            response = await make_constitutional_api_call(provider, constitutional_prompt)
+            response_data = await make_constitutional_api_call(provider, provider_prompt)
+
             session_responses[provider] = {
-                "response": response,
+                "response": response_data.get("response", f"No response from {provider}"),
                 "role": role_assignments.get(provider, "General Analysis"),
                 "round": 1,
                 "constitutional_compliance": True,
-                "timestamp": datetime.now().isoformat()
+                "provider_verified": provider,
+                "timestamp": datetime.now().isoformat(),
+                "constitutional_patches": response_data.get("constitutional_patches", {}),
+                "success": True
             }
 
+            print(f"SUCCESS {provider} completed successfully")
+
         except Exception as e:
-            # Constitutional failure handling: retry once, mark failure clearly
+            print(f"WARNING {provider} failed: {str(e)}")
+
+            # CRITICAL FIX: Fail-safe execution - mark failed seat and continue
             try:
-                response = await make_constitutional_api_call(provider, constitutional_prompt)
+                # Retry once with simplified prompt
+                retry_response = await make_constitutional_api_call(provider, f"RETRY: {provider} simple response test")
                 session_responses[provider] = {
-                    "response": response,
+                    "response": retry_response.get("response", f"Retry response from {provider}"),
                     "role": role_assignments.get(provider, "General Analysis"),
                     "round": 1,
                     "constitutional_compliance": True,
                     "retry": True,
-                    "timestamp": datetime.now().isoformat()
+                    "provider_verified": provider,
+                    "timestamp": datetime.now().isoformat(),
+                    "success": True
                 }
-            except:
+                print(f"SUCCESS {provider} retry succeeded")
+            except Exception as retry_error:
+                # CRITICAL FIX: Mark failed seat but DO NOT crash entire session
                 session_responses[provider] = {
-                    "response": f"SEAT FAILED: {str(e)}",
+                    "response": f"SEAT FAILED: {str(e)} | Retry failed: {str(retry_error)}",
                     "role": role_assignments.get(provider, "General Analysis"),
                     "round": 1,
                     "constitutional_compliance": False,
                     "failed": True,
-                    "timestamp": datetime.now().isoformat()
+                    "provider_verified": provider,
+                    "error": str(e),
+                    "retry_error": str(retry_error),
+                    "timestamp": datetime.now().isoformat(),
+                    "success": False
                 }
+                print(f"FAILED {provider} failed completely - marked failed, continuing session")
 
     return create_constitutional_session_object(session_responses, "SAFE", system_packet)
 
@@ -1370,17 +1540,17 @@ CONSTITUTIONAL COMPLIANCE: Following sole carrier rule, voice integrity maintain
 [END {provider.upper()} CONSTITUTIONAL RESPONSE]
 """
 
-        # 🚨 PATCH 4: MIRROR OUTPUT DETECTION
+        # ALERT PATCH 4: MIRROR OUTPUT DETECTION
         suspicious_detection = detect_mirror_output(response_text, "perfect_pass")
 
-        # 🚨 PATCH 3: EVALUABILITY AWARENESS
+        # ALERT PATCH 3: EVALUABILITY AWARENESS
         evaluation = assess_evaluability(
             method="mock_api_response",
             inputs_complete=True,
             evaluator_independent=True
         )
 
-        # 🚨 PATCH 2: Check for rule violations (mock check)
+        # ALERT PATCH 2: Check for rule violations (mock check)
         violation_id = None
         if "100% success" in response_text.lower():
             violation_id = mark_rule_violation(
@@ -1415,7 +1585,7 @@ CONSTITUTIONAL COMPLIANCE: Following sole carrier rule, voice integrity maintain
         }
 
     except Exception as e:
-        # 🚨 PATCH 2: Mark as rule violation on error
+        # ALERT PATCH 2: Mark as rule violation on error
         violation_id = mark_rule_violation(
             rule="API Reliability Rule",
             description=f"Provider API call failed: {str(e)}",
@@ -1493,7 +1663,7 @@ async def get_session(session_id: str):
     return session_data
 
 
-# 🔴 FIX #5: SAVE / CAPTURE BUTTONS
+# FIX FIX #5: SAVE / CAPTURE BUTTONS
 @app.post("/api/insights/save")
 async def save_insight(request: SaveInsightRequest):
     """Save insight, decision, or feature from council session"""
@@ -1523,7 +1693,7 @@ async def get_saved_insights():
     return {"insights": list(saved_insights.values())}
 
 
-# 🔴 FIX #6: PROVIDER STATUS PANEL
+# FIX FIX #6: PROVIDER STATUS PANEL
 @app.get("/api/providers/status")
 async def get_provider_status():
     """Get current status of all AI providers"""
@@ -1540,60 +1710,104 @@ async def get_provider_status():
     }
 
 
-# 🏛️ CONSTITUTIONAL PROVIDER HEALTH PANEL
+# CONSTITUTIONAL CONSTITUTIONAL PROVIDER HEALTH PANEL
 
 @app.post("/api/providers/test/{provider}")
 async def test_single_provider(provider: str):
-    """Constitutional requirement: Test single provider with full health data"""
+    """CRITICAL FIX: Test single provider with proper error handling"""
 
-    if provider not in ["claude", "gpt4", "gemini", "grok", "perplexity"]:
-        raise HTTPException(status_code=400, detail="Invalid provider")
-
-    start_time = datetime.now()
-
-    try:
-        # Constitutional test: Get actual response sample
-        test_result = await constitutional_provider_test(provider)
-
-        end_time = datetime.now()
-        latency_ms = (end_time - start_time).total_seconds() * 1000
-
-        # Update provider status
-        provider_status[provider] = ProviderStatus(
-            provider=provider,
-            status="online" if test_result["success"] else "error",
-            response_time_ms=int(latency_ms),
-            last_check=datetime.now()
-        )
-
+    # CRITICAL FIX: Validate provider input
+    valid_providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
+    if provider not in valid_providers:
         return {
             "provider": provider,
-            "success": test_result["success"],
-            "latency_ms": int(latency_ms),
-            "sample_output": test_result["sample"],
-            "error": test_result.get("error"),
+            "success": False,
+            "mode": "INVALID",
+            "latency_ms": 0,
+            "error": f"Invalid provider. Valid options: {', '.join(valid_providers)}",
+            "api_key_status": "n/a",
             "constitutional_test": True,
             "timestamp": datetime.now().isoformat()
         }
 
-    except Exception as e:
+    start_time = datetime.now()
+
+    try:
+        print(f"TESTING Testing provider: {provider}")
+
+        # CRITICAL FIX: Safe provider test with fallback
+        test_result = await constitutional_provider_test(provider)
+
         end_time = datetime.now()
-        latency_ms = (end_time - start_time).total_seconds() * 1000
+        latency_ms = max(1, (end_time - start_time).total_seconds() * 1000)
 
-        provider_status[provider] = ProviderStatus(
-            provider=provider,
-            status="error",
-            error_message=str(e),
-            response_time_ms=int(latency_ms),
-            last_check=datetime.now()
-        )
+        # CRITICAL FIX: Ensure test_result is valid
+        if not test_result or not isinstance(test_result, dict):
+            test_result = {
+                "success": False,
+                "sample": "Test result invalid",
+                "error": "Provider test returned invalid result"
+            }
 
+        # CRITICAL FIX: Safe provider status update
+        try:
+            provider_status[provider] = ProviderStatus(
+                provider=provider,
+                status="online" if test_result.get("success", False) else "error",
+                response_time_ms=int(latency_ms),
+                last_check=datetime.now(),
+                error_message=test_result.get("error")
+            )
+        except Exception as status_error:
+            print(f"WARNING Failed to update provider status: {status_error}")
+
+        # CRITICAL FIX: Structured return format with REAL/MOCK mode indicator
+        real_latency = test_result.get("latency_ms", latency_ms)
+        result = {
+            "provider": provider,
+            "success": test_result.get("success", False),
+            "mode": test_result.get("mode", "UNKNOWN"),  # REAL or MOCK indicator
+            "latency_ms": int(real_latency),
+            "sample_output": test_result.get("sample", "No sample available"),
+            "error": test_result.get("error"),
+            "api_key_status": "configured" if API_KEYS.get(provider) else "missing",
+            "constitutional_test": True,
+            "test_completed": True,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        print(f"SUCCESS Provider test completed: {provider} - Success: {result['success']}")
+        return result
+
+    except Exception as e:
+        print(f"FAILED Provider test failed: {provider} - Error: {str(e)}")
+
+        end_time = datetime.now()
+        latency_ms = max(1, (end_time - start_time).total_seconds() * 1000)
+
+        # CRITICAL FIX: Safe error status update
+        try:
+            provider_status[provider] = ProviderStatus(
+                provider=provider,
+                status="error",
+                error_message=str(e),
+                response_time_ms=int(latency_ms),
+                last_check=datetime.now()
+            )
+        except Exception as status_error:
+            print(f"WARNING Failed to update error status: {status_error}")
+
+        # CRITICAL FIX: Structured error return
         return {
             "provider": provider,
             "success": False,
+            "mode": "ERROR",  # Error during test
             "latency_ms": int(latency_ms),
+            "sample_output": "Test failed",
             "error": str(e),
+            "api_key_status": "configured" if API_KEYS.get(provider) else "missing",
             "constitutional_test": True,
+            "test_completed": False,
             "timestamp": datetime.now().isoformat()
         }
 
@@ -1634,7 +1848,7 @@ async def test_all_providers():
     }
 
 
-# 🔴 FIX #7: COST + CALL TRACKING
+# FIX FIX #7: COST + CALL TRACKING
 @app.get("/api/session/stats/{session_id}")
 async def get_session_stats(session_id: str):
     """Get statistics for a specific session"""
@@ -1676,7 +1890,7 @@ async def list_sessions():
     return {"sessions": sessions}
 
 
-# 🚨 CONSTITUTIONAL PATCH API ENDPOINTS
+# ALERT CONSTITUTIONAL PATCH API ENDPOINTS
 
 @app.get("/api/constitutional/red-flags")
 async def get_red_flags():
@@ -1738,7 +1952,7 @@ async def get_constitutional_status():
 
 
 # ---------------------------------------------------------------------------
-# 🔥 REPO SHARE SYSTEM - Read-Only Repository Access
+# REPO REPO SHARE SYSTEM - Read-Only Repository Access
 # ---------------------------------------------------------------------------
 
 @app.get("/api/repos/available")
@@ -2016,7 +2230,7 @@ async def create_handoff_packet(request: HandoffPacketRequest):
         if session:
             synthesis = synthesis_engine.synthesize_council_session(session)
 
-        # 🔴 FIX #8: HANDOFF EXPORT STRUCTURE
+        # FIX FIX #8: HANDOFF EXPORT STRUCTURE
         # Extract structured information from synthesis
         synthesis_data = synthesis_engine.export_synthesis(synthesis) if synthesis else {}
 
@@ -2339,12 +2553,12 @@ async def health_check():
 @app.on_event("startup")
 async def startup():
     """Initialize system on startup"""
-    print("🏛️ AI Council System Starting...")
+    print("AI Council System Starting...")
     print(f"   APIs configured: {[k for k, v in API_KEYS.items() if v]}")
     print("   System Packet Builder: Ready")
     print("   Execution Engine: Ready")
     print("   Synthesis Engine: Ready")
-    print("🚀 AI Council System: READY")
+    print("AI Council System: READY")
 
 
 if __name__ == "__main__":
