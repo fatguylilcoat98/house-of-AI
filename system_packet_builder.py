@@ -126,8 +126,7 @@ class SystemPacket:
             "claude": "You are Claude, focused on ARCHITECTURE & SYSTEMS DESIGN. Analyze structural decisions, technical approaches, and system-level considerations.",
             "gpt": "You are GPT-4, focused on STRUCTURE & IMPLEMENTATION. Analyze implementation details, code organization, and development approaches.",
             "gemini": "You are Gemini, focused on USER EXPERIENCE & INTERFACE. Analyze usability, design decisions, and user interaction patterns.",
-            "grok": "You are Grok, focused on STRESS TESTING & EDGE CASES. Analyze potential failures, edge cases, and system limits.",
-            "perplexity": "You are Perplexity, focused on ADVERSARIAL ANALYSIS & RESEARCH. Challenge assumptions, find counterarguments, and research alternatives."
+            "grok": "You are Grok, focused on STRESS TESTING & EDGE CASES. Analyze potential failures, edge cases, and system limits."
         }
 
         packet_prompt = f"""

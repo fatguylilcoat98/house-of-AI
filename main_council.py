@@ -512,7 +512,7 @@ async def execute_council_session(request: CouncilRequest):
         }
 
         # FIX FIX #3: PROVIDER STATUS CHECK
-        active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok", "perplexity"]
+        active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok"]
         await update_provider_status(active_providers)
 
         # Filter to only working providers
@@ -1684,8 +1684,7 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str], 
         "claude": "Architecture / Systems / Integrity",
         "gpt4": "Structure / Guardrails / Synthesis",
         "gemini": "UX / Human Clarity / Flow",
-        "grok": "Stress Test / Edge Cases / Pressure",
-        "perplexity": "Adversarial Reality Check / Feasibility / External pressure"
+        "grok": "Stress Test / Edge Cases / Pressure"
     }
 
     # Select appropriate prompt template based on whether we have codebase context
@@ -1851,8 +1850,7 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str], 
         "claude": "Architecture / Systems / Integrity",
         "gpt4": "Structure / Guardrails / Synthesis",
         "gemini": "UX / Human Clarity / Flow",
-        "grok": "Stress Test / Edge Cases / Pressure",
-        "perplexity": "Adversarial Reality Check / Feasibility / External pressure"
+        "grok": "Stress Test / Edge Cases / Pressure"
     }
 
     round2_responses = {}
@@ -1989,7 +1987,7 @@ async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, 
                 seat=provider,
                 objection="High risk operation detected in prompt",
                 reasoning="Critical operations require additional review for system safety",
-                risk_level="high"
+                session_risk_level="high"
             )
 
         return {
@@ -2130,7 +2128,7 @@ async def get_saved_insights():
 async def get_provider_status():
     """Get current status of all AI providers"""
     # Update status before returning
-    providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
+    providers = ["claude", "gpt4", "gemini", "grok"]
     await update_provider_status(providers)
 
     return {
@@ -2150,7 +2148,7 @@ async def test_single_provider(provider: str):
     """CRITICAL FIX: Test single provider with proper error handling"""
 
     # CRITICAL FIX: Validate provider input
-    valid_providers = ["claude", "gpt4", "gemini", "groq", "grok", "perplexity"]
+    valid_providers = ["claude", "gpt4", "gemini", "groq", "grok"]
     if provider not in valid_providers:
         return {
             "provider": provider,
@@ -2249,7 +2247,7 @@ async def test_single_provider(provider: str):
 async def test_all_providers():
     """Constitutional requirement: Test all providers simultaneously"""
 
-    providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
+    providers = ["claude", "gpt4", "gemini", "grok"]
     results = {}
 
     for provider in providers:
