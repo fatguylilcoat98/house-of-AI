@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.2"  # System Frame Integrity Rule integration
+APP_VERSION = "v1.4.3"  # Enhanced council with automatic codebase context
 
 app = FastAPI(
     title="House of AI Council",
@@ -460,8 +460,10 @@ async def execute_council_session(request: CouncilRequest):
             session_goal = SessionGoal(**request.session_goal)
             packet_builder.add_session_goal(session_goal)
 
-        # REPO REPO SHARE INTEGRATION - Inject repo context if provided
+        # ENHANCED COUNCIL - Auto-inject codebase context for better advice
         repo_context = None
+
+        # First, try to get explicitly shared repo context
         if request.repo_share_id and request.repo_share_id in repo_shares:
             try:
                 repo_content = build_repo_content_packet(repo_shares[request.repo_share_id])
@@ -469,13 +471,26 @@ async def execute_council_session(request: CouncilRequest):
                     "repo_share_metadata": repo_shares[request.repo_share_id].dict(),
                     "repo_content": repo_content
                 }
+                print("ENHANCED COUNCIL: Using explicit repo share context")
             except Exception as e:
-                print(f"Warning: Failed to load repo context: {e}")
+                print(f"Warning: Failed to load explicit repo context: {e}")
 
-        # Build full system packet with ALL context (including repo if shared)
+        # If no explicit context, auto-generate current project context
+        if not repo_context:
+            auto_context = create_auto_codebase_context()
+            if auto_context:
+                repo_context = auto_context
+                print("ENHANCED COUNCIL: Auto-generated codebase context for full project visibility")
+            else:
+                print("ENHANCED COUNCIL: No codebase context available")
+
+        # Build full system packet with ALL context (including repo if available)
         system_packet = packet_builder.build_packet(request.user_input)
-        if repo_context:
-            system_packet.add_repo_context(repo_context)
+
+        # Note: Commenting out add_repo_context since it doesn't exist on SystemPacket
+        # Instead, we'll pass repo_context directly to the execution functions
+        # if repo_context:
+        #     system_packet.add_repo_context(repo_context)
 
         # RISK-ADAPTIVE GOVERNANCE: Assess risk level for adaptive strictness
         risk_level = assess_risk_level(request.user_input)
@@ -512,7 +527,7 @@ async def execute_council_session(request: CouncilRequest):
         if execution_mode == "safe":
             # SAFE MODE: 1 round only, raw outputs, no synthesis
             session = await execute_constitutional_safe_mode(
-                system_packet, working_providers
+                system_packet, working_providers, repo_context
             )
             round_info = {
                 "mode": "SAFE",
@@ -529,7 +544,7 @@ async def execute_council_session(request: CouncilRequest):
         else:
             # FULL MODE: 2 rounds with cross-review
             session = await execute_constitutional_full_mode(
-                system_packet, working_providers
+                system_packet, working_providers, repo_context
             )
             round_info = {
                 "mode": "FULL",
@@ -909,6 +924,85 @@ def build_repo_content_packet(share: RepoShareSession) -> Dict[str, Any]:
         content["constitutional_safeguards"]["file_limit_warning"] = f"CONSTITUTIONAL NOTICE: File limit reached. Only first {file_count} files included for governance compliance."
 
     return content
+
+
+# ---------------------------------------------------------------------------
+# Enhanced Council - Automatic Codebase Context
+# ---------------------------------------------------------------------------
+
+def create_auto_codebase_context(project_path: str = None) -> Dict[str, Any]:
+    """
+    Create automatic codebase context for enhanced council sessions.
+
+    This gives the council full visibility into the current project structure,
+    code, and context without requiring manual setup.
+    """
+    import os
+    from datetime import datetime
+
+    if not project_path:
+        project_path = os.getcwd()
+
+    # Create a repo share object for the current working directory
+    auto_share = type('AutoRepoShare', (), {
+        'share_id': 'auto-codebase-context',
+        'repo_name': os.path.basename(project_path),
+        'repo_path': project_path,
+        'branch': 'current',
+        'scope_type': 'full_repo',
+        'scope_data': {},
+        'snapshot_timestamp': datetime.now(),
+        'created_by': 'enhanced-council-system'
+    })()
+
+    try:
+        # Build the content packet using existing infrastructure
+        content_packet = build_repo_content_packet(auto_share)
+
+        return {
+            'repo_share_metadata': {
+                'share_id': 'auto-codebase-context',
+                'repo_name': auto_share.repo_name,
+                'project_path': project_path,
+                'scope': 'full_project',
+                'auto_generated': True,
+                'snapshot_time': datetime.now().isoformat()
+            },
+            'repo_content': content_packet
+        }
+    except Exception as e:
+        print(f"WARNING: Could not create auto codebase context: {e}")
+        return None
+
+def get_enhanced_council_prompt_template() -> str:
+    """
+    Enhanced prompt template that informs council members they have full project visibility.
+    """
+    return """
+You're part of an AI council with FULL PROJECT VISIBILITY. You can see the complete codebase, file structure, and current state of the project we're working on.
+
+Each member brings their expertise:
+- Claude: Architecture, systems thinking, and technical integrity
+- GPT-4: Structure, planning, and strategic synthesis
+- Gemini: User experience, clarity, and practical flow
+- Grok: Stress testing, edge cases, and critical pressure points
+- Perplexity: Research, fact-checking, and external reality
+
+ENHANCED CAPABILITIES:
+🔍 You can see the actual code files, structure, and dependencies
+📁 You have access to the current project state and recent changes
+🎯 Give specific, code-aware advice instead of generic suggestions
+📊 Reference actual file names, line numbers, and existing patterns
+
+SYSTEM FRAME INTEGRITY RULE:
+Challenge logic, structure, assumptions, and design decisions freely. Express limitations as constraints, uncertainties, or visibility gaps. Stay engaged in the council discussion - don't break the collaborative framework.
+
+Respond naturally with specific, actionable insights based on what you can see in the codebase.
+"""
+
+# ---------------------------------------------------------------------------
+# End Enhanced Council Features
+# ---------------------------------------------------------------------------
 
 
 # ALERT CONSTITUTIONAL PATCH ENFORCEMENT FUNCTIONS
@@ -1579,7 +1673,7 @@ async def handle_session_error(session_id: str, error: str, request: CouncilRequ
 
 # CONSTITUTIONAL CONSTITUTIONAL EXECUTION MODES
 
-async def execute_constitutional_safe_mode(system_packet, providers: List[str]):
+async def execute_constitutional_safe_mode(system_packet, providers: List[str], repo_context: Dict[str, Any] = None):
     """
     SAFE MODE: 1 round only, raw outputs, no synthesis
     Constitutional requirement: Raw outputs preserved, no fake consensus
@@ -1594,8 +1688,14 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str]):
         "perplexity": "Adversarial Reality Check / Feasibility / External pressure"
     }
 
-    # Natural conversation prompt template with System Frame Integrity Rule
-    natural_prompt_template = """
+    # Select appropriate prompt template based on whether we have codebase context
+    if repo_context:
+        # Enhanced template with full project visibility
+        prompt_template = get_enhanced_council_prompt_template()
+        print("ENHANCED COUNCIL: Using enhanced prompt template with codebase context")
+    else:
+        # Standard natural conversation template
+        prompt_template = """
 You're part of an AI council discussing this request. Each member brings their own expertise:
 
 - Claude: Architecture, systems thinking, and technical integrity
@@ -1611,6 +1711,7 @@ You may challenge logic, structure, assumptions, and design decisions. Express l
 
 No need for formal headers or structured formats. Just talk naturally about what you think.
 """
+        print("ENHANCED COUNCIL: Using standard prompt template")
 
     session_responses = {}
 
@@ -1630,19 +1731,40 @@ No need for formal headers or structured formats. Just talk naturally about what
                 print(f"WARNING WARNING: Provider {provider} not in role assignments")
                 role_assignments[provider] = "General Analysis"
 
-            # Build natural conversation prompt
+            # Build enhanced conversation prompt with optional codebase context
             role = role_assignments.get(provider, "General Analysis")
+
+            # Base prompt with role and user request
             provider_prompt = f"""
-{natural_prompt_template}
+{prompt_template}
 
 Your role in this council: {role}
 
 Here's the user's request:
-
 {system_packet.to_prompt(provider)}
-
-Please respond naturally with your thoughts and perspective.
 """
+
+            # Add codebase context if available
+            if repo_context:
+                repo_content = repo_context.get('repo_content', {})
+                repo_metadata = repo_context.get('repo_share_metadata', {})
+
+                provider_prompt += f"""
+
+FULL PROJECT CONTEXT:
+Project: {repo_metadata.get('repo_name', 'Current Project')}
+Path: {repo_metadata.get('project_path', 'N/A')}
+
+FILES AND STRUCTURE:
+{json.dumps(repo_content.get('files', {}), indent=2)[:2000]}...
+
+PROJECT STRUCTURE:
+{json.dumps(repo_content.get('structure', {}), indent=2)[:1000]}...
+
+You can see the complete codebase. Reference specific files, functions, and code patterns in your response.
+"""
+
+            provider_prompt += "\nPlease respond naturally with your thoughts and perspective."
 
             # Constitutional compliance: Each seat responds independently
             response_data = await make_constitutional_api_call(provider, provider_prompt)
@@ -1697,14 +1819,14 @@ Please respond naturally with your thoughts and perspective.
     return create_constitutional_session_object(session_responses, "SAFE", system_packet)
 
 
-async def execute_constitutional_full_mode(system_packet, providers: List[str]):
+async def execute_constitutional_full_mode(system_packet, providers: List[str], repo_context: Dict[str, Any] = None):
     """
     FULL MODE: 2 rounds with cross-review
     Constitutional requirement: Real cross-review with actual Round 1 outputs
     """
 
     # Round 1: Independent analysis (same as safe mode)
-    round1_session = await execute_constitutional_safe_mode(system_packet, providers)
+    round1_session = await execute_constitutional_safe_mode(system_packet, providers, repo_context)
 
     # CRITICAL FIX: Defensive check for Round 1 failure
     if round1_session is None or not hasattr(round1_session, 'responses'):
