@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.3.3"  # House of AI Branding Update
+APP_VERSION = "v1.3.4"  # Council execution display fix
 
 app = FastAPI(
     title="House of AI Council",
