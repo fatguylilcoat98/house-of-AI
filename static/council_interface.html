@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House of AI Council</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .council-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .council-output {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .input-group textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .system-state {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .system-state-item {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .system-state-item strong {
+            color: #495057;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .council-members {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .member-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .member-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .member-role {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .member-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #28a745;
+            color: white;
+        }
+
+        .response-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .response-content {
+            display: none;
+        }
+
+        .response-content.active {
+            display: block;
+        }
+
+        .response-round {
+            margin-bottom: 25px;
+        }
+
+        .round-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .ai-response {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #28a745;
+        }
+
+        .ai-response.error {
+            border-left-color: #dc3545;
+        }
+
+        .ai-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .ai-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #495057;
+            white-space: pre-wrap;
+        }
+
+        .synthesis-section {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .agreement-item, .conflict-item {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .conflict-item {
+            border-left-color: #ffc107;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .save-controls {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .save-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .builder-instance {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .builder-instance.active {
+            border-left-color: #28a745;
+        }
+
+        .builder-instance.paused {
+            border-left-color: #ffc107;
+        }
+
+        .builder-instance.blocked {
+            border-left-color: #dc3545;
+        }
+
+        .builder-instance.needs-handoff {
+            border-left-color: #fd7e14;
+        }
+
+        .builder-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .builder-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .builder-status {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: white;
+            margin-left: auto;
+        }
+
+        .builder-status.active { background: #28a745; }
+        .builder-status.paused { background: #ffc107; color: #333; }
+        .builder-status.blocked { background: #dc3545; }
+        .builder-status.needs-handoff { background: #fd7e14; }
+        .builder-status.waiting-handoff { background: #6f42c1; }
+
+        .builder-details {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .builder-detail-row {
+            margin-bottom: 5px;
+        }
+
+        .handoff-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .handoff-header {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .handoff-details {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .handoff-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .council-grid {
+                grid-template-columns: 1fr;
+            }
+            .council-members {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 20% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ House of AI Council</h1>
+            <p>Constitutional AI Governance with Real API Integration</p>
+            <div id="versionDisplay" style="margin-top: 8px; padding: 4px 12px; background: #e3f2fd; border-radius: 4px; font-size: 0.9em; color: #1565c0;">
+                Loading version...
+            </div>
+        </div>
+
+        <div class="council-grid">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="section-title">🎯 Council Request</div>
+
+                <div class="input-group">
+                    <label for="userInput">Your Request:</label>
+                    <textarea id="userInput" placeholder="Enter your request for the AI council to analyze..."></textarea>
+                </div>
+
+                <!-- 🔴 FIX #2: ROUND CONTROL -->
+                <div class="execution-control" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                    <label style="font-weight: 600; margin-bottom: 10px; display: block;">Execution Mode:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="executionMode" value="safe" style="margin: 0;">
+                            <span>🛡️ Safe Mode (1 round)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="executionMode" value="full" checked style="margin: 0;">
+                            <span>🔄 Full Mode (2 rounds with cross-review)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 🔴 FIX #3: CROSS-TALK CONFIRMATION -->
+                <div id="roundProgress" class="round-progress" style="display: none; margin: 15px 0; padding: 12px; background: #e8f4fd; border-radius: 6px; border-left: 4px solid #007bff;">
+                    <div id="roundStatus">🔄 Preparing council session...</div>
+                    <div class="progress-bar" style="background: #e9ecef; border-radius: 10px; height: 8px; margin-top: 8px;">
+                        <div id="progressFill" style="background: #007bff; height: 100%; border-radius: 10px; width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="executeCouncil()" id="executeBtn">
+                    Execute Council Session
+                </button>
+
+                <!-- 🔴 FIX #9: SOLE CARRIER WARNING -->
+                <div class="sole-carrier-warning" style="margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 6px; border: 1px solid #ffeaa7; font-size: 12px; color: #856404;">
+                    ⚠️ Models do not share memory. Only information provided in this session is considered valid.
+                </div>
+
+                <!-- 🔥 REPO SHARE PANEL -->
+                <div class="section-title" style="margin-top: 30px;">📂 Repo Share (Read-Only)</div>
+                <div class="repo-share-panel" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+
+                    <!-- Repo Selection -->
+                    <div class="repo-controls" style="margin-bottom: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Repository:</label>
+                                <select id="repoSelect" onchange="loadRepoBranches()" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                                    <option value="">Select Repository...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Branch:</label>
+                                <select id="branchSelect" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                                    <option value="master">master</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scope Selection -->
+                    <div class="scope-controls" style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Share Scope:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="selected_files" onchange="updateScopeOptions()" style="margin: 0;">
+                                <span>📄 Selected Files</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="selected_folder" onchange="updateScopeOptions()" style="margin: 0;">
+                                <span>📁 Selected Folder</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="diff" onchange="updateScopeOptions()" checked style="margin: 0;">
+                                <span>🔄 Changed Files / Diff</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="shareScope" value="full_repo" onchange="updateScopeOptions()" style="margin: 0;">
+                                <span>🗂️ Full Repo Snapshot</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Scope-specific options -->
+                    <div id="scopeOptions" style="margin-bottom: 15px;">
+                        <!-- Dynamic scope options will appear here -->
+                    </div>
+
+                    <!-- Share Controls -->
+                    <div class="share-controls" style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-small" onclick="createRepoShare()" id="shareRepoBtn" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                            📂 Create Repo Share
+                        </button>
+                        <button class="btn-small" onclick="clearRepoShare()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                            🗑️ Clear
+                        </button>
+                    </div>
+
+                    <!-- Active Share Display -->
+                    <div id="activeRepoShare" style="display: none; margin-top: 15px; padding: 12px; background: #e8f4fd; border-radius: 6px; border-left: 4px solid #007bff;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">📂 Active Repo Share</div>
+                        <div id="shareMetadata" style="font-size: 13px;">
+                            <!-- Share metadata will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Read-only warning -->
+                    <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 4px; font-size: 12px; color: #856404;">
+                        🔒 <strong>Read-Only Mode:</strong> No edit, commit, or push actions available. Claude Code remains the only build system.
+                    </div>
+                </div>
+
+                <div class="section-title" style="margin-top: 30px;">📊 Active System State</div>
+                <div class="system-state" id="systemState">
+                    <div class="system-state-item"><strong>Project:</strong> <span id="projectName">New Council Session</span></div>
+                    <div class="system-state-item"><strong>Phase:</strong> <span id="currentPhase">initial</span></div>
+                    <div class="system-state-item"><strong>Goals:</strong> <span id="goals">Provide coordinated guidance</span></div>
+                    <div class="system-state-item"><strong>Context:</strong> <span id="contextSummary">Fresh session starting</span></div>
+                </div>
+
+                <button class="btn btn-secondary" onclick="showStateEditor()">
+                    Edit System State
+                </button>
+
+                <!-- 🏛️ CONSTITUTIONAL PROVIDER HEALTH PANEL -->
+                <div class="section-title" style="margin-top: 30px;">🤖 Council Members & Provider Health</div>
+
+                <!-- Constitutional Layer Info -->
+                <div style="margin-bottom: 15px; padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #007bff; font-size: 13px;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">🏛️ House Council (Inside the House)</div>
+                    <div>Claude • GPT-4 • Gemini • Grok</div>
+                    <div style="margin-top: 8px; color: #666;">
+                        <strong>Note:</strong> Perplexity now operates in the Support Layer for retrieval/evidence, not as a House council member.
+                    </div>
+                </div>
+
+                <!-- Constitutional Provider Test Controls -->
+                <div class="provider-test-controls" style="margin-bottom: 15px; padding: 12px; background: #e8f4fd; border-radius: 6px; border: 1px solid #007bff;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🏛️ Constitutional Health Tests</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <button onclick="testProvider('claude')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Claude
+                        </button>
+                        <button onclick="testProvider('gpt4')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test GPT-4
+                        </button>
+                        <button onclick="testProvider('gemini')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Gemini
+                        </button>
+                        <button onclick="testProvider('grok')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Test Grok
+                        </button>
+                        <button onclick="testAllProviders()" class="test-btn" style="background: #007bff; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">
+                            🏛️ Test All
+                        </button>
+                    </div>
+                </div>
+
+                <div class="council-members" id="councilMembers">
+                    <!-- Dynamic provider status will be loaded here -->
+                </div>
+
+                <!-- Constitutional Test Results -->
+                <div id="testResults" style="display: none; margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🏛️ Health Test Results</div>
+                    <div id="testOutput" style="font-size: 13px; font-family: monospace;">
+                        <!-- Test results will appear here -->
+                    </div>
+                </div>
+
+                <!-- 🏛️ CONSTITUTIONAL SESSION LOGGING -->
+                <div class="session-stats" id="sessionStats" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">📊 Constitutional Session Logging</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 10px;">
+                        <div><strong>Total calls:</strong> <span id="totalCalls">0</span></div>
+                        <div><strong>Successful:</strong> <span id="successfulCalls">0</span></div>
+                        <div><strong>Failed:</strong> <span id="failedCalls">0</span></div>
+                        <div><strong>Cost:</strong> <span id="estimatedCost">$0.00</span></div>
+                        <div><strong>Time:</strong> <span id="processingTime">0ms</span></div>
+                        <div><strong>Mode:</strong> <span id="executionModeUsed">-</span></div>
+                    </div>
+
+                    <!-- Constitutional Call Details -->
+                    <div id="callDetails" style="display: none;">
+                        <div style="font-weight: 600; margin: 10px 0 5px 0; padding-top: 10px; border-top: 1px solid #dee2e6;">🏛️ Call Logs</div>
+                        <div id="callLogsList" style="font-size: 11px;">
+                            <!-- Constitutional call logs will appear here -->
+                        </div>
+                        <button onclick="toggleCallDetails()" style="background: #6c757d; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 8px;">
+                            Hide Details
+                        </button>
+                    </div>
+
+                    <div id="showCallDetails" style="margin-top: 8px;">
+                        <button onclick="toggleCallDetails()" style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            Show Call Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Council Output -->
+            <div class="council-output">
+                <div class="section-title">📋 Council Analysis</div>
+
+                <div class="response-tabs">
+                    <div class="tab active" onclick="showTab('responses')">Council Responses</div>
+                    <div class="tab" onclick="showTab('synthesis')">Synthesis & Analysis</div>
+                    <div class="tab" onclick="showTab('handoff')">Export & Handoff</div>
+                    <div class="tab" onclick="showTab('builders')">Builder Instances</div>
+                </div>
+
+                <div id="responses" class="response-content active">
+                    <!-- 🔴 FIX #5: SAVE / CAPTURE BUTTONS -->
+                    <div class="save-controls" id="saveControls" style="display: none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">💾 Save & Capture</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-small" onclick="saveItem('insight')" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                💡 Save Insight
+                            </button>
+                            <button class="btn-small" onclick="saveItem('decision')" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                ⚖️ Save Decision
+                            </button>
+                            <button class="btn-small" onclick="saveItem('feature')" style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                🚀 Save Feature
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="councilOutput">
+                        <div class="loading">
+                            Ready for council session. Enter your request and click "Execute Council Session" to begin.
+                        </div>
+                    </div>
+                </div>
+
+                <div id="synthesis" class="response-content">
+                    <!-- Enhanced synthesis with no fake merging -->
+                    <div id="synthesisOutput">
+                        <div class="loading">
+                            Synthesis will appear after council execution.
+                        </div>
+                    </div>
+
+                    <!-- 🔴 FIX #4: NO FAKE SYNTHESIS - Structured display -->
+                    <div id="structuredSynthesis" style="display: none;">
+                        <div class="synthesis-section">
+                            <h4 style="color: #28a745; margin: 15px 0 8px 0;">✅ Agreements</h4>
+                            <div id="agreementsList"></div>
+                        </div>
+                        <div class="synthesis-section">
+                            <h4 style="color: #dc3545; margin: 15px 0 8px 0;">⚠️ Conflicts</h4>
+                            <div id="conflictsList"></div>
+                        </div>
+                        <div class="synthesis-section">
+                            <h4 style="color: #ffc107; margin: 15px 0 8px 0;">❓ Open Questions</h4>
+                            <div id="openQuestionsList"></div>
+                        </div>
+                        <div class="synthesis-section">
+                            <h4 style="color: #6f42c1; margin: 15px 0 8px 0;">🎭 Provider Perspectives</h4>
+                            <div id="providerPerspectives"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="handoff" class="response-content">
+                    <div id="handoffOutput">
+                        <div class="loading">
+                            Export and handoff options will appear after council execution.
+                        </div>
+                    </div>
+                </div>
+
+                <div id="builders" class="response-content">
+                    <div class="section-title">🔧 Builder Instance Management</div>
+
+                    <div class="builder-controls" style="margin-bottom: 20px;">
+                        <button class="btn" onclick="refreshBuilderStatus()">Refresh Status</button>
+                        <button class="btn btn-secondary" onclick="showRegisterBuilder()">Register New Instance</button>
+                    </div>
+
+                    <div id="builderStatus">
+                        <div class="loading">
+                            Loading builder instances...
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="margin-top: 30px;">📦 Pending Handoffs</div>
+                    <div id="pendingHandoffs">
+                        <div class="loading">
+                            Loading pending handoffs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSession = null;
+        let currentSynthesis = null;
+
+        // Load and display version information
+        async function loadVersion() {
+            try {
+                const response = await fetch('/api/version');
+                const versionData = await response.json();
+                document.getElementById('versionDisplay').innerHTML = `
+                    📦 ${versionData.version} | API: ${versionData.api_integration} | Council: ${versionData.council_execution}
+                `;
+            } catch (error) {
+                document.getElementById('versionDisplay').innerHTML = '📦 Version: Unknown';
+            }
+        }
+
+        // Load version on page load
+        document.addEventListener('DOMContentLoaded', loadVersion);
+
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.response-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected content and tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function executeCouncil() {
+            const userInput = document.getElementById('userInput').value.trim();
+            if (!userInput) {
+                alert('Please enter a request for the council to analyze.');
+                return;
+            }
+
+            // 🔴 Get execution mode from radio buttons
+            const executionMode = document.querySelector('input[name="executionMode"]:checked').value;
+
+            const executeBtn = document.getElementById('executeBtn');
+            const output = document.getElementById('councilOutput');
+            const roundProgress = document.getElementById('roundProgress');
+            const roundStatus = document.getElementById('roundStatus');
+            const progressFill = document.getElementById('progressFill');
+
+            executeBtn.disabled = true;
+            executeBtn.textContent = 'Executing Council Session...';
+
+            // 🔴 Show round progress
+            roundProgress.style.display = 'block';
+            progressFill.style.width = '10%';
+
+            // 🔴 Update provider status first
+            await updateProviderStatus();
+
+            // 🔴 FIX #3: CROSS-TALK CONFIRMATION
+            if (executionMode === 'full') {
+                roundStatus.textContent = '🔄 Round 1: Independent analysis...';
+                progressFill.style.width = '30%';
+            } else {
+                roundStatus.textContent = '🛡️ Safe Mode: Single round execution...';
+                progressFill.style.width = '50%';
+            }
+
+            output.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Executing ${executionMode === 'full' ? 'Full' : 'Safe'} Mode council session...<br>
+                    Please wait while the AI council processes your request...
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/council/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_input: userInput,
+                        execution_mode: executionMode,
+                        selected_providers: getSelectedProviders(),
+                        repo_share_id: currentRepoShareId  // 🔥 Include repo share if active
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // 🔴 Show cross-review phase for full mode
+                    if (executionMode === 'full') {
+                        roundStatus.textContent = '🔄 Round 2: Cross-review in progress...';
+                        progressFill.style.width = '70%';
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulation
+                    }
+
+                    roundStatus.textContent = '✅ Council session completed!';
+                    progressFill.style.width = '100%';
+
+                    // Store session data
+                    currentSession = data.session;
+                    currentSynthesis = data.synthesis;
+                    currentSessionId = data.session_id;
+
+                    // 🔴 Update session statistics
+                    updateSessionStats(data.session_stats);
+
+                    // 🔴 Display results with enhanced formatting
+                    displayCouncilResults(data.session, data.synthesis, data.repo_share_info);
+                    displayStructuredSynthesis(data.synthesis);
+                    displayHandoffOptions(data.session_id);
+
+                    // 🔴 Show save controls
+                    document.getElementById('saveControls').style.display = 'block';
+
+                    // Hide progress after completion
+                    setTimeout(() => {
+                        roundProgress.style.display = 'none';
+                    }, 2000);
+
+                } else {
+                    throw new Error(data.detail || 'Council execution failed');
+                }
+
+            } catch (error) {
+                roundStatus.textContent = '❌ Council session failed';
+                roundProgress.style.display = 'none';
+                output.innerHTML = `
+                    <div class="ai-response error">
+                        <div class="ai-name">⚠️ Error</div>
+                        <div class="ai-text">Council execution failed: ${error.message}</div>
+                    </div>
+                `;
+            } finally {
+                executeBtn.disabled = false;
+                executeBtn.textContent = 'Execute Council Session';
+            }
+        }
+
+        // 🔴 NEW SUPPORTING FUNCTIONS FOR ENHANCED FUNCTIONALITY
+
+        async function updateProviderStatus() {
+            try {
+                const response = await fetch('/api/providers/status');
+                const data = await response.json();
+                displayProviderStatus(data.providers);
+            } catch (error) {
+                console.error('Failed to update provider status:', error);
+            }
+        }
+
+        function displayProviderStatus(providers) {
+            const container = document.getElementById('councilMembers');
+            const roles = {
+                'claude': 'Architecture & Systems Design',
+                'gpt4': 'Structure & Implementation',
+                'gemini': 'User Experience & Interface',
+                'grok': 'Stress Testing & Edge Cases'
+            };
+
+            container.innerHTML = '';
+
+            // CRITICAL FIX: Initialize default providers if none provided
+            if (!providers || Object.keys(providers).length === 0) {
+                providers = {
+                    'claude': { name: 'claude', status: 'unknown', online: false, latency: null, error: null },
+                    'gpt4': { name: 'gpt4', status: 'unknown', online: false, latency: null, error: null },
+                    'gemini': { name: 'gemini', status: 'unknown', online: false, latency: null, error: null },
+                    'grok': { name: 'grok', status: 'unknown', online: false, latency: null, error: null }
+                };
+            }
+
+            for (const [provider, status] of Object.entries(providers)) {
+                // CRITICAL FIX: Null/undefined guard with safe fallback
+                if (!status) {
+                    console.warn(`Provider ${provider} status is undefined - using safe fallback`);
+                    status = { name: provider, status: 'error', online: false, latency: null, error: 'Status undefined' };
+                }
+
+                // CRITICAL FIX: Ensure all required properties exist
+                const safeStatus = {
+                    name: status.name || provider,
+                    status: status.status || 'unknown',
+                    online: status.status === 'online' || status.online === true,
+                    latency: status.response_time_ms || status.latency || null,
+                    error: status.error_message || status.error || null
+                };
+
+                const statusColor = safeStatus.online ? '#28a745' : '#dc3545';
+                const statusIcon = safeStatus.online ? '✅' : '❌';
+                const responseTime = safeStatus.latency ? ` ${safeStatus.latency}ms` : '';
+
+                container.innerHTML += `
+                    <div class="member-card" style="border-left: 4px solid ${statusColor};">
+                        <div class="member-name">${provider.charAt(0).toUpperCase() + provider.slice(1)}</div>
+                        <div class="member-role">${roles[provider] || 'AI Assistant'}</div>
+                        <div class="member-status" style="color: ${statusColor};">
+                            ${statusIcon} ${safeStatus.status}${responseTime}
+                        </div>
+                        ${safeStatus.error ? `<div style="color: #dc3545; font-size: 11px;">Error: ${safeStatus.error}</div>` : ''}
+                    </div>
+                `;
+            }
+        }
+
+        function getSelectedProviders() {
+            // For now, return all House council providers. Could be enhanced with checkboxes later.
+            return ['claude', 'gpt4', 'gemini', 'grok'];
+        }
+
+        function updateSessionStats(stats) {
+            // Constitutional session statistics
+            document.getElementById('totalCalls').textContent = stats.total_calls || 0;
+            document.getElementById('successfulCalls').textContent = stats.successful_calls || 0;
+            document.getElementById('failedCalls').textContent = stats.failed_calls || 0;
+            document.getElementById('estimatedCost').textContent = `$${(stats.total_estimated_cost || 0).toFixed(4)}`;
+            document.getElementById('processingTime').textContent = `${stats.processing_time_ms || 0}ms`;
+            document.getElementById('executionModeUsed').textContent = stats.execution_mode || '-';
+
+            // Constitutional call logging details
+            if (stats.call_logs && stats.call_logs.length > 0) {
+                const callLogsList = document.getElementById('callLogsList');
+                let logsHTML = '';
+
+                stats.call_logs.forEach(log => {
+                    const statusColor = log.success ? '#28a745' : '#dc3545';
+                    const statusIcon = log.success ? '✅' : '❌';
+                    const complianceIcon = log.constitutional_compliance ? '🏛️' : '⚠️';
+
+                    logsHTML += `
+                        <div style="margin: 4px 0; padding: 6px; background: ${log.success ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; align-items: center;">
+                                <div style="color: ${statusColor}; font-weight: 600;">
+                                    ${statusIcon} ${complianceIcon} ${log.provider}
+                                </div>
+                                <div>R${log.round} • ${log.latency_ms}ms</div>
+                                <div>~${log.token_usage.total_tokens}tok</div>
+                                <div>$${log.estimated_cost.toFixed(4)}</div>
+                            </div>
+                            ${!log.success ? `<div style="color: #dc3545; font-size: 10px; margin-top: 2px;">Failed: Check provider health</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                callLogsList.innerHTML = logsHTML;
+            }
+        }
+
+        function toggleCallDetails() {
+            const details = document.getElementById('callDetails');
+            const showButton = document.getElementById('showCallDetails');
+
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                showButton.style.display = 'none';
+            } else {
+                details.style.display = 'none';
+                showButton.style.display = 'block';
+            }
+        }
+
+        function displayStructuredSynthesis(synthesis) {
+            const container = document.getElementById('structuredSynthesis');
+            const loadingContainer = document.getElementById('synthesisOutput');
+
+            // Hide loading and show structured
+            loadingContainer.style.display = 'none';
+            container.style.display = 'block';
+
+            // Display agreements
+            const agreementsList = document.getElementById('agreementsList');
+            agreementsList.innerHTML = synthesis.agreements && synthesis.agreements.length > 0
+                ? synthesis.agreements.map(item => `<div class="synthesis-item">${item}</div>`).join('')
+                : '<div class="synthesis-item">No clear agreements identified</div>';
+
+            // Display conflicts
+            const conflictsList = document.getElementById('conflictsList');
+            conflictsList.innerHTML = synthesis.conflicts && synthesis.conflicts.length > 0
+                ? synthesis.conflicts.map(item => `<div class="synthesis-item">${item}</div>`).join('')
+                : '<div class="synthesis-item">No major conflicts detected</div>';
+
+            // Display open questions
+            const openQuestionsList = document.getElementById('openQuestionsList');
+            openQuestionsList.innerHTML = synthesis.open_questions && synthesis.open_questions.length > 0
+                ? synthesis.open_questions.map(item => `<div class="synthesis-item">${item}</div>`).join('')
+                : '<div class="synthesis-item">No outstanding questions</div>';
+
+            // Display provider perspectives
+            const providerPerspectives = document.getElementById('providerPerspectives');
+            if (synthesis.provider_perspectives) {
+                let perspectivesHTML = '';
+                for (const [provider, perspective] of Object.entries(synthesis.provider_perspectives)) {
+                    perspectivesHTML += `
+                        <div class="provider-perspective">
+                            <strong>${provider.charAt(0).toUpperCase() + provider.slice(1)}:</strong>
+                            <div class="perspective-content">${typeof perspective === 'string' ? perspective : JSON.stringify(perspective)}</div>
+                        </div>
+                    `;
+                }
+                providerPerspectives.innerHTML = perspectivesHTML;
+            } else {
+                providerPerspectives.innerHTML = '<div class="synthesis-item">Individual perspectives not available</div>';
+            }
+        }
+
+        async function saveItem(type) {
+            if (!currentSessionId) {
+                alert('No active session to save from');
+                return;
+            }
+
+            const title = prompt(`Enter title for this ${type}:`);
+            if (!title) return;
+
+            const content = prompt(`Enter ${type} content or description:`);
+            if (!content) return;
+
+            try {
+                const response = await fetch('/api/insights/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        title: title,
+                        content: content,
+                        session_id: currentSessionId,
+                        tags: []
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} saved successfully!`);
+                } else {
+                    alert(`Failed to save ${type}: ${data.detail}`);
+                }
+            } catch (error) {
+                alert(`Error saving ${type}: ${error.message}`);
+            }
+        }
+
+        // Initialize provider status on page load
+        let currentSessionId = null;
+
+        // Load initial provider status and repos
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProviderStatus();
+            loadAvailableRepos();
+            updateScopeOptions(); // Initialize scope options
+        });
+
+        // 🔥 REPO SHARE FUNCTIONS
+
+        let currentRepoShareId = null;
+
+        async function loadAvailableRepos() {
+            try {
+                const response = await fetch('/api/repos/available');
+                const data = await response.json();
+
+                const select = document.getElementById('repoSelect');
+                select.innerHTML = '<option value="">Select Repository...</option>';
+
+                data.repos.forEach(repo => {
+                    const option = document.createElement('option');
+                    option.value = repo.name;
+                    option.textContent = `${repo.name} ${!repo.exists ? '(missing)' : ''}`;
+                    option.disabled = !repo.exists;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load repos:', error);
+            }
+        }
+
+        async function loadRepoBranches() {
+            const repoName = document.getElementById('repoSelect').value;
+            if (!repoName) return;
+
+            try {
+                const response = await fetch(`/api/repos/${repoName}/branches`);
+                const data = await response.json();
+
+                const select = document.getElementById('branchSelect');
+                select.innerHTML = '';
+
+                data.branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch;
+                    option.textContent = branch;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load branches:', error);
+            }
+        }
+
+        function updateScopeOptions() {
+            const scope = document.querySelector('input[name="shareScope"]:checked').value;
+            const container = document.getElementById('scopeOptions');
+
+            container.innerHTML = '';
+
+            if (scope === 'selected_files') {
+                container.innerHTML = `
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Files to Share:</label>
+                    <textarea id="selectedFiles" placeholder="Enter file paths, one per line&#10;Example:&#10;src/main.py&#10;config/settings.json"
+                        style="width: 100%; height: 80px; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; resize: vertical;"></textarea>
+                `;
+            } else if (scope === 'selected_folder') {
+                container.innerHTML = `
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Folder to Share:</label>
+                    <input type="text" id="selectedFolder" placeholder="Enter folder path (e.g., src/, docs/)"
+                        style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                `;
+            } else if (scope === 'diff') {
+                container.innerHTML = `
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Diff Base:</label>
+                    <select id="diffBase" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;">
+                        <option value="HEAD~1">Last commit (HEAD~1)</option>
+                        <option value="HEAD~5">5 commits ago</option>
+                        <option value="main">main branch</option>
+                        <option value="master">master branch</option>
+                    </select>
+                `;
+            } else if (scope === 'full_repo') {
+                container.innerHTML = `
+                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 13px; color: #856404;">
+                        ⚠️ <strong>Warning:</strong> Full repo sharing includes all files. Large repos may be truncated to 50 files for performance.
+                    </div>
+                `;
+            }
+        }
+
+        async function createRepoShare() {
+            const repoSelect = document.getElementById('repoSelect');
+            const branchSelect = document.getElementById('branchSelect');
+            const scope = document.querySelector('input[name="shareScope"]:checked').value;
+
+            if (!repoSelect.value) {
+                alert('Please select a repository');
+                return;
+            }
+
+            const shareBtn = document.getElementById('shareRepoBtn');
+            shareBtn.disabled = true;
+            shareBtn.textContent = 'Creating Share...';
+
+            try {
+                // Get repo path from available repos
+                const reposResponse = await fetch('/api/repos/available');
+                const reposData = await reposResponse.json();
+                const selectedRepo = reposData.repos.find(r => r.name === repoSelect.value);
+
+                if (!selectedRepo) {
+                    throw new Error('Selected repository not found');
+                }
+
+                // Build scope data
+                let scopeData = {};
+
+                if (scope === 'selected_files') {
+                    const filesText = document.getElementById('selectedFiles').value;
+                    scopeData.files = filesText.split('\n').filter(f => f.trim()).map(f => f.trim());
+                } else if (scope === 'selected_folder') {
+                    scopeData.folder = document.getElementById('selectedFolder').value.trim();
+                } else if (scope === 'diff') {
+                    scopeData.base_ref = document.getElementById('diffBase').value;
+                }
+
+                // Create repo share
+                const response = await fetch('/api/repos/share', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        repo_path: selectedRepo.path,
+                        branch: branchSelect.value,
+                        scope_type: scope,
+                        scope_data: scopeData,
+                        description: `${scope} share of ${repoSelect.value}/${branchSelect.value}`
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentRepoShareId = data.share_id;
+                    displayActiveRepoShare(data.session);
+                    alert(`Repo share created successfully! ${data.message}`);
+                } else {
+                    throw new Error(data.detail || 'Failed to create repo share');
+                }
+
+            } catch (error) {
+                alert(`Error creating repo share: ${error.message}`);
+            } finally {
+                shareBtn.disabled = false;
+                shareBtn.textContent = '📂 Create Repo Share';
+            }
+        }
+
+        function displayActiveRepoShare(shareSession) {
+            const container = document.getElementById('activeRepoShare');
+            const metadata = document.getElementById('shareMetadata');
+
+            metadata.innerHTML = `
+                <div><strong>Repo:</strong> ${shareSession.repo_name}</div>
+                <div><strong>Branch:</strong> ${shareSession.branch}</div>
+                <div><strong>Scope:</strong> ${shareSession.scope_type.replace('_', ' ')}</div>
+                <div><strong>Files:</strong> ${shareSession.file_count}</div>
+                <div><strong>Size:</strong> ${(shareSession.total_size_bytes / 1024).toFixed(1)} KB</div>
+                <div><strong>Created:</strong> ${new Date(shareSession.created_at).toLocaleString()}</div>
+                <div><strong>Status:</strong> <span style="color: #28a745;">🔒 Read-Only</span></div>
+            `;
+
+            container.style.display = 'block';
+        }
+
+        function clearRepoShare() {
+            currentRepoShareId = null;
+            document.getElementById('activeRepoShare').style.display = 'none';
+            document.getElementById('repoSelect').value = '';
+            document.getElementById('branchSelect').innerHTML = '<option value="master">master</option>';
+            document.querySelector('input[name="shareScope"][value="diff"]').checked = true;
+            updateScopeOptions();
+        }
+
+        // 🏛️ CONSTITUTIONAL PROVIDER HEALTH TESTING
+
+        async function testProvider(provider) {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+
+            testResults.style.display = 'block';
+            testOutput.innerHTML = `<div style="color: #007bff;">🏛️ Testing ${provider}...</div>`;
+
+            try {
+                const response = await fetch(`/api/providers/test/${provider}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                const statusColor = data.success ? '#28a745' : '#dc3545';
+                const statusIcon = data.success ? '✅' : '❌';
+
+                testOutput.innerHTML = `
+                    <div style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${provider.toUpperCase()} - ${data.success ? 'OPERATIONAL' : 'FAILED'}</div>
+                    <div><strong>Latency:</strong> ${data.latency_ms}ms</div>
+                    <div><strong>Sample Output:</strong></div>
+                    <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin: 5px 0;">${data.sample_output || 'No sample available'}</div>
+                    ${data.error ? `<div style="color: #dc3545;"><strong>Error:</strong> ${data.error}</div>` : ''}
+                    <div style="color: #6c757d; font-size: 11px;">Constitutional Test: ${data.constitutional_test ? 'COMPLIANT' : 'NON-COMPLIANT'}</div>
+                `;
+
+                // Update provider status in the main panel
+                updateProviderStatus();
+
+            } catch (error) {
+                testOutput.innerHTML = `
+                    <div style="color: #dc3545; font-weight: 600;">❌ ${provider.toUpperCase()} - TEST FAILED</div>
+                    <div style="color: #dc3545;"><strong>Error:</strong> ${error.message}</div>
+                `;
+            }
+        }
+
+        async function testAllProviders() {
+            const testResults = document.getElementById('testResults');
+            const testOutput = document.getElementById('testOutput');
+
+            testResults.style.display = 'block';
+            testOutput.innerHTML = `<div style="color: #007bff;">🏛️ Testing all providers...</div>`;
+
+            try {
+                const response = await fetch('/api/providers/test-all', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                let resultsHTML = `
+                    <div style="font-weight: 600; margin-bottom: 10px;">🏛️ CONSTITUTIONAL HEALTH SUMMARY</div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Online:</strong> ${data.summary.online}/${data.summary.total_providers}
+                        <strong>Average Latency:</strong> ${Math.round(data.summary.average_latency)}ms
+                    </div>
+                `;
+
+                for (const [provider, result] of Object.entries(data.results)) {
+                    const statusColor = result.success ? '#28a745' : '#dc3545';
+                    const statusIcon = result.success ? '✅' : '❌';
+
+                    resultsHTML += `
+                        <div style="margin: 8px 0; padding: 6px; background: ${result.success ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                            <div style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${provider.toUpperCase()} - ${result.success ? 'OPERATIONAL' : 'FAILED'}</div>
+                            ${result.latency_ms ? `<div><strong>Latency:</strong> ${result.latency_ms}ms</div>` : ''}
+                            ${result.error ? `<div style="color: #dc3545; font-size: 12px;">Error: ${result.error}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                testOutput.innerHTML = resultsHTML;
+
+                // Update provider status in the main panel
+                updateProviderStatus();
+
+            } catch (error) {
+                testOutput.innerHTML = `
+                    <div style="color: #dc3545; font-weight: 600;">❌ ALL PROVIDERS TEST FAILED</div>
+                    <div style="color: #dc3545;"><strong>Error:</strong> ${error.message}</div>
+                `;
+            }
+        }
+
+        function displayCouncilResults(session, synthesis, repoShareInfo = null) {
+            const output = document.getElementById('councilOutput');
+            let html = '';
+
+            // 🔥 Show repo share metadata if included
+            if (repoShareInfo && repoShareInfo.repo_shared && repoShareInfo.share_metadata) {
+                const meta = repoShareInfo.share_metadata;
+                html += `
+                    <div class="repo-metadata" style="margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">📂 Repository Context Included</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                            <div><strong>Repo:</strong> ${meta.repo_name}</div>
+                            <div><strong>Branch:</strong> ${meta.branch}</div>
+                            <div><strong>Scope:</strong> ${meta.scope_type.replace('_', ' ')}</div>
+                            <div><strong>Files:</strong> ${meta.file_count}</div>
+                            <div><strong>Snapshot:</strong> ${new Date(meta.snapshot_timestamp).toLocaleString()}</div>
+                            <div><strong>Status:</strong> <span style="color: #28a745;">🔒 Read-Only</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Round 1 Responses
+            html += '<div class="response-round"><div class="round-title">🔄 Round 1: Independent Analysis</div>';
+
+            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok'];
+            const aiNames = {
+                'claude': 'Claude (Architecture)',
+                'gpt4': 'GPT-4 (Structure)',
+                'gemini': 'Gemini (UX)',
+                'grok': 'Grok (Stress Testing)'
+            };
+
+            // DEFENSIVE NULL CHECKING for session and round1_responses
+            if (session && session.round1_responses) {
+                aiOrder.forEach(ai => {
+                    if (session.round1_responses[ai]) {
+                        const response = session.round1_responses[ai];
+                        const errorClass = response.error ? ' error' : '';
+                        html += `
+                            <div class="ai-response${errorClass}">
+                                <div class="ai-name">${aiNames[ai] || ai}</div>
+                                <div class="ai-text">${response.error || response.response}</div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                html += `<div style="color: #dc3545;">⚠️ Session data not available for Round 1 responses</div>`;
+            });
+
+            html += '</div>';
+
+            // Round 2 Responses
+            html += '<div class="response-round"><div class="round-title">🔄 Round 2: Cross-Review</div>';
+
+            // DEFENSIVE NULL CHECKING for Round 2 responses
+            if (session && session.round2_responses) {
+                aiOrder.forEach(ai => {
+                    if (session.round2_responses[ai]) {
+                        const response = session.round2_responses[ai];
+                        const errorClass = response.error ? ' error' : '';
+                        html += `
+                            <div class="ai-response${errorClass}">
+                                <div class="ai-name">${aiNames[ai] || ai} (Cross-Review)</div>
+                                <div class="ai-text">${response.error || response.response}</div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                html += `<div style="color: #888;">🔄 Round 2 responses not available (Safe Mode or failed execution)</div>`;
+            }
+
+            html += '</div>';
+
+            // Save controls
+            html += `
+                <div class="save-controls">
+                    <input type="text" class="save-input" id="saveName" placeholder="Name for this output...">
+                    <input type="text" class="save-input" id="saveDescription" placeholder="Description...">
+                    <button class="btn" onclick="saveOutput('${session && session.session_id ? session.session_id : 'unknown'}')">Save Output</button>
+                </div>
+            `;
+
+            output.innerHTML = html;
+        }
+
+        function displaySynthesis(synthesis) {
+            const output = document.getElementById('synthesisOutput');
+            let html = '';
+
+            // Council Summary
+            html += `
+                <div class="synthesis-section">
+                    <div class="section-title">📝 Council Summary</div>
+                    <div class="ai-text">${synthesis.council_summary}</div>
+                </div>
+            `;
+
+            // Agreements
+            if (synthesis.agreements && synthesis.agreements.length > 0) {
+                html += '<div class="section-title">✅ Agreements</div>';
+                synthesis.agreements.forEach(agreement => {
+                    html += `
+                        <div class="agreement-item">
+                            <strong>${agreement.topic}</strong><br>
+                            ${agreement.consensus_statement}
+                        </div>
+                    `;
+                });
+            }
+
+            // Conflicts
+            if (synthesis.conflicts && synthesis.conflicts.length > 0) {
+                html += '<div class="section-title">⚠️ Conflicts</div>';
+                synthesis.conflicts.forEach(conflict => {
+                    html += `
+                        <div class="conflict-item">
+                            <strong>${conflict.topic}</strong> (${conflict.conflict_type})<br>
+                            ${Object.entries(conflict.positions).map(([ai, pos]) => `${ai}: ${pos}`).join('<br>')}
+                        </div>
+                    `;
+                });
+            }
+
+            // Key Insights
+            if (synthesis.key_insights && synthesis.key_insights.length > 0) {
+                html += '<div class="section-title">💡 Key Insights</div>';
+                synthesis.key_insights.forEach(insight => {
+                    html += `<div class="ai-text">• ${insight}</div>`;
+                });
+            }
+
+            output.innerHTML = html;
+        }
+
+        function displayHandoffOptions(sessionId) {
+            const output = document.getElementById('handoffOutput');
+
+            output.innerHTML = `
+                <div class="section-title">📤 Export Options</div>
+                <div class="save-controls">
+                    <input type="text" class="save-input" id="handoffRecipient" placeholder="Recipient/Team...">
+                    <input type="text" class="save-input" id="handoffPurpose" placeholder="Purpose/Objective...">
+                    <button class="btn" onclick="createHandoff('${sessionId}')">Create Handoff Packet</button>
+                    <button class="btn btn-secondary" onclick="exportSession('${sessionId}')">Export Raw Session</button>
+                </div>
+            `;
+        }
+
+        async function saveOutput(sessionId) {
+            const name = document.getElementById('saveName').value;
+            const description = document.getElementById('saveDescription').value;
+
+            if (!name) {
+                alert('Please enter a name for the output.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/outputs/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        session_id: sessionId,
+                        include_synthesis: true
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Output saved successfully!');
+                    document.getElementById('saveName').value = '';
+                    document.getElementById('saveDescription').value = '';
+                }
+
+            } catch (error) {
+                alert('Failed to save output: ' + error.message);
+            }
+        }
+
+        async function createHandoff(sessionId) {
+            const recipient = document.getElementById('handoffRecipient').value;
+            const purpose = document.getElementById('handoffPurpose').value;
+
+            if (!recipient || !purpose) {
+                alert('Please enter recipient and purpose for the handoff.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/handoff/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        recipient: recipient,
+                        purpose: purpose,
+                        include_full_context: true
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Download handoff packet
+                    const blob = new Blob([JSON.stringify(data.handoff_packet, null, 2)],
+                        {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `handoff_${recipient}_${sessionId}.json`;
+                    a.click();
+                }
+
+            } catch (error) {
+                alert('Failed to create handoff: ' + error.message);
+            }
+        }
+
+        function exportSession(sessionId) {
+            if (currentSession) {
+                const blob = new Blob([JSON.stringify(currentSession, null, 2)],
+                    {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `council_session_${sessionId}.json`;
+                a.click();
+            }
+        }
+
+        function showStateEditor() {
+            // Simple state editor - could be enhanced
+            const newProject = prompt('Project Name:', document.getElementById('projectName').textContent);
+            const newPhase = prompt('Current Phase:', document.getElementById('currentPhase').textContent);
+
+            if (newProject || newPhase) {
+                updateSystemState({
+                    project_name: newProject,
+                    current_phase: newPhase
+                });
+            }
+        }
+
+        async function updateSystemState(updates) {
+            try {
+                const response = await fetch('/api/system/state', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updates)
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Update UI
+                    if (updates.project_name) {
+                        document.getElementById('projectName').textContent = updates.project_name;
+                    }
+                    if (updates.current_phase) {
+                        document.getElementById('currentPhase').textContent = updates.current_phase;
+                    }
+                }
+
+            } catch (error) {
+                alert('Failed to update system state: ' + error.message);
+            }
+        }
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                executeCouncil();
+            }
+        });
+
+        // Builder Instance Management
+        async function refreshBuilderStatus() {
+            try {
+                const response = await fetch('/api/builders/status');
+                const data = await response.json();
+                displayBuilderStatus(data);
+
+                // Also refresh handoffs
+                const handoffsResponse = await fetch('/api/builders/handoffs');
+                const handoffsData = await handoffsResponse.json();
+                displayPendingHandoffs(handoffsData.pending_handoffs || []);
+
+            } catch (error) {
+                document.getElementById('builderStatus').innerHTML = `
+                    <div class="ai-response error">
+                        <div class="ai-name">⚠️ Error</div>
+                        <div class="ai-text">Failed to load builder status: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayBuilderStatus(statusData) {
+            const output = document.getElementById('builderStatus');
+            let html = '';
+
+            if (!statusData.instance_details || Object.keys(statusData.instance_details).length === 0) {
+                html = `
+                    <div class="loading">
+                        No builder instances registered. Click "Register New Instance" to add your desktop and phone instances.
+                    </div>
+                `;
+            } else {
+                Object.entries(statusData.instance_details).forEach(([instanceId, instance]) => {
+                    const statusClass = instance.status.replace('_', '-');
+                    html += `
+                        <div class="builder-instance ${statusClass}">
+                            <div class="builder-header">
+                                <div class="builder-name">${instance.name}</div>
+                                <div class="builder-status ${statusClass}">${instance.status}</div>
+                            </div>
+                            <div class="builder-details">
+                                <div class="builder-detail-row"><strong>Project:</strong> ${instance.project}</div>
+                                <div class="builder-detail-row"><strong>Task:</strong> ${instance.task}</div>
+                                <div class="builder-detail-row"><strong>Workspace:</strong> ${instance.workspace}</div>
+                                <div class="builder-detail-row"><strong>Last Active:</strong> ${new Date(instance.last_active).toLocaleString()}</div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <button class="btn btn-small" onclick="updateBuilderStatus('${instanceId}')">Update Status</button>
+                                <button class="btn btn-small btn-secondary" onclick="createHandoffFor('${instanceId}')">Create Handoff</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            output.innerHTML = html;
+        }
+
+        function displayPendingHandoffs(handoffs) {
+            const output = document.getElementById('pendingHandoffs');
+            let html = '';
+
+            if (handoffs.length === 0) {
+                html = '<div class="loading">No pending handoffs.</div>';
+            } else {
+                handoffs.forEach(handoff => {
+                    html += `
+                        <div class="handoff-item">
+                            <div class="handoff-header">
+                                ${handoff.from_instance.name} → ${handoff.to_instance.name}
+                                (${handoff.type})
+                            </div>
+                            <div class="handoff-details">
+                                <div><strong>Project:</strong> ${handoff.project_context}</div>
+                                <div><strong>Task:</strong> ${handoff.task_description}</div>
+                                <div><strong>Priority:</strong> ${handoff.priority}</div>
+                                <div><strong>Created:</strong> ${new Date(handoff.created_at).toLocaleString()}</div>
+                                <div><strong>Instructions:</strong> ${handoff.instructions}</div>
+                            </div>
+                            <div class="handoff-actions">
+                                <button class="btn btn-small" onclick="acceptHandoff('${handoff.handoff_id}')">Accept Handoff</button>
+                                <button class="btn btn-small btn-secondary" onclick="viewHandoffDetails('${handoff.handoff_id}')">View Details</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            output.innerHTML = html;
+        }
+
+        function showRegisterBuilder() {
+            const modal = document.getElementById('registerModal');
+            if (!modal) {
+                // Create modal if it doesn't exist
+                const modalHtml = `
+                    <div id="registerModal" class="modal">
+                        <div class="modal-content">
+                            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+                            <div class="modal-header">Register Builder Instance</div>
+                            <input type="text" id="registerName" class="modal-input" placeholder="Instance Name (e.g., Desktop, Phone)">
+                            <input type="text" id="registerDevice" class="modal-input" placeholder="Device Type (e.g., windows_desktop, mobile_android)">
+                            <input type="text" id="registerProject" class="modal-input" placeholder="Initial Project (optional)">
+                            <div class="modal-actions">
+                                <button class="btn btn-secondary" onclick="closeModal('registerModal')">Cancel</button>
+                                <button class="btn" onclick="registerBuilderInstance()">Register</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            }
+
+            document.getElementById('registerModal').style.display = 'block';
+        }
+
+        async function registerBuilderInstance() {
+            const name = document.getElementById('registerName').value.trim();
+            const device = document.getElementById('registerDevice').value.trim();
+            const project = document.getElementById('registerProject').value.trim() || 'Unassigned';
+
+            if (!name || !device) {
+                alert('Please enter instance name and device type.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/builders/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instance_name: name,
+                        device_type: device,
+                        initial_project: project
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Builder instance registered successfully!');
+                    closeModal('registerModal');
+                    refreshBuilderStatus();
+                } else {
+                    alert('Registration failed: ' + data.detail);
+                }
+
+            } catch (error) {
+                alert('Registration failed: ' + error.message);
+            }
+        }
+
+        async function acceptHandoff(handoffId) {
+            const notes = prompt('Verification notes (optional):');
+
+            try {
+                const response = await fetch(`/api/builders/handoff/${handoffId}/accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        verification_notes: notes || ''
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Handoff accepted successfully!');
+                    refreshBuilderStatus();
+                } else {
+                    alert('Handoff acceptance failed: ' + data.detail);
+                }
+
+            } catch (error) {
+                alert('Handoff acceptance failed: ' + error.message);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function updateBuilderStatus(instanceId) {
+            // Simple status update - could be enhanced with a proper modal
+            const newStatus = prompt('New status (active/paused/blocked/needs_handoff):');
+            const newTask = prompt('Current task (optional):');
+
+            if (newStatus) {
+                updateBuilderInstance(instanceId, {
+                    status: newStatus,
+                    task: newTask
+                });
+            }
+        }
+
+        async function updateBuilderInstance(instanceId, updates) {
+            try {
+                const response = await fetch(`/api/builders/${instanceId}/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    refreshBuilderStatus();
+                } else {
+                    alert('Update failed: ' + data.detail);
+                }
+
+            } catch (error) {
+                alert('Update failed: ' + error.message);
+            }
+        }
+
+        function createHandoffFor(instanceId) {
+            alert('Handoff creation interface - to be implemented');
+            // TODO: Implement handoff creation modal
+        }
+
+        function viewHandoffDetails(handoffId) {
+            alert('Handoff details view - to be implemented');
+            // TODO: Implement handoff details modal
+        }
+
+        // Load initial system state
+        async function loadSystemState() {
+            try {
+                const response = await fetch('/api/system/state');
+                const data = await response.json();
+                // Update UI with current state
+            } catch (error) {
+                console.log('Failed to load system state');
+            }
+        }
+
+        // Auto-load builder status when builders tab is opened
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.response-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected content and tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Auto-load builder status when builders tab is opened
+            if (tabName === 'builders') {
+                refreshBuilderStatus();
+            }
+        }
+
+        loadSystemState();
+    </script>
+</body>
+</html>

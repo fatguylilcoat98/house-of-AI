@@ -1,45 +1,63 @@
-# House of AI — Veracore Coordination Layer
-**The Good Neighbor Guard**
+# AI Council System - Clean Architecture
 
-A dead-simple backend that sends your Veracore task to Claude, GPT, and Gemini simultaneously, then shows all three responses side by side with a consensus summary.
+**The Good Neighbor Guard - Unified AI Council**
 
----
-
-## Deploy to Render
-
-1. Push this repo to GitHub (`fatguylilcoat98/house-of-ai` or similar)
-2. On Render → New → Web Service → connect your repo
-3. **Build command:** `pip install -r requirements.txt`
-4. **Start command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Add these **Environment Variables** in Render dashboard:
-
-| Key | Value |
-|-----|-------|
-| `ANTHROPIC_API_KEY` | your Claude key |
-| `OPENAI_API_KEY` | your GPT key |
-| `GEMINI_API_KEY` | your Gemini key |
-
-6. Deploy. Visit your Render URL. Done.
+A sophisticated multi-AI coordination system with System Packet Builder, 2-round execution, claim tagging, and comprehensive synthesis capabilities.
 
 ---
 
-## How it works
+## 🏛️ Council Architecture
 
-- You type a task (and optional context from a prior phase)
-- All three AIs respond in parallel — no waiting for one before the next
-- A consensus engine (Claude doing a meta-read) flags agreements and conflicts
-- You make the call — you're still the architect
+### Council Members & Roles
 
-## Repo structure
+| AI | Role | Focus Area |
+|---|---|---|
+| **Claude** | Architecture & Systems Design | Structural decisions, technical approaches, system-level considerations |
+| **GPT-4** | Structure & Implementation | Implementation details, code organization, development approaches |
+| **Gemini** | User Experience & Interface | Usability, design decisions, user interaction patterns |
+| **Grok** | Stress Testing & Edge Cases | Potential failures, edge cases, system limits |
+| **Perplexity** | Adversarial Analysis & Research | Challenge assumptions, counterarguments, alternatives |
 
+### Key Features
+
+✅ **System Packet Builder** - Comprehensive context injection  
+✅ **Two-Round Execution** - Independent analysis + cross-review  
+✅ **Claim Tagging** - Provenance tracking (measured/inferred/assumed/generated)  
+✅ **Synthesis Engine** - Preserves distinct voices, identifies agreements/conflicts  
+✅ **Save/Capture System** - Named output storage and retrieval  
+✅ **Active System State** - Editable persistent context  
+✅ **Handoff Packets** - Exportable session packages  
+✅ **Sole Carrier Rule** - No cross-AI memory assumptions  
+✅ **Correction Mechanism** - Post-delivery output updates  
+
+---
+
+## 🚀 Quick Start
+
+### 1. Installation
+
+```bash
+git clone <your-repo>
+cd house-of-AI-council-clean
+pip install -r requirements.txt
 ```
-house-of-ai/
-├── main.py           # FastAPI backend
-├── requirements.txt
-├── render_start.sh
-└── static/
-    └── index.html    # Frontend UI
+
+### 2. Environment Setup
+
+Create `.env` file:
+
+```env
+ANTHROPIC_API_KEY=your_claude_key
+OPENAI_API_KEY=your_gpt4_key
+GEMINI_API_KEY=your_gemini_key
+GROK_API_KEY=your_grok_key
+PERPLEXITY_API_KEY=your_perplexity_key
 ```
 
-## Keyboard shortcut
-`Ctrl + Enter` in the task box to submit.
+### 3. Start Council System
+
+```bash
+python main_council.py
+```
+
+Visit: `http://localhost:8000/static/council_interface.html`
