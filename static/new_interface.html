@@ -750,8 +750,8 @@
                 }
 
                 const data = await response.json();
-                currentSession = data.session;
-                displayCouncilResults(data.session, data.synthesis);
+                currentSession = data;
+                displayCouncilResults(data);
 
             } catch (error) {
                 console.error('Council execution failed:', error);
@@ -771,10 +771,14 @@
         }
 
         // Display council results
-        function displayCouncilResults(session, synthesis) {
+        function displayCouncilResults(data) {
             const resultsContent = document.getElementById('resultsContent');
 
-            if (!session || !session.responses) {
+            // Handle the actual API response format
+            const synthesis = data.synthesis;
+            const providerPerspectives = synthesis?.provider_perspectives;
+
+            if (!providerPerspectives) {
                 resultsContent.innerHTML = `
                     <div class="results-empty">
                         <h3>No Results Available</h3>
@@ -784,23 +788,53 @@
                 return;
             }
 
-            let html = '<div style="space-y: 24px;">';
+            let html = '<div style="margin-bottom: 24px;">';
 
             // Round 1 Responses
-            html += '<div style="margin-bottom: 32px;"><h3 style="color: var(--text); margin-bottom: 16px; font-size: 1.1rem;">Round 1: Independent Analysis</h3>';
+            html += '<div style="margin-bottom: 32px;"><h3 style="color: var(--text); margin-bottom: 16px; font-size: 1.1rem;">Council Responses</h3>';
 
-            Object.entries(session.responses).forEach(([provider, response]) => {
-                if (response && response.response) {
+            Object.entries(providerPerspectives).forEach(([provider, data]) => {
+                if (data && data.response) {
+                    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                    const role = data.role || 'Council Member';
+
                     html += `
                         <div style="margin-bottom: 20px; padding: 20px; background: rgba(13, 18, 32, 0.4); border: 1px solid var(--border); border-radius: 12px;">
-                            <h4 style="color: var(--text); margin-bottom: 12px; font-weight: 600;">${provider.charAt(0).toUpperCase() + provider.slice(1)}</h4>
-                            <div style="color: var(--muted); line-height: 1.6; font-size: 14px;">${response.response}</div>
+                            <h4 style="color: var(--text); margin-bottom: 8px; font-weight: 600;">${providerName}</h4>
+                            <p style="color: var(--muted); font-size: 12px; margin-bottom: 12px; opacity: 0.8;">${role}</p>
+                            <div style="color: var(--text); line-height: 1.6; font-size: 14px;">${data.response}</div>
                         </div>
                     `;
                 }
             });
 
-            html += '</div></div>';
+            // Add synthesis summary if available
+            if (synthesis.agreements?.length > 0 || synthesis.conflicts?.length > 0) {
+                html += '<div style="margin-top: 32px; padding: 20px; background: rgba(26, 140, 255, 0.1); border: 1px solid var(--blue); border-radius: 12px;">';
+                html += '<h3 style="color: var(--blue); margin-bottom: 16px; font-size: 1.1rem;">Council Analysis</h3>';
+
+                if (synthesis.agreements?.length > 0) {
+                    html += '<h4 style="color: var(--green); margin-bottom: 8px;">Agreements:</h4>';
+                    html += '<ul style="color: var(--text); margin-bottom: 16px;">';
+                    synthesis.agreements.forEach(agreement => {
+                        html += `<li style="margin-bottom: 4px;">${agreement}</li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                if (synthesis.conflicts?.length > 0) {
+                    html += '<h4 style="color: var(--gold); margin-bottom: 8px;">Different Perspectives:</h4>';
+                    html += '<ul style="color: var(--text);">';
+                    synthesis.conflicts.forEach(conflict => {
+                        html += `<li style="margin-bottom: 4px;">${conflict}</li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                html += '</div>';
+            }
+
+            html += '</div>';
             resultsContent.innerHTML = html;
         }
 
