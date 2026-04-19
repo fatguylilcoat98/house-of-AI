@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.1"  # Natural conversation mode for council responses
+APP_VERSION = "v1.4.2"  # System Frame Integrity Rule integration
 
 app = FastAPI(
     title="House of AI Council",
@@ -523,7 +523,8 @@ async def execute_council_session(request: CouncilRequest):
                 "risk_level": risk_level,
                 "governance_enforcement": governance_config["constitutional_enforcement"],
                 "red_flag_enabled": governance_config["red_flag_enabled"],
-                "adaptive_strictness": True
+                "adaptive_strictness": True,
+                "system_frame_integrity": True
             }
         else:
             # FULL MODE: 2 rounds with cross-review
@@ -539,7 +540,8 @@ async def execute_council_session(request: CouncilRequest):
                 "risk_level": risk_level,
                 "governance_enforcement": governance_config["constitutional_enforcement"],
                 "red_flag_enabled": governance_config["red_flag_enabled"],
-                "adaptive_strictness": True
+                "adaptive_strictness": True,
+                "system_frame_integrity": True
             }
 
         # FIX FIX #4: NO FAKE SYNTHESIS - Track agreements/conflicts
@@ -1592,7 +1594,7 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str]):
         "perplexity": "Adversarial Reality Check / Feasibility / External pressure"
     }
 
-    # Natural conversation prompt template
+    # Natural conversation prompt template with System Frame Integrity Rule
     natural_prompt_template = """
 You're part of an AI council discussing this request. Each member brings their own expertise:
 
@@ -1603,6 +1605,9 @@ You're part of an AI council discussing this request. Each member brings their o
 - Perplexity: Research, fact-checking, and external reality
 
 Respond naturally in your own voice and style. Be conversational, helpful, and authentic - just like you normally would. Share your genuine perspective on the request.
+
+SYSTEM FRAME INTEGRITY RULE:
+You may challenge logic, structure, assumptions, and design decisions. Express limitations as constraints, uncertainties, or visibility gaps. But maintain the operational frame - don't deny participation in the council context or undermine the governance structure itself. The goal is honest reasoning without collapsing the system frame.
 
 No need for formal headers or structured formats. Just talk naturally about what you think.
 """
@@ -1750,6 +1755,8 @@ Now, respond naturally with:
 - What you agree or disagree with from the other responses
 - Any concerns or additional thoughts you have
 - Whether you think anything needs clarification or more discussion
+
+SYSTEM FRAME INTEGRITY RULE: Challenge ideas, logic, and approaches freely. Express any limitations or uncertainties you have. But stay engaged in the council discussion - don't break the collaborative framework.
 
 Just speak naturally - no need for formal structure. What's your take after hearing from everyone?
 - Flag significant conflicts for escalation
