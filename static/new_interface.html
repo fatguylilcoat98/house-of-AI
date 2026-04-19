@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House of AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #080c14;
+            --bg2: #0d1220;
+            --blue: #1a8cff;
+            --teal: #00d4ff;
+            --green: #00e5a0;
+            --gold: #f0a500;
+            --text: #e8edf5;
+            --muted: #8899aa;
+            --faint: #4a5568;
+            --card-bg: rgba(13, 18, 32, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #080c14 0%, #1a1f2e 100%);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 998;
+            background: rgba(8, 12, 20, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            height: 68px;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            justify-content: space-between;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .nav-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, var(--blue), var(--teal));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1.5px solid rgba(26, 140, 255, 0.5);
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.04em;
+        }
+
+        .version-badge {
+            background: rgba(0, 229, 160, 0.1);
+            color: var(--green);
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            border: 1px solid rgba(0, 229, 160, 0.2);
+        }
+
+        /* Main Layout */
+        .main-container {
+            margin-top: 68px;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, rgba(26, 140, 255, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--blue), var(--teal), var(--green));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--muted);
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        .hero-description {
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 16px;
+            color: var(--faint);
+            line-height: 1.6;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon {
+            font-size: 16px;
+        }
+
+        /* Council Request Form */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(13, 18, 32, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--blue);
+            background: rgba(13, 18, 32, 0.8);
+            box-shadow: 0 0 0 3px rgba(26, 140, 255, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Execution Modes */
+        .execution-modes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .execution-mode {
+            padding: 16px;
+            background: rgba(13, 18, 32, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .execution-mode:hover {
+            border-color: var(--blue);
+            background: rgba(26, 140, 255, 0.05);
+        }
+
+        .execution-mode.selected {
+            border-color: var(--blue);
+            background: rgba(26, 140, 255, 0.1);
+        }
+
+        .mode-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .mode-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .mode-desc {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(45deg, var(--blue), var(--teal));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(26, 140, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Provider Status */
+        .provider-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .provider-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(13, 18, 32, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .provider-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--blue), var(--teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .provider-details h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .provider-details p {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .provider-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-online {
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        .status-offline {
+            background: #e74c3c;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Test Button */
+        .btn-test {
+            padding: 8px 16px;
+            background: rgba(0, 229, 160, 0.1);
+            border: 1px solid rgba(0, 229, 160, 0.2);
+            border-radius: 6px;
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-test:hover {
+            background: rgba(0, 229, 160, 0.2);
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 40px;
+        }
+
+        .results-tabs {
+            display: flex;
+            background: rgba(13, 18, 32, 0.4);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .results-tab {
+            flex: 1;
+            padding: 16px 20px;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .results-tab.active {
+            background: linear-gradient(45deg, var(--blue), var(--teal));
+            color: white;
+        }
+
+        .results-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            min-height: 300px;
+        }
+
+        .results-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .results-empty h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--faint);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(26, 140, 255, 0.2);
+            border-top: 3px solid var(--blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .execution-modes {
+                grid-template-columns: 1fr;
+            }
+
+            .results-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="nav-logo">🏛️</div>
+            <div class="nav-brand">House of AI</div>
+        </div>
+        <div id="versionDisplay" class="version-badge">
+            Loading...
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title">🏛️ House of AI</h1>
+            <p class="hero-subtitle">Constitutional AI Governance Platform</p>
+            <p class="hero-description">
+                Experience the power of multi-AI constitutional governance. Submit your questions to a council of 5 AI models
+                working together with real API integration, constitutional oversight, and transparent decision-making.
+            </p>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard-grid">
+            <!-- Council Request -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">⚡</span>
+                    Council Request
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">Your Question or Request</label>
+                    <textarea
+                        id="userInput"
+                        class="form-input form-textarea"
+                        placeholder="Ask your question to the House of AI council. Be specific and clear about what you need guidance on..."
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Execution Mode</label>
+                    <div class="execution-modes">
+                        <div class="execution-mode selected" data-mode="safe">
+                            <span class="mode-icon">🛡️</span>
+                            <div class="mode-title">Safe Mode</div>
+                            <div class="mode-desc">Single round analysis</div>
+                        </div>
+                        <div class="execution-mode" data-mode="full">
+                            <span class="mode-icon">🔄</span>
+                            <div class="mode-title">Full Mode</div>
+                            <div class="mode-desc">Two rounds with cross-review</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="executeBtn" class="btn-primary">
+                    Execute Council Session
+                </button>
+            </div>
+
+            <!-- Provider Status -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">🤖</span>
+                    Council Members
+                </h2>
+
+                <div class="provider-grid">
+                    <div class="provider-card" data-provider="claude">
+                        <div class="provider-info">
+                            <div class="provider-avatar">C</div>
+                            <div class="provider-details">
+                                <h4>Claude</h4>
+                                <p>Architecture & Systems Design</p>
+                            </div>
+                        </div>
+                        <div class="provider-status">
+                            <div class="status-dot status-offline"></div>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-card" data-provider="gpt4">
+                        <div class="provider-info">
+                            <div class="provider-avatar">G</div>
+                            <div class="provider-details">
+                                <h4>GPT-4</h4>
+                                <p>Structure & Implementation</p>
+                            </div>
+                        </div>
+                        <div class="provider-status">
+                            <div class="status-dot status-offline"></div>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-card" data-provider="gemini">
+                        <div class="provider-info">
+                            <div class="provider-avatar">M</div>
+                            <div class="provider-details">
+                                <h4>Gemini</h4>
+                                <p>User Experience & Interface</p>
+                            </div>
+                        </div>
+                        <div class="provider-status">
+                            <div class="status-dot status-offline"></div>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-card" data-provider="grok">
+                        <div class="provider-info">
+                            <div class="provider-avatar">X</div>
+                            <div class="provider-details">
+                                <h4>Grok</h4>
+                                <p>Stress Testing & Edge Cases</p>
+                            </div>
+                        </div>
+                        <div class="provider-status">
+                            <div class="status-dot status-offline"></div>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+
+                    <div class="provider-card" data-provider="perplexity">
+                        <div class="provider-info">
+                            <div class="provider-avatar">P</div>
+                            <div class="provider-details">
+                                <h4>Perplexity</h4>
+                                <p>Research & Analysis</p>
+                            </div>
+                        </div>
+                        <div class="provider-status">
+                            <div class="status-dot status-offline"></div>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="testAllBtn" class="btn-test" style="width: 100%; margin-top: 16px;">
+                    Test All Providers
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="results-tabs">
+                <button class="results-tab active" data-tab="responses">Council Responses</button>
+                <button class="results-tab" data-tab="synthesis">Synthesis & Analysis</button>
+                <button class="results-tab" data-tab="export">Export & Handoff</button>
+            </div>
+
+            <div id="resultsContent" class="results-content">
+                <div class="results-empty">
+                    <h3>Ready for Council Session</h3>
+                    <p>Enter your request above and click "Execute Council Session" to begin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMode = 'safe';
+        let currentSession = null;
+
+        // Load and display version information
+        async function loadVersion() {
+            try {
+                const response = await fetch('/api/version');
+                const versionData = await response.json();
+                document.getElementById('versionDisplay').textContent = versionData.version;
+            } catch (error) {
+                document.getElementById('versionDisplay').textContent = 'Version: Unknown';
+            }
+        }
+
+        // Update provider status
+        async function updateProviderStatus() {
+            try {
+                const response = await fetch('/api/providers/status');
+                const data = await response.json();
+
+                Object.keys(data.providers).forEach(provider => {
+                    const card = document.querySelector(`[data-provider="${provider}"]`);
+                    if (card) {
+                        const statusDot = card.querySelector('.status-dot');
+                        const statusText = card.querySelector('.provider-status span');
+                        const providerData = data.providers[provider];
+
+                        if (providerData.status === 'online') {
+                            statusDot.className = 'status-dot status-online';
+                            statusText.textContent = `Online (${providerData.response_time_ms}ms)`;
+                            card.style.borderColor = 'var(--green)';
+                        } else {
+                            statusDot.className = 'status-dot status-offline';
+                            statusText.textContent = 'Offline';
+                            card.style.borderColor = 'var(--border)';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to update provider status:', error);
+            }
+        }
+
+        // Test all providers
+        async function testAllProviders() {
+            const btn = document.getElementById('testAllBtn');
+            btn.textContent = 'Testing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/providers/test-all', { method: 'POST' });
+                const data = await response.json();
+
+                console.log('Test results:', data);
+                await updateProviderStatus();
+            } catch (error) {
+                console.error('Test failed:', error);
+            } finally {
+                btn.textContent = 'Test All Providers';
+                btn.disabled = false;
+            }
+        }
+
+        // Handle execution mode selection
+        document.querySelectorAll('.execution-mode').forEach(mode => {
+            mode.addEventListener('click', () => {
+                document.querySelectorAll('.execution-mode').forEach(m => m.classList.remove('selected'));
+                mode.classList.add('selected');
+                selectedMode = mode.dataset.mode;
+            });
+        });
+
+        // Execute council session
+        async function executeCouncilSession() {
+            const userInput = document.getElementById('userInput').value.trim();
+            if (!userInput) {
+                alert('Please enter a question or request');
+                return;
+            }
+
+            const btn = document.getElementById('executeBtn');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContent = document.getElementById('resultsContent');
+
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            resultsSection.style.display = 'block';
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h3>Executing ${selectedMode === 'full' ? 'Full' : 'Safe'} Mode Council Session</h3>
+                    <p>The AI council is processing your request...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/council/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_input: userInput,
+                        execution_mode: selectedMode,
+                        selected_providers: ["claude", "gpt4", "gemini", "grok", "perplexity"]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentSession = data.session;
+                displayCouncilResults(data.session, data.synthesis);
+
+            } catch (error) {
+                console.error('Council execution failed:', error);
+                resultsContent.innerHTML = `
+                    <div class="results-empty">
+                        <h3>Council Execution Failed</h3>
+                        <p style="color: var(--muted);">Error: ${error.message}</p>
+                        <button onclick="location.reload()" style="margin-top: 16px; padding: 8px 16px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            Reload Page
+                        </button>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Execute Council Session';
+            }
+        }
+
+        // Display council results
+        function displayCouncilResults(session, synthesis) {
+            const resultsContent = document.getElementById('resultsContent');
+
+            if (!session || !session.responses) {
+                resultsContent.innerHTML = `
+                    <div class="results-empty">
+                        <h3>No Results Available</h3>
+                        <p>Session data is not available. Please try again.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div style="space-y: 24px;">';
+
+            // Round 1 Responses
+            html += '<div style="margin-bottom: 32px;"><h3 style="color: var(--text); margin-bottom: 16px; font-size: 1.1rem;">Round 1: Independent Analysis</h3>';
+
+            Object.entries(session.responses).forEach(([provider, response]) => {
+                if (response && response.response) {
+                    html += `
+                        <div style="margin-bottom: 20px; padding: 20px; background: rgba(13, 18, 32, 0.4); border: 1px solid var(--border); border-radius: 12px;">
+                            <h4 style="color: var(--text); margin-bottom: 12px; font-weight: 600;">${provider.charAt(0).toUpperCase() + provider.slice(1)}</h4>
+                            <div style="color: var(--muted); line-height: 1.6; font-size: 14px;">${response.response}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            html += '</div></div>';
+            resultsContent.innerHTML = html;
+        }
+
+        // Handle tab switching
+        document.querySelectorAll('.results-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.results-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                // Tab content switching logic would go here
+            });
+        });
+
+        // Event listeners
+        document.getElementById('executeBtn').addEventListener('click', executeCouncilSession);
+        document.getElementById('testAllBtn').addEventListener('click', testAllProviders);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVersion();
+            updateProviderStatus();
+
+            // Auto-refresh provider status every 30 seconds
+            setInterval(updateProviderStatus, 30000);
+        });
+    </script>
+</body>
+</html>

@@ -2640,7 +2640,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
 async def root():
     """Root endpoint - serve main interface"""
-    return FileResponse("static/council_interface.html")
+    return FileResponse("static/new_interface.html")
 
 
 @app.get("/api/version")
