@@ -1279,7 +1279,7 @@ async def test_provider_connection(provider: str) -> bool:
 
 # REAL API CALLING FUNCTIONS FOR HEALTH TESTS
 
-async def _real_call_claude(prompt: str, api_key: str) -> str:
+async def _real_call_claude(prompt: str, api_key: str, max_tokens: int = 100, system_msg: str = "Health test for AI Council System") -> str:
     """Make REAL API call to Claude - WORKING VERACORE IMPLEMENTATION"""
     import anthropic
 
@@ -1287,14 +1287,14 @@ async def _real_call_claude(prompt: str, api_key: str) -> str:
 
     r = client.messages.create(
         model="claude-sonnet-4-20250514",
-        max_tokens=100,
-        system="Health test for AI Council System",
+        max_tokens=max_tokens,
+        system=system_msg,
         messages=[{"role": "user", "content": prompt}]
     )
     return r.content[0].text
 
 
-async def _real_call_gpt4(prompt: str, api_key: str) -> str:
+async def _real_call_gpt4(prompt: str, api_key: str, max_tokens: int = 100) -> str:
     """Make REAL API call to GPT-4"""
     import httpx
 
@@ -1308,7 +1308,7 @@ async def _real_call_gpt4(prompt: str, api_key: str) -> str:
             json={
                 "model": "gpt-4",
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 100
+                "max_tokens": max_tokens
             }
         )
         response.raise_for_status()
@@ -1316,7 +1316,7 @@ async def _real_call_gpt4(prompt: str, api_key: str) -> str:
         return data["choices"][0]["message"]["content"]
 
 
-async def _real_call_gemini(prompt: str, api_key: str) -> str:
+async def _real_call_gemini(prompt: str, api_key: str, max_tokens: int = 100) -> str:
     """Make REAL API call to Gemini with rate limit handling"""
     import httpx
     import asyncio
@@ -1333,7 +1333,7 @@ async def _real_call_gemini(prompt: str, api_key: str) -> str:
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [{"parts": [{"text": prompt}]}],
-                        "generationConfig": {"maxOutputTokens": 100}
+                        "generationConfig": {"maxOutputTokens": max_tokens}
                     }
                 )
 
@@ -1385,7 +1385,7 @@ async def _real_call_groq(prompt: str, api_key: str) -> str:
     return r.choices[0].message.content
 
 
-async def _real_call_grok(prompt: str, api_key: str) -> str:
+async def _real_call_grok(prompt: str, api_key: str, max_tokens: int = 100, system_msg: str = "Health test for AI Council System") -> str:
     """Make REAL API call to Grok - WORKING VERACORE IMPLEMENTATION"""
     from openai import OpenAI
 
@@ -1396,16 +1396,16 @@ async def _real_call_grok(prompt: str, api_key: str) -> str:
 
     r = client.chat.completions.create(
         model="grok-4-1-fast-non-reasoning",
-        max_tokens=100,
+        max_tokens=max_tokens,
         messages=[
-            {"role": "system", "content": "Health test for AI Council System"},
+            {"role": "system", "content": system_msg},
             {"role": "user", "content": prompt}
         ]
     )
     return r.choices[0].message.content
 
 
-async def _real_call_perplexity(prompt: str, api_key: str) -> str:
+async def _real_call_perplexity(prompt: str, api_key: str, max_tokens: int = 100) -> str:
     """Make REAL API call to Perplexity with CORRECT configuration"""
     import httpx
 
@@ -1420,7 +1420,7 @@ async def _real_call_perplexity(prompt: str, api_key: str) -> str:
             json={
                 "model": "sonar",
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 100,
+                "max_tokens": max_tokens,
                 "temperature": 0.1
             }
         )
@@ -1811,17 +1811,20 @@ async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, 
 
         print(f"COUNCIL API CALL: Making real API call to {provider}")
 
-        # Call the real API using the working health check functions
+        # Call the real API with higher token limits for natural conversation
+        council_max_tokens = 800  # Much higher for natural conversation
+        council_system_msg = "You're part of an AI council providing thoughtful analysis and discussion."
+
         if provider == "claude":
-            response_text = await _real_call_claude(prompt, api_key)
+            response_text = await _real_call_claude(prompt, api_key, council_max_tokens, council_system_msg)
         elif provider == "gpt4":
-            response_text = await _real_call_gpt4(prompt, api_key)
+            response_text = await _real_call_gpt4(prompt, api_key, council_max_tokens)
         elif provider == "gemini":
-            response_text = await _real_call_gemini(prompt, api_key)
+            response_text = await _real_call_gemini(prompt, api_key, council_max_tokens)
         elif provider == "grok":
-            response_text = await _real_call_grok(prompt, api_key)
+            response_text = await _real_call_grok(prompt, api_key, council_max_tokens, council_system_msg)
         elif provider == "perplexity":
-            response_text = await _real_call_perplexity(prompt, api_key)
+            response_text = await _real_call_perplexity(prompt, api_key, council_max_tokens)
         else:
             raise Exception(f"Unsupported provider: {provider}")
 
