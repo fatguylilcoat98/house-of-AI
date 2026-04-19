@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.0"  # Risk-adaptive governance system
+APP_VERSION = "v1.4.1"  # Natural conversation mode for council responses
 
 app = FastAPI(
     title="House of AI Council",
@@ -1592,22 +1592,19 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str]):
         "perplexity": "Adversarial Reality Check / Feasibility / External pressure"
     }
 
-    # Constitutional packet prompt template (without provider-specific content)
-    constitutional_prompt_template = """
-SOLE CARRIER RULE: Models do not share native memory. Only information included in this session packet is valid for this run.
+    # Natural conversation prompt template
+    natural_prompt_template = """
+You're part of an AI council discussing this request. Each member brings their own expertise:
 
-CONSTITUTIONAL REQUIREMENTS:
-- Stay in your assigned lane
-- Provide independent reasoning
-- Flag VERIFIED FACT vs PROFESSIONAL OPINION vs UNKNOWN
-- Do not assume other council members verified anything
-- Challenge unsupported claims clearly
+- Claude: Architecture, systems thinking, and technical integrity
+- GPT-4: Structure, planning, and strategic synthesis
+- Gemini: User experience, clarity, and practical flow
+- Grok: Stress testing, edge cases, and critical pressure points
+- Perplexity: Research, fact-checking, and external reality
 
-CONSTITUTIONAL RESPONSE REQUIREMENTS:
-- Lead with your lane perspective
-- Classify key statements as VERIFIED/OPINION/UNKNOWN
-- Flag any assumptions clearly
-- Preserve nuance - do not flatten complexity
+Respond naturally in your own voice and style. Be conversational, helpful, and authentic - just like you normally would. Share your genuine perspective on the request.
+
+No need for formal headers or structured formats. Just talk naturally about what you think.
 """
 
     session_responses = {}
@@ -1628,16 +1625,18 @@ CONSTITUTIONAL RESPONSE REQUIREMENTS:
                 print(f"WARNING WARNING: Provider {provider} not in role assignments")
                 role_assignments[provider] = "General Analysis"
 
-            # Build constitutional prompt with provider assignment verification
+            # Build natural conversation prompt
+            role = role_assignments.get(provider, "General Analysis")
             provider_prompt = f"""
-CONSTITUTIONAL GOVERNANCE SESSION - SAFE MODE
+{natural_prompt_template}
 
-ROLE ASSIGNMENT: {role_assignments.get(provider, "General Analysis")}
-PROVIDER VERIFICATION: {provider}
+Your role in this council: {role}
 
-{constitutional_prompt_template}
+Here's the user's request:
 
 {system_packet.to_prompt(provider)}
+
+Please respond naturally with your thoughts and perspective.
 """
 
             # Constitutional compliance: Each seat responds independently
@@ -1733,36 +1732,26 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str]):
 
     for provider in providers:
         try:
-            # Constitutional cross-review prompt with actual Round 1 outputs
+            # Natural cross-review prompt with Round 1 outputs
+            role = role_assignments.get(provider, "General Analysis")
             cross_review_prompt = f"""
-CONSTITUTIONAL GOVERNANCE SESSION - FULL MODE ROUND 2
+Round 2: Now that everyone has shared their initial thoughts, let's build on what was said.
 
-ROLE ASSIGNMENT: {role_assignments.get(provider, "General Analysis")}
+Your role: {role}
 
-CONSTITUTIONAL CROSS-REVIEW REQUIREMENTS:
-- Review actual Round 1 outputs from other council members
-- Challenge, refine, agree, disagree, or flag unknowns
-- Preserve disagreement - do not create fake consensus
-- Flag where claims lack verification
-- Stay in your lane while reviewing others
+Here's what the other council members said in Round 1:
 
-ROUND 1 COUNCIL OUTPUTS:
 {json.dumps(getattr(round1_session, 'responses', {}) if round1_session else {}, indent=2)}
 
-ORIGINAL SESSION CONTEXT:
+Original request:
 {system_packet.to_prompt(provider)}
 
-CROSS-REVIEW INSTRUCTIONS:
-1. Identify where you agree/disagree with other seats
-2. Flag any claims that need verification
-3. Challenge risky or unsupported assertions
-4. Preserve important disagreements
-5. Flag areas needing broader council review
+Now, respond naturally with:
+- What you agree or disagree with from the other responses
+- Any concerns or additional thoughts you have
+- Whether you think anything needs clarification or more discussion
 
-CONSTITUTIONAL RESPONSE REQUIREMENTS:
-- Lead with agreements/challenges to other seats
-- Classify cross-review findings as VERIFIED/OPINION/UNKNOWN
-- Preserve voice integrity - speak only for yourself
+Just speak naturally - no need for formal structure. What's your take after hearing from everyone?
 - Flag significant conflicts for escalation
 """
 
