@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.3"  # Enhanced council with automatic codebase context
+APP_VERSION = "v1.4.4"  # Constitutional compliance fixes - proper layer separation
 
 app = FastAPI(
     title="House of AI Council",
