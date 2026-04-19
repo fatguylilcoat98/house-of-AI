@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.3.4"  # Council execution display fix
+APP_VERSION = "v1.4.0"  # Risk-adaptive governance system
 
 app = FastAPI(
     title="House of AI Council",
@@ -117,6 +117,147 @@ CONSTITUTIONAL_REPO_LIMITS = {
     "truncation_marker": "[CONSTITUTIONAL LIMIT: File truncated for governance compliance]",
     "constitutional_compliance": True
 }
+
+# ---------------------------------------------------------------------------
+# Risk-Adaptive Governance System
+# ---------------------------------------------------------------------------
+
+class RiskLevel:
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+# Risk assessment patterns for adaptive strictness
+RISK_PATTERNS = {
+    RiskLevel.HIGH: [
+        # Production and deployment
+        "deploy", "production", "prod", "live", "release", "publish",
+        "git push", "merge to main", "merge to master", "main branch",
+
+        # Irreversible actions
+        "delete", "remove", "drop", "truncate", "destroy", "rm -rf",
+        "kill -9", "force", "overwrite", "reset --hard",
+
+        # Financial and business critical
+        "payment", "billing", "charge", "money", "cost", "price",
+        "database", "backup", "migration", "schema change",
+
+        # Security and access
+        "password", "key", "token", "secret", "credential", "auth",
+        "permission", "role", "admin", "root", "sudo",
+
+        # External integrations
+        "API key", "webhook", "external", "third-party", "integration"
+    ],
+
+    RiskLevel.MEDIUM: [
+        # Design and architecture decisions
+        "architecture", "design", "framework", "library", "dependency",
+        "config", "configuration", "setting", "parameter",
+
+        # Code structure changes
+        "refactor", "restructure", "reorganize", "rename", "move",
+        "class", "function", "method", "interface", "API",
+
+        # Planning and decisions
+        "decide", "choose", "select", "recommend", "suggest",
+        "strategy", "approach", "plan", "roadmap",
+
+        # Testing and validation
+        "test", "validation", "verify", "check", "review"
+    ],
+
+    RiskLevel.LOW: [
+        # Exploration and learning
+        "explore", "investigate", "research", "understand", "learn",
+        "explain", "describe", "show", "example", "demo",
+
+        # Documentation and communication
+        "document", "comment", "readme", "help", "guide",
+        "hello", "hi", "thanks", "question",
+
+        # Analysis and review
+        "analyze", "review", "look at", "examine", "study",
+        "what", "how", "why", "when", "where"
+    ]
+}
+
+def assess_risk_level(user_input: str) -> str:
+    """
+    Assess risk level of user input for adaptive governance.
+
+    Avoids over-triggering by only flagging true HIGH risk scenarios.
+    RED FLAG and strict enforcement reserved for HIGH risk only.
+
+    Returns:
+        RiskLevel.LOW: exploration, minor changes - minimal enforcement
+        RiskLevel.MEDIUM: design decisions - moderate challenge, no blocking
+        RiskLevel.HIGH: production, irreversible - full enforcement with RED FLAG
+    """
+    user_input_lower = user_input.lower()
+
+    # Check for HIGH risk patterns first (most restrictive)
+    for pattern in RISK_PATTERNS[RiskLevel.HIGH]:
+        if pattern.lower() in user_input_lower:
+            return RiskLevel.HIGH
+
+    # Check for MEDIUM risk patterns
+    for pattern in RISK_PATTERNS[RiskLevel.MEDIUM]:
+        if pattern.lower() in user_input_lower:
+            return RiskLevel.MEDIUM
+
+    # Default to LOW risk for exploration and learning
+    return RiskLevel.LOW
+
+def get_governance_config(risk_level: str) -> Dict[str, Any]:
+    """
+    Get governance configuration based on risk level.
+
+    Adaptive strictness prevents over-enforcement:
+    - LOW: minimal challenge, no RED FLAG, allow flow
+    - MEDIUM: moderate challenge, flag uncertainty, no blocking behavior
+    - HIGH: full enforcement with RED FLAG, Two-seat rule, verification required
+    """
+    if risk_level == RiskLevel.HIGH:
+        return {
+            "red_flag_enabled": True,
+            "two_seat_rule": True,
+            "verification_required": True,
+            "challenge_level": "full",
+            "constitutional_enforcement": "strict",
+            "blocking_behavior": True,
+            "challenge_threshold": 0.3,  # Lower threshold = more challenging
+            "require_unanimous": True,
+            "risk_level": RiskLevel.HIGH
+        }
+    elif risk_level == RiskLevel.MEDIUM:
+        return {
+            "red_flag_enabled": False,  # No RED FLAG for medium risk
+            "two_seat_rule": False,
+            "verification_required": False,
+            "challenge_level": "moderate",
+            "constitutional_enforcement": "standard",
+            "blocking_behavior": False,  # No blocking for medium risk
+            "challenge_threshold": 0.6,  # Moderate threshold
+            "require_unanimous": False,
+            "risk_level": RiskLevel.MEDIUM
+        }
+    else:  # LOW risk
+        return {
+            "red_flag_enabled": False,  # No RED FLAG for low risk
+            "two_seat_rule": False,
+            "verification_required": False,
+            "challenge_level": "minimal",
+            "constitutional_enforcement": "permissive",
+            "blocking_behavior": False,  # Allow flow for low risk
+            "challenge_threshold": 0.8,  # High threshold = minimal challenging
+            "require_unanimous": False,
+            "risk_level": RiskLevel.LOW
+        }
+
+# ---------------------------------------------------------------------------
+# End Risk-Adaptive Governance System
+# ---------------------------------------------------------------------------
 
 # Initialize provider status (will be populated when first accessed)
 # Note: ProviderStatus objects created lazily to avoid import order issues
@@ -336,6 +477,25 @@ async def execute_council_session(request: CouncilRequest):
         if repo_context:
             system_packet.add_repo_context(repo_context)
 
+        # RISK-ADAPTIVE GOVERNANCE: Assess risk level for adaptive strictness
+        risk_level = assess_risk_level(request.user_input)
+        governance_config = get_governance_config(risk_level)
+
+        # Log governance assessment
+        print(f"GOVERNANCE: Risk level assessed as {risk_level}")
+        print(f"GOVERNANCE: Enforcement level: {governance_config['constitutional_enforcement']}")
+        print(f"GOVERNANCE: RED FLAG enabled: {governance_config['red_flag_enabled']}")
+        print(f"GOVERNANCE: Two-seat rule: {governance_config['two_seat_rule']}")
+
+        # Store governance config for use in this session (will be added to responses)
+        session_governance = {
+            "risk_level": risk_level,
+            "governance_config": governance_config,
+            "adaptive_strictness": True,
+            "red_flag_threshold": governance_config["red_flag_enabled"],
+            "enforcement_level": governance_config["constitutional_enforcement"]
+        }
+
         # FIX FIX #3: PROVIDER STATUS CHECK
         active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok", "perplexity"]
         await update_provider_status(active_providers)
@@ -359,7 +519,11 @@ async def execute_council_session(request: CouncilRequest):
                 "rounds": 1,
                 "cross_review": False,
                 "synthesis": False,
-                "constitutional_compliance": True
+                "constitutional_compliance": True,
+                "risk_level": risk_level,
+                "governance_enforcement": governance_config["constitutional_enforcement"],
+                "red_flag_enabled": governance_config["red_flag_enabled"],
+                "adaptive_strictness": True
             }
         else:
             # FULL MODE: 2 rounds with cross-review
@@ -371,7 +535,11 @@ async def execute_council_session(request: CouncilRequest):
                 "rounds": 2,
                 "cross_review": True,
                 "synthesis": True,
-                "constitutional_compliance": True
+                "constitutional_compliance": True,
+                "risk_level": risk_level,
+                "governance_enforcement": governance_config["constitutional_enforcement"],
+                "red_flag_enabled": governance_config["red_flag_enabled"],
+                "adaptive_strictness": True
             }
 
         # FIX FIX #4: NO FAKE SYNTHESIS - Track agreements/conflicts
@@ -743,9 +911,24 @@ def build_repo_content_packet(share: RepoShareSession) -> Dict[str, Any]:
 
 # ALERT CONSTITUTIONAL PATCH ENFORCEMENT FUNCTIONS
 
-def issue_red_flag(seat: str, objection: str, reasoning: str, risk_level: str = "high") -> str:
-    """PATCH 1: RED FLAG PROTOCOL - Issue structured escalation"""
+def issue_red_flag(seat: str, objection: str, reasoning: str, session_risk_level: str = "high",
+                   governance_config: Dict[str, Any] = None) -> str:
+    """
+    PATCH 1: RED FLAG PROTOCOL - Risk-adaptive escalation
 
+    RED FLAGS only trigger on HIGH risk scenarios to avoid over-enforcement.
+    Maintains safety guarantees: HIGH risk scenarios must never pass silently.
+    """
+
+    # Risk-adaptive governance: Only issue RED FLAG for HIGH risk scenarios
+    if governance_config and not governance_config.get("red_flag_enabled", False):
+        # For LOW/MEDIUM risk: Log concern but don't block
+        print(f"GOVERNANCE: {seat} flagged concern: {objection}")
+        print(f"GOVERNANCE: Risk level {session_risk_level} - No RED FLAG required")
+        print(f"GOVERNANCE: Allowing flow for {session_risk_level} risk scenario")
+        return None  # No RED FLAG issued
+
+    # HIGH risk scenario: Full RED FLAG enforcement
     flag_id = str(uuid.uuid4())
 
     red_flag = RedFlagAlert(
@@ -753,17 +936,17 @@ def issue_red_flag(seat: str, objection: str, reasoning: str, risk_level: str = 
         issuing_seat=seat,
         objection=objection,
         reasoning=reasoning,
-        risk_level=risk_level,
+        risk_level=session_risk_level,
         timestamp=datetime.now()
     )
 
     constitutional_patches["red_flags"][flag_id] = red_flag
 
-    # Log the red flag for session tracking
+    # Log the red flag for session tracking (HIGH risk only)
     print(f"ALERT RED FLAG ISSUED by {seat}: {objection}")
     print(f"ALERT REASONING: {reasoning}")
-    print(f"ALERT RISK LEVEL: {risk_level}")
-    print(f"ALERT REQUIRES EXPLICIT USER ACKNOWLEDGMENT")
+    print(f"ALERT RISK LEVEL: {session_risk_level}")
+    print(f"ALERT HIGH RISK SCENARIO - REQUIRES EXPLICIT USER ACKNOWLEDGMENT")
 
     return flag_id
 
@@ -882,9 +1065,33 @@ def detect_mirror_output(output_text: str, pattern_type: str) -> Optional[str]:
     return None
 
 
-def enforce_two_seat_rule(action_type: str, reviewing_seats: List[str], exclude_self: str = None) -> Dict[str, Any]:
-    """PATCH 5: TWO-SEAT RULE - Enforce multi-seat validation"""
+def enforce_two_seat_rule(action_type: str, reviewing_seats: List[str], exclude_self: str = None,
+                         governance_config: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    PATCH 5: TWO-SEAT RULE - Risk-adaptive multi-seat validation
 
+    Two-seat rule only enforced for HIGH risk scenarios to avoid over-enforcement.
+    LOW/MEDIUM risk scenarios allow flow without blocking behavior.
+    """
+
+    # Risk-adaptive governance: Only enforce two-seat rule for HIGH risk scenarios
+    if governance_config and not governance_config.get("two_seat_rule", False):
+        risk_level = governance_config.get("risk_level", "LOW")
+        print(f"GOVERNANCE: Two-seat rule waived for {risk_level} risk scenario")
+        print(f"GOVERNANCE: {action_type} - Allowing flow")
+
+        # Return approved result for LOW/MEDIUM risk
+        return {
+            "validation_id": None,
+            "approved": True,
+            "approvals": len(reviewing_seats),
+            "required": 0,  # No requirement for LOW/MEDIUM risk
+            "blocked": False,
+            "risk_adaptive": True,
+            "risk_level": risk_level
+        }
+
+    # HIGH risk scenario: Full two-seat rule enforcement
     validation_id = str(uuid.uuid4())
 
     # Exclude self-review if specified
@@ -906,13 +1113,15 @@ def enforce_two_seat_rule(action_type: str, reviewing_seats: List[str], exclude_
         "approved": validation.approved,
         "approvals": len(valid_reviewers),
         "required": 2,
-        "blocked": not validation.approved
+        "blocked": not validation.approved,
+        "risk_adaptive": True,
+        "risk_level": "HIGH"
     }
 
     if not validation.approved:
-        print(f"BLOCKED TWO-SEAT RULE: {action_type} requires 2 independent reviews")
+        print(f"BLOCKED TWO-SEAT RULE: HIGH RISK {action_type} requires 2 independent reviews")
         print(f"BLOCKED CURRENT APPROVALS: {len(valid_reviewers)}/2")
-        print(f"BLOCKED BLOCKED until requirement satisfied")
+        print(f"BLOCKED HIGH RISK SCENARIO - BLOCKED until requirement satisfied")
 
     return result
 
@@ -2651,8 +2860,29 @@ async def get_version():
         "title": "House of AI Council",
         "api_integration": "REAL",
         "council_execution": "REAL",
+        "adaptive_governance": "ENABLED",
         "timestamp": datetime.now().isoformat(),
         "deployment_status": "live"
+    }
+
+@app.post("/api/governance/assess-risk")
+async def assess_risk_endpoint(request: dict):
+    """Test endpoint for risk assessment system"""
+    user_input = request.get("user_input", "")
+
+    risk_level = assess_risk_level(user_input)
+    governance_config = get_governance_config(risk_level)
+
+    return {
+        "user_input": user_input,
+        "risk_level": risk_level,
+        "governance_config": governance_config,
+        "enforcement_summary": {
+            "red_flag_enabled": governance_config["red_flag_enabled"],
+            "two_seat_rule": governance_config["two_seat_rule"],
+            "blocking_behavior": governance_config["blocking_behavior"],
+            "challenge_level": governance_config["challenge_level"]
+        }
     }
 
 @app.get("/api/health")
