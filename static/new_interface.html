@@ -598,19 +598,6 @@
                         </div>
                     </div>
 
-                    <div class="provider-card" data-provider="perplexity">
-                        <div class="provider-info">
-                            <div class="provider-avatar">P</div>
-                            <div class="provider-details">
-                                <h4>Perplexity</h4>
-                                <p>Research & Analysis</p>
-                            </div>
-                        </div>
-                        <div class="provider-status">
-                            <div class="status-dot status-offline"></div>
-                            <span>Checking...</span>
-                        </div>
-                    </div>
                 </div>
 
                 <button id="testAllBtn" class="btn-test" style="width: 100%; margin-top: 16px;">
@@ -741,7 +728,7 @@
                     body: JSON.stringify({
                         user_input: userInput,
                         execution_mode: selectedMode,
-                        selected_providers: ["claude", "gpt4", "gemini", "grok", "perplexity"]
+                        selected_providers: ["claude", "gpt4", "gemini", "grok"]
                     })
                 });
 
