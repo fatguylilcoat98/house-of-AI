@@ -595,6 +595,15 @@
                 <!-- 🏛️ CONSTITUTIONAL PROVIDER HEALTH PANEL -->
                 <div class="section-title" style="margin-top: 30px;">🤖 Council Members & Provider Health</div>
 
+                <!-- Constitutional Layer Info -->
+                <div style="margin-bottom: 15px; padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #007bff; font-size: 13px;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">🏛️ House Council (Inside the House)</div>
+                    <div>Claude • GPT-4 • Gemini • Grok</div>
+                    <div style="margin-top: 8px; color: #666;">
+                        <strong>Note:</strong> Perplexity now operates in the Support Layer for retrieval/evidence, not as a House council member.
+                    </div>
+                </div>
+
                 <!-- Constitutional Provider Test Controls -->
                 <div class="provider-test-controls" style="margin-bottom: 15px; padding: 12px; background: #e8f4fd; border-radius: 6px; border: 1px solid #007bff;">
                     <div style="font-weight: 600; margin-bottom: 8px;">🏛️ Constitutional Health Tests</div>
@@ -610,9 +619,6 @@
                         </button>
                         <button onclick="testProvider('grok')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
                             Test Grok
-                        </button>
-                        <button onclick="testProvider('perplexity')" class="test-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
-                            Test Perplexity
                         </button>
                         <button onclick="testAllProviders()" class="test-btn" style="background: #007bff; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">
                             🏛️ Test All
@@ -924,8 +930,7 @@
                 'claude': 'Architecture & Systems Design',
                 'gpt4': 'Structure & Implementation',
                 'gemini': 'User Experience & Interface',
-                'grok': 'Stress Testing & Edge Cases',
-                'perplexity': 'Adversarial Analysis & Research'
+                'grok': 'Stress Testing & Edge Cases'
             };
 
             container.innerHTML = '';
@@ -936,8 +941,7 @@
                     'claude': { name: 'claude', status: 'unknown', online: false, latency: null, error: null },
                     'gpt4': { name: 'gpt4', status: 'unknown', online: false, latency: null, error: null },
                     'gemini': { name: 'gemini', status: 'unknown', online: false, latency: null, error: null },
-                    'grok': { name: 'grok', status: 'unknown', online: false, latency: null, error: null },
-                    'perplexity': { name: 'perplexity', status: 'unknown', online: false, latency: null, error: null }
+                    'grok': { name: 'grok', status: 'unknown', online: false, latency: null, error: null }
                 };
             }
 
@@ -975,8 +979,8 @@
         }
 
         function getSelectedProviders() {
-            // For now, return all providers. Could be enhanced with checkboxes later.
-            return ['claude', 'gpt4', 'gemini', 'grok', 'perplexity'];
+            // For now, return all House council providers. Could be enhanced with checkboxes later.
+            return ['claude', 'gpt4', 'gemini', 'grok'];
         }
 
         function updateSessionStats(stats) {
@@ -1412,13 +1416,12 @@
             // Round 1 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 1: Independent Analysis</div>';
 
-            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok', 'perplexity'];
+            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok'];
             const aiNames = {
                 'claude': 'Claude (Architecture)',
                 'gpt4': 'GPT-4 (Structure)',
                 'gemini': 'Gemini (UX)',
-                'grok': 'Grok (Stress Testing)',
-                'perplexity': 'Perplexity (Adversarial)'
+                'grok': 'Grok (Stress Testing)'
             };
 
             // DEFENSIVE NULL CHECKING for session and round1_responses
