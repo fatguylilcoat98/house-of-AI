@@ -674,10 +674,10 @@
                 <div class="section-title">📋 Council Analysis</div>
 
                 <div class="response-tabs">
-                    <div class="tab active" onclick="showTab('responses')">Council Responses</div>
-                    <div class="tab" onclick="showTab('synthesis')">Synthesis & Analysis</div>
-                    <div class="tab" onclick="showTab('handoff')">Export & Handoff</div>
-                    <div class="tab" onclick="showTab('builders')">Builder Instances</div>
+                    <div class="tab active" onclick="showTab('responses', this)">Council Responses</div>
+                    <div class="tab" onclick="showTab('synthesis', this)">Synthesis & Analysis</div>
+                    <div class="tab" onclick="showTab('handoff', this)">Export & Handoff</div>
+                    <div class="tab" onclick="showTab('builders', this)">Builder Instances</div>
                 </div>
 
                 <div id="responses" class="response-content active">
@@ -783,10 +783,29 @@
             }
         }
 
+        // Toggle response expand/collapse
+        function toggleResponse(responseId) {
+            const preview = document.getElementById(`${responseId}-preview`);
+            const full = document.getElementById(`${responseId}-full`);
+            const btn = document.getElementById(`${responseId}-btn`);
+
+            if (full.style.display === 'none') {
+                // Show full response
+                preview.style.display = 'none';
+                full.style.display = 'block';
+                btn.textContent = 'Show Less';
+            } else {
+                // Show truncated response
+                preview.style.display = 'block';
+                full.style.display = 'none';
+                btn.textContent = 'Show More';
+            }
+        }
+
         // Load version on page load
         document.addEventListener('DOMContentLoaded', loadVersion);
 
-        function showTab(tabName) {
+        function showTab(tabName, clickedTab) {
             // Hide all content
             document.querySelectorAll('.response-content').forEach(content => {
                 content.classList.remove('active');
@@ -797,9 +816,13 @@
                 tab.classList.remove('active');
             });
 
-            // Show selected content and tab
+            // Show selected content
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+
+            // Add active class to the clicked tab
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            }
         }
 
         async function executeCouncil() {
@@ -846,6 +869,8 @@
             `;
 
             try {
+                console.log(`🔥 Executing council in ${executionMode} mode with providers:`, getSelectedProviders());
+
                 const response = await fetch('/api/council/execute', {
                     method: 'POST',
                     headers: {
@@ -860,6 +885,7 @@
                 });
 
                 const data = await response.json();
+                console.log('🔥 Council execution response:', data);
 
                 if (data.status === 'success') {
                     // 🔴 Show cross-review phase for full mode
@@ -898,12 +924,23 @@
                 }
 
             } catch (error) {
+                console.error('🔥 Council execution error details:', error);
+                console.error('🔥 Execution mode:', executionMode);
+                console.error('🔥 Selected providers:', getSelectedProviders());
+
                 roundStatus.textContent = '❌ Council session failed';
                 roundProgress.style.display = 'none';
                 output.innerHTML = `
                     <div class="ai-response error">
                         <div class="ai-name">⚠️ Error</div>
-                        <div class="ai-text">Council execution failed: ${error.message}</div>
+                        <div class="ai-text">
+                            Council execution failed: ${error.message}<br>
+                            <small style="color: #666;">
+                                Mode: ${executionMode} |
+                                Providers: ${getSelectedProviders().join(', ')} |
+                                Check browser console for full details
+                            </small>
+                        </div>
                     </div>
                 `;
             } finally {
@@ -1430,10 +1467,23 @@
                     if (session.round1_responses[ai]) {
                         const response = session.round1_responses[ai];
                         const errorClass = response.error ? ' error' : '';
+                        const fullText = response.error || response.response;
+                        const truncatedText = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
+                        const responseId = `response-${ai}-round1`;
+
                         html += `
                             <div class="ai-response${errorClass}">
                                 <div class="ai-name">${aiNames[ai] || ai}</div>
-                                <div class="ai-text">${response.error || response.response}</div>
+                                <div class="ai-text">
+                                    <div id="${responseId}-preview">${truncatedText}</div>
+                                    <div id="${responseId}-full" style="display: none;">${fullText}</div>
+                                    ${fullText.length > 200 ? `
+                                        <button class="expand-btn" onclick="toggleResponse('${responseId}')" id="${responseId}-btn"
+                                                style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 8px;">
+                                            Show More
+                                        </button>
+                                    ` : ''}
+                                </div>
                             </div>
                         `;
                     }
@@ -1453,10 +1503,23 @@
                     if (session.round2_responses[ai]) {
                         const response = session.round2_responses[ai];
                         const errorClass = response.error ? ' error' : '';
+                        const fullText = response.error || response.response;
+                        const truncatedText = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
+                        const responseId = `response-${ai}-round2`;
+
                         html += `
                             <div class="ai-response${errorClass}">
                                 <div class="ai-name">${aiNames[ai] || ai} (Cross-Review)</div>
-                                <div class="ai-text">${response.error || response.response}</div>
+                                <div class="ai-text">
+                                    <div id="${responseId}-preview">${truncatedText}</div>
+                                    <div id="${responseId}-full" style="display: none;">${fullText}</div>
+                                    ${fullText.length > 200 ? `
+                                        <button class="expand-btn" onclick="toggleResponse('${responseId}')" id="${responseId}-btn"
+                                                style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 8px;">
+                                            Show More
+                                        </button>
+                                    ` : ''}
+                                </div>
                             </div>
                         `;
                     }
