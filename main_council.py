@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.11"  # Fixed response display - corrected frontend data structure handling
+APP_VERSION = "v1.4.12"  # CRITICAL: Fixed null session - return actual session data
 
 app = FastAPI(
     title="House of AI Council",
@@ -612,7 +612,7 @@ async def execute_council_session(request: CouncilRequest):
             "status": "success",
             "session_id": session_id,
             "round_info": round_info,
-            "session": execution_engine.export_session(session_id),
+            "session": session.__dict__ if session else None,
             "synthesis": {
                 "agreements": synthesis.get("agreements", []),
                 "conflicts": synthesis.get("conflicts", []),
