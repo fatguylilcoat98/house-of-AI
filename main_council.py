@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.8"  # Added full mode debug logging
+APP_VERSION = "v1.4.9"  # Fixed GPT-4 crash - added error handling
 
 app = FastAPI(
     title="House of AI Council",
@@ -1396,22 +1396,26 @@ async def _real_call_gpt4(prompt: str, api_key: str, max_tokens: int = 100) -> s
     """Make REAL API call to GPT-4"""
     import httpx
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "gpt-4",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "gpt-4",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": max_tokens
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"GPT-4 API ERROR: {str(e)}")
+        raise Exception(f"GPT-4 API call failed: {str(e)}")
 
 
 async def _real_call_gemini(prompt: str, api_key: str, max_tokens: int = 100) -> str:
