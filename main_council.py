@@ -610,7 +610,15 @@ async def execute_council_session(request: CouncilRequest):
             "status": "success",
             "session_id": session_id,
             "round_info": round_info,
-            "session": execution_engine.export_session(session_id),
+            "session": {
+                "session_id": session.session_id,
+                "mode": session.mode,
+                "responses": session.responses,
+                "round1_responses": session.round1_responses,
+                "constitutional_compliance": session.constitutional_compliance,
+                "timestamp": session.timestamp,
+                "total_processing_time_ms": session.total_processing_time_ms
+            },
             "synthesis": {
                 "agreements": synthesis.get("agreements", []),
                 "conflicts": synthesis.get("conflicts", []),
@@ -2039,16 +2047,18 @@ async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, 
 def create_constitutional_session_object(responses: Dict[str, Any], mode: str, system_packet, round1_responses=None):
     """Create constitutional session object"""
 
-    session_obj = type('ConstitutionalSession', (), {
-        'session_id': str(uuid.uuid4()),
-        'mode': mode,
-        'responses': responses,
-        'round1_responses': round1_responses,
-        'system_packet': system_packet,
-        'constitutional_compliance': True,
-        'timestamp': datetime.now(),
-        'total_processing_time_ms': 1000  # Mock timing
-    })()
+    class ConstitutionalSession:
+        pass
+
+    session_obj = ConstitutionalSession()
+    session_obj.session_id = str(uuid.uuid4())
+    session_obj.mode = mode
+    session_obj.responses = responses
+    session_obj.round1_responses = round1_responses
+    session_obj.system_packet = system_packet
+    session_obj.constitutional_compliance = True
+    session_obj.timestamp = datetime.now().isoformat()
+    session_obj.total_processing_time_ms = 1000
 
     return session_obj
 
