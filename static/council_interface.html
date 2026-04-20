@@ -1453,12 +1453,13 @@
             // Round 1 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 1: Independent Analysis</div>';
 
-            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok'];
+            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok', 'perplexity'];
             const aiNames = {
                 'claude': 'Claude (Architecture)',
                 'gpt4': 'GPT-4 (Structure)',
                 'gemini': 'Gemini (UX)',
-                'grok': 'Grok (Stress Testing)'
+                'grok': 'Grok (Stress Testing)',
+                'perplexity': 'Perplexity (Adversarial)'
             };
 
             // DEFENSIVE NULL CHECKING for session and round1_responses
