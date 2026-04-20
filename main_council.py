@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.15"  # FIXED: Vale's bugs - synthesis crash + empty session object
+APP_VERSION = "v1.4.16"  # FINAL FIX: Direct session serialization + proper timestamp
 
 app = FastAPI(
     title="House of AI Council",
@@ -621,7 +621,15 @@ async def execute_council_session(request: CouncilRequest):
             "status": "success",
             "session_id": session_id,
             "round_info": round_info,
-            "session": session.__dict__ if session else None,
+            "session": {
+                "session_id": session.session_id,
+                "mode": session.mode,
+                "responses": session.responses,
+                "round1_responses": session.round1_responses,
+                "constitutional_compliance": session.constitutional_compliance,
+                "timestamp": session.timestamp,
+                "total_processing_time_ms": session.total_processing_time_ms
+            } if session else None,
             "synthesis": {
                 "agreements": synthesis.get("agreements", []),
                 "conflicts": synthesis.get("conflicts", []),
@@ -2073,7 +2081,7 @@ def create_constitutional_session_object(responses: Dict[str, Any], mode: str, s
     session_obj.round1_responses = round1_responses
     session_obj.system_packet = system_packet
     session_obj.constitutional_compliance = True
-    session_obj.timestamp = datetime.now()
+    session_obj.timestamp = datetime.now().isoformat()
     session_obj.total_processing_time_ms = 1000  # Mock timing
 
     return session_obj
