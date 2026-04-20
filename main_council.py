@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.5"  # UI fixes + full mode repair
+APP_VERSION = "v1.4.6"  # Restored Perplexity adversarial layer
 
 app = FastAPI(
     title="House of AI Council",
@@ -1850,7 +1850,8 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str], 
         "claude": "Architecture / Systems / Integrity",
         "gpt4": "Structure / Guardrails / Synthesis",
         "gemini": "UX / Human Clarity / Flow",
-        "grok": "Stress Test / Edge Cases / Pressure"
+        "grok": "Stress Test / Edge Cases / Pressure",
+        "perplexity": "Adversarial Analysis / Challenge Assumptions"
     }
 
     round2_responses = {}
