@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.12"  # CRITICAL: Fixed null session - return actual session data
+APP_VERSION = "v1.4.13"  # DIAGNOSTIC: Added session serialization debugging
 
 app = FastAPI(
     title="House of AI Council",
@@ -607,6 +607,15 @@ async def execute_council_session(request: CouncilRequest):
             "timestamp": start_time.isoformat(),
             "completed_at": end_time.isoformat()
         }
+
+        # DIAGNOSTIC: Check session object before serialization
+        import json
+        print("SESSION TYPE:", type(session))
+        print("SESSION DICT:", session.__dict__ if hasattr(session, '__dict__') else "NO __dict__")
+        try:
+            print("SESSION JSON TEST:", json.dumps(session.__dict__))
+        except Exception as e:
+            print("JSON SERIALIZATION FAILED:", str(e))
 
         return {
             "status": "success",
