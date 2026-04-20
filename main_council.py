@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.13"  # DIAGNOSTIC: Added session serialization debugging
+APP_VERSION = "v1.4.14"  # TEST: Temporarily removed GPT-4 to isolate crash
 
 app = FastAPI(
     title="House of AI Council",
@@ -512,7 +512,7 @@ async def execute_council_session(request: CouncilRequest):
         }
 
         # FIX FIX #3: PROVIDER STATUS CHECK
-        active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok"]
+        active_providers = request.selected_providers or ["claude", "gemini", "grok"]  # TEMP: Remove GPT-4 to test crash
         await update_provider_status(active_providers)
 
         # Filter to only working providers
