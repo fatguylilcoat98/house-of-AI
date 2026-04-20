@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.10"  # Fixed Perplexity health check + tab navigation
+APP_VERSION = "v1.4.11"  # Fixed response display - corrected frontend data structure handling
 
 app = FastAPI(
     title="House of AI Council",

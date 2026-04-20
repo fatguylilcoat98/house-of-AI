@@ -1468,10 +1468,15 @@
             };
 
             // DEFENSIVE NULL CHECKING for session and round1_responses
-            if (session && session.round1_responses) {
+            if (session && (session.round1_responses || session.responses)) {
+                const round1Data = session.round1_responses || session.responses;
                 aiOrder.forEach(ai => {
-                    if (session.round1_responses[ai]) {
-                        const response = session.round1_responses[ai];
+                    // Check round1_responses first, then filter from main responses
+                    const response = session.round1_responses ?
+                        session.round1_responses[ai] :
+                        (session.responses[ai] && session.responses[ai].round === 1 ? session.responses[ai] : null);
+
+                    if (response) {
                         const errorClass = response.error ? ' error' : '';
                         const fullText = response.error || response.response;
                         const truncatedText = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
@@ -1495,19 +1500,19 @@
                     }
                 });
             } else {
-                html += `<div style="color: #dc3545;">⚠️ Session data not available for Round 1 responses</div>`;
-            });
+                html += `<div style="color: #dc3545;">⚠️ No session data available for Round 1 responses</div>`;
+            }
 
             html += '</div>';
 
             // Round 2 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 2: Cross-Review</div>';
 
-            // DEFENSIVE NULL CHECKING for Round 2 responses
-            if (session && session.round2_responses) {
+            // DEFENSIVE NULL CHECKING for Round 2 responses - filter from main responses by round
+            if (session && session.responses) {
                 aiOrder.forEach(ai => {
-                    if (session.round2_responses[ai]) {
-                        const response = session.round2_responses[ai];
+                    if (session.responses[ai] && session.responses[ai].round === 2) {
+                        const response = session.responses[ai];
                         const errorClass = response.error ? ' error' : '';
                         const fullText = response.error || response.response;
                         const truncatedText = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
