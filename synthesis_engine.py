@@ -258,7 +258,9 @@ class SynthesisEngine:
             pos_providers = []
             neg_providers = []
 
-            for provider, text in responses.items():
+            for provider, response_data in responses.items():
+                # Extract text from response dict
+                text = response_data.get('response', '') if isinstance(response_data, dict) else str(response_data)
                 if pos_term.lower() in text.lower():
                     pos_providers.append(provider)
                 if neg_term.lower() in text.lower():
@@ -297,7 +299,9 @@ class SynthesisEngine:
 
         for theme, keywords in theme_keywords.items():
             participating = set()
-            for provider, text in responses.items():
+            for provider, response_data in responses.items():
+                # Extract text from response dict
+                text = response_data.get('response', '') if isinstance(response_data, dict) else str(response_data)
                 text_lower = text.lower()
                 if any(keyword in text_lower for keyword in keywords):
                     participating.add(provider)

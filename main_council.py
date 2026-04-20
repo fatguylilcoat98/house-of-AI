@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.14"  # TEST: Temporarily removed GPT-4 to isolate crash
+APP_VERSION = "v1.4.15"  # FIXED: Vale's bugs - synthesis crash + empty session object
 
 app = FastAPI(
     title="House of AI Council",
@@ -2062,16 +2062,19 @@ async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, 
 def create_constitutional_session_object(responses: Dict[str, Any], mode: str, system_packet, round1_responses=None):
     """Create constitutional session object"""
 
-    session_obj = type('ConstitutionalSession', (), {
-        'session_id': str(uuid.uuid4()),
-        'mode': mode,
-        'responses': responses,
-        'round1_responses': round1_responses,
-        'system_packet': system_packet,
-        'constitutional_compliance': True,
-        'timestamp': datetime.now(),
-        'total_processing_time_ms': 1000  # Mock timing
-    })()
+    # Create empty object and set INSTANCE attributes
+    class ConstitutionalSession:
+        pass
+
+    session_obj = ConstitutionalSession()
+    session_obj.session_id = str(uuid.uuid4())
+    session_obj.mode = mode
+    session_obj.responses = responses
+    session_obj.round1_responses = round1_responses
+    session_obj.system_packet = system_packet
+    session_obj.constitutional_compliance = True
+    session_obj.timestamp = datetime.now()
+    session_obj.total_processing_time_ms = 1000  # Mock timing
 
     return session_obj
 
