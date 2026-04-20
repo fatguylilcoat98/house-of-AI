@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.7"  # Fixed Perplexity UI rendering - now visible
+APP_VERSION = "v1.4.8"  # Added full mode debug logging
 
 app = FastAPI(
     title="House of AI Council",
@@ -543,9 +543,11 @@ async def execute_council_session(request: CouncilRequest):
             }
         else:
             # FULL MODE: 2 rounds with cross-review
+            print(f"🔄 STARTING FULL MODE with {len(working_providers)} providers: {working_providers}")
             session = await execute_constitutional_full_mode(
                 system_packet, working_providers, repo_context
             )
+            print(f"🔄 FULL MODE COMPLETED successfully")
             round_info = {
                 "mode": "FULL",
                 "rounds": 2,
@@ -1825,7 +1827,9 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str], 
     """
 
     # Round 1: Independent analysis (same as safe mode)
+    print(f"🔄 FULL MODE Round 1 starting with providers: {providers}")
     round1_session = await execute_constitutional_safe_mode(system_packet, providers, repo_context)
+    print(f"🔄 FULL MODE Round 1 completed")
 
     # CRITICAL FIX: Defensive check for Round 1 failure
     if round1_session is None or not hasattr(round1_session, 'responses'):
@@ -1855,6 +1859,7 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str], 
     }
 
     round2_responses = {}
+    print(f"🔄 FULL MODE Round 2 starting with {len(providers)} providers")
 
     for provider in providers:
         try:
