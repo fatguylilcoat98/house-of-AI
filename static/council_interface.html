@@ -823,6 +823,11 @@
             if (clickedTab) {
                 clickedTab.classList.add('active');
             }
+
+            // Auto-load builder status when builders tab is opened
+            if (tabName === 'builders') {
+                refreshBuilderStatus();
+            }
         }
 
         async function executeCouncil() {
@@ -1974,27 +1979,7 @@
             }
         }
 
-        // Auto-load builder status when builders tab is opened
-        function showTab(tabName) {
-            // Hide all content
-            document.querySelectorAll('.response-content').forEach(content => {
-                content.classList.remove('active');
-            });
-
-            // Remove active from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Show selected content and tab
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-
-            // Auto-load builder status when builders tab is opened
-            if (tabName === 'builders') {
-                refreshBuilderStatus();
-            }
-        }
+        // Auto-load builder status moved to proper showTab function
 
         loadSystemState();
     </script>

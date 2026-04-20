@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.9"  # Fixed GPT-4 crash - added error handling
+APP_VERSION = "v1.4.10"  # Fixed Perplexity health check + tab navigation
 
 app = FastAPI(
     title="House of AI Council",
@@ -1511,24 +1511,28 @@ async def _real_call_perplexity(prompt: str, api_key: str, max_tokens: int = 100
     """Make REAL API call to Perplexity with CORRECT configuration"""
     import httpx
 
-    # Use correct Perplexity API configuration
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.perplexity.ai/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "sonar",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens,
-                "temperature": 0.1
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    try:
+        # Use correct Perplexity API configuration
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "sonar",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": max_tokens,
+                    "temperature": 0.1
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"Perplexity API ERROR: {str(e)}")
+        raise Exception(f"Perplexity API call failed: {str(e)}")
 
 
 async def constitutional_provider_test(provider: str) -> Dict[str, Any]:
