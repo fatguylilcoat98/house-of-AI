@@ -614,7 +614,8 @@ async def execute_council_session(request: CouncilRequest):
                 "session_id": session.session_id,
                 "mode": session.mode,
                 "responses": session.responses,
-                "round1_responses": session.round1_responses,
+                "round1_responses": session.round1_responses if session.round1_responses else session.responses,
+                "round2_responses": session.round2_responses if hasattr(session, 'round2_responses') else {},
                 "constitutional_compliance": session.constitutional_compliance,
                 "timestamp": session.timestamp,
                 "total_processing_time_ms": session.total_processing_time_ms
@@ -2055,6 +2056,7 @@ def create_constitutional_session_object(responses: Dict[str, Any], mode: str, s
     session_obj.mode = mode
     session_obj.responses = responses
     session_obj.round1_responses = round1_responses
+    session_obj.round2_responses = {k: v for k, v in responses.items() if v.get("round") == 2} if responses and round1_responses else {}
     session_obj.system_packet = system_packet
     session_obj.constitutional_compliance = True
     session_obj.timestamp = datetime.now().isoformat()
