@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.17"  # Gemini full-text fix, Full-mode render fix, Perplexity wired in as adversarial seat
+APP_VERSION = "v1.4.17"  # Gemini thinkingBudget=0 + full-parts concat, Full-mode Round 2 dict fix, Perplexity adversarial seat (on top of v1.4.16)
 
 app = FastAPI(
     title="House of AI Council",
@@ -512,7 +512,7 @@ async def execute_council_session(request: CouncilRequest):
         }
 
         # FIX FIX #3: PROVIDER STATUS CHECK
-        active_providers = request.selected_providers or ["claude", "gpt4", "gemini", "grok"]
+        active_providers = request.selected_providers or ["claude", "gemini", "grok"]  # TEMP: Remove GPT-4 to test crash
         await update_provider_status(active_providers)
 
         # Filter to only working providers
@@ -543,9 +543,11 @@ async def execute_council_session(request: CouncilRequest):
             }
         else:
             # FULL MODE: 2 rounds with cross-review
+            print(f"🔄 STARTING FULL MODE with {len(working_providers)} providers: {working_providers}")
             session = await execute_constitutional_full_mode(
                 system_packet, working_providers, repo_context
             )
+            print(f"🔄 FULL MODE COMPLETED successfully")
             round_info = {
                 "mode": "FULL",
                 "rounds": 2,
@@ -606,6 +608,15 @@ async def execute_council_session(request: CouncilRequest):
             "completed_at": end_time.isoformat()
         }
 
+        # DIAGNOSTIC: Check session object before serialization
+        import json
+        print("SESSION TYPE:", type(session))
+        print("SESSION DICT:", session.__dict__ if hasattr(session, '__dict__') else "NO __dict__")
+        try:
+            print("SESSION JSON TEST:", json.dumps(session.__dict__))
+        except Exception as e:
+            print("JSON SERIALIZATION FAILED:", str(e))
+
         return {
             "status": "success",
             "session_id": session_id,
@@ -619,7 +630,7 @@ async def execute_council_session(request: CouncilRequest):
                 "constitutional_compliance": session.constitutional_compliance,
                 "timestamp": session.timestamp,
                 "total_processing_time_ms": session.total_processing_time_ms
-            },
+            } if session else None,
             "synthesis": {
                 "agreements": synthesis.get("agreements", []),
                 "conflicts": synthesis.get("conflicts", []),
@@ -1403,22 +1414,26 @@ async def _real_call_gpt4(prompt: str, api_key: str, max_tokens: int = 100) -> s
     """Make REAL API call to GPT-4"""
     import httpx
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "gpt-4",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "gpt-4",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": max_tokens
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"GPT-4 API ERROR: {str(e)}")
+        raise Exception(f"GPT-4 API call failed: {str(e)}")
 
 
 async def _real_call_gemini(prompt: str, api_key: str, max_tokens: int = 100) -> str:
@@ -1526,24 +1541,28 @@ async def _real_call_perplexity(prompt: str, api_key: str, max_tokens: int = 100
     """Make REAL API call to Perplexity with CORRECT configuration"""
     import httpx
 
-    # Use correct Perplexity API configuration
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.perplexity.ai/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "sonar",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens,
-                "temperature": 0.1
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    try:
+        # Use correct Perplexity API configuration
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "sonar",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": max_tokens,
+                    "temperature": 0.1
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"Perplexity API ERROR: {str(e)}")
+        raise Exception(f"Perplexity API call failed: {str(e)}")
 
 
 async def constitutional_provider_test(provider: str) -> Dict[str, Any]:
@@ -1706,7 +1725,7 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str], 
         "gpt4": "Structure / Guardrails / Synthesis",
         "gemini": "UX / Human Clarity / Flow",
         "grok": "Stress Test / Edge Cases / Pressure",
-        "perplexity": "Adversarial Analysis / Research / Counterarguments"
+        "perplexity": "Adversarial Analysis / Challenge Assumptions"
     }
 
     # Select appropriate prompt template based on whether we have codebase context
@@ -1847,7 +1866,9 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str], 
     """
 
     # Round 1: Independent analysis (same as safe mode)
+    print(f"🔄 FULL MODE Round 1 starting with providers: {providers}")
     round1_session = await execute_constitutional_safe_mode(system_packet, providers, repo_context)
+    print(f"🔄 FULL MODE Round 1 completed")
 
     # CRITICAL FIX: Defensive check for Round 1 failure
     if round1_session is None or not hasattr(round1_session, 'responses'):
@@ -1873,10 +1894,11 @@ async def execute_constitutional_full_mode(system_packet, providers: List[str], 
         "gpt4": "Structure / Guardrails / Synthesis",
         "gemini": "UX / Human Clarity / Flow",
         "grok": "Stress Test / Edge Cases / Pressure",
-        "perplexity": "Adversarial Analysis / Research / Counterarguments"
+        "perplexity": "Adversarial Analysis / Challenge Assumptions"
     }
 
     round2_responses = {}
+    print(f"🔄 FULL MODE Round 2 starting with {len(providers)} providers")
 
     for provider in providers:
         try:
@@ -2064,6 +2086,7 @@ async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, 
 def create_constitutional_session_object(responses: Dict[str, Any], mode: str, system_packet, round1_responses=None):
     """Create constitutional session object"""
 
+    # Create empty object and set INSTANCE attributes
     class ConstitutionalSession:
         pass
 
@@ -2076,7 +2099,7 @@ def create_constitutional_session_object(responses: Dict[str, Any], mode: str, s
     session_obj.system_packet = system_packet
     session_obj.constitutional_compliance = True
     session_obj.timestamp = datetime.now().isoformat()
-    session_obj.total_processing_time_ms = 1000
+    session_obj.total_processing_time_ms = 1000  # Mock timing
 
     return session_obj
 

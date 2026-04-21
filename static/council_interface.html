@@ -823,6 +823,11 @@
             if (clickedTab) {
                 clickedTab.classList.add('active');
             }
+
+            // Auto-load builder status when builders tab is opened
+            if (tabName === 'builders') {
+                refreshBuilderStatus();
+            }
         }
 
         async function executeCouncil() {
@@ -1016,8 +1021,8 @@
         }
 
         function getSelectedProviders() {
-            // For now, return all House council providers. Could be enhanced with checkboxes later.
-            return ['claude', 'gpt4', 'gemini', 'grok'];
+            // TEMP: Remove GPT-4 to test crash - Could be enhanced with checkboxes later.
+            return ['claude', 'gemini', 'grok', 'perplexity'];
         }
 
         function updateSessionStats(stats) {
@@ -1453,19 +1458,25 @@
             // Round 1 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 1: Independent Analysis</div>';
 
-            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok'];
+            const aiOrder = ['claude', 'gpt4', 'gemini', 'grok', 'perplexity'];
             const aiNames = {
                 'claude': 'Claude (Architecture)',
                 'gpt4': 'GPT-4 (Structure)',
                 'gemini': 'Gemini (UX)',
-                'grok': 'Grok (Stress Testing)'
+                'grok': 'Grok (Stress Testing)',
+                'perplexity': 'Perplexity (Adversarial)'
             };
 
             // DEFENSIVE NULL CHECKING for session and round1_responses
-            if (session && session.round1_responses) {
+            if (session && (session.round1_responses || session.responses)) {
+                const round1Data = session.round1_responses || session.responses;
                 aiOrder.forEach(ai => {
-                    if (session.round1_responses[ai]) {
-                        const response = session.round1_responses[ai];
+                    // Check round1_responses first, then filter from main responses
+                    const response = session.round1_responses ?
+                        session.round1_responses[ai] :
+                        (session.responses[ai] && session.responses[ai].round === 1 ? session.responses[ai] : null);
+
+                    if (response) {
                         const errorClass = response.error ? ' error' : '';
                         const fullText = response.error || response.response;
                         const truncatedText = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
@@ -1489,19 +1500,19 @@
                     }
                 });
             } else {
-                html += `<div style="color: #dc3545;">⚠️ Session data not available for Round 1 responses</div>`;
-            });
+                html += `<div style="color: #dc3545;">⚠️ No session data available for Round 1 responses</div>`;
+            }
 
             html += '</div>';
 
             // Round 2 Responses
             html += '<div class="response-round"><div class="round-title">🔄 Round 2: Cross-Review</div>';
 
-            // DEFENSIVE NULL CHECKING for Round 2 responses
-            if (session && session.round2_responses) {
+            // DEFENSIVE NULL CHECKING for Round 2 responses - filter from main responses by round
+            if (session && session.responses) {
                 aiOrder.forEach(ai => {
-                    if (session.round2_responses[ai]) {
-                        const response = session.round2_responses[ai];
+                    if (session.responses[ai] && session.responses[ai].round === 2) {
+                        const response = session.responses[ai];
                         const errorClass = response.error ? ' error' : '';
                         const fullText = response.error || response.response;
                         const truncatedText = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
@@ -1973,27 +1984,7 @@
             }
         }
 
-        // Auto-load builder status when builders tab is opened
-        function showTab(tabName) {
-            // Hide all content
-            document.querySelectorAll('.response-content').forEach(content => {
-                content.classList.remove('active');
-            });
-
-            // Remove active from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Show selected content and tab
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-
-            // Auto-load builder status when builders tab is opened
-            if (tabName === 'builders') {
-                refreshBuilderStatus();
-            }
-        }
+        // Auto-load builder status moved to proper showTab function
 
         loadSystemState();
     </script>
