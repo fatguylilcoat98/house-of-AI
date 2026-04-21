@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.5"  # Gemini full-text fix, Full-mode render fix, Perplexity wired in as adversarial seat
+APP_VERSION = "v1.4.17"  # Gemini full-text fix, Full-mode render fix, Perplexity wired in as adversarial seat
 
 app = FastAPI(
     title="House of AI Council",
