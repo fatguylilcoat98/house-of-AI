@@ -45,7 +45,7 @@ HEALTH_CHECK_CACHE = {}
 CACHE_DURATION = 60  # Cache results for 60 seconds
 
 # Version tracking for deployment verification
-APP_VERSION = "v1.4.16"  # FINAL FIX: Direct session serialization + proper timestamp
+APP_VERSION = "v1.4.17"  # Gemini thinkingBudget=0 + full-parts concat, Full-mode Round 2 dict fix, Perplexity adversarial seat (on top of v1.4.16)
 
 app = FastAPI(
     title="House of AI Council",
@@ -625,7 +625,8 @@ async def execute_council_session(request: CouncilRequest):
                 "session_id": session.session_id,
                 "mode": session.mode,
                 "responses": session.responses,
-                "round1_responses": session.round1_responses,
+                "round1_responses": session.round1_responses if session.round1_responses else session.responses,
+                "round2_responses": session.round2_responses if hasattr(session, 'round2_responses') else {},
                 "constitutional_compliance": session.constitutional_compliance,
                 "timestamp": session.timestamp,
                 "total_processing_time_ms": session.total_processing_time_ms
@@ -1005,7 +1006,7 @@ Each member brings their expertise:
 - GPT-4: Organized planner who breaks things down step-by-step and keeps things practical
 - Gemini: UX-focused teammate who thinks about how real users will actually experience this
 - Grok: The friendly skeptic who finds potential problems and suggests "what if" scenarios
-- Perplexity: Research-focused teammate who double-checks facts and finds relevant info
+- Perplexity: Adversarial analyst who challenges assumptions, surfaces counterarguments, and grounds them in research
 
 ENHANCED CAPABILITIES:
 🔍 You can see the actual code files, structure, and dependencies
@@ -1452,13 +1453,25 @@ async def _real_call_gemini(prompt: str, api_key: str, max_tokens: int = 100) ->
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [{"parts": [{"text": prompt}]}],
-                        "generationConfig": {"maxOutputTokens": max_tokens}
+                        "generationConfig": {
+                            "maxOutputTokens": max_tokens,
+                            # Disable thinking so reasoning tokens don't consume the output budget
+                            "thinkingConfig": {"thinkingBudget": 0}
+                        }
                     }
                 )
 
                 if response.status_code == 200:
                     data = response.json()
-                    return data["candidates"][0]["content"]["parts"][0]["text"]
+                    candidate = data["candidates"][0]
+                    parts = candidate.get("content", {}).get("parts", []) or []
+                    # Concatenate all non-thought text parts (Gemini may split output across parts)
+                    text = "".join(
+                        p.get("text", "") for p in parts if not p.get("thought")
+                    )
+                    if not text and candidate.get("finishReason") == "MAX_TOKENS":
+                        text = "[Gemini response truncated: MAX_TOKENS reached before any visible text was produced]"
+                    return text
                 elif response.status_code == 429:
                     # Rate limited - implement exponential backoff
                     if attempt < max_retries:
@@ -1711,7 +1724,8 @@ async def execute_constitutional_safe_mode(system_packet, providers: List[str], 
         "claude": "Architecture / Systems / Integrity",
         "gpt4": "Structure / Guardrails / Synthesis",
         "gemini": "UX / Human Clarity / Flow",
-        "grok": "Stress Test / Edge Cases / Pressure"
+        "grok": "Stress Test / Edge Cases / Pressure",
+        "perplexity": "Adversarial Analysis / Challenge Assumptions"
     }
 
     # Select appropriate prompt template based on whether we have codebase context
@@ -1728,7 +1742,7 @@ You're part of an AI council discussing this request. Each member brings their o
 - GPT-4: Organized planner who breaks things down step-by-step and keeps things practical
 - Gemini: UX-focused teammate who thinks about how real users will actually experience this
 - Grok: The friendly skeptic who finds potential problems and suggests "what if" scenarios
-- Perplexity: Research-focused teammate who double-checks facts and finds relevant info
+- Perplexity: Adversarial analyst who challenges assumptions, surfaces counterarguments, and grounds them in research
 
 Respond naturally in your own voice and style. Be conversational, helpful, and authentic - just like you normally would. Share your genuine perspective on the request.
 
@@ -1913,27 +1927,29 @@ Just speak naturally - no need for formal structure. What's your take after hear
 - Flag significant conflicts for escalation
 """
 
-            response = await make_constitutional_api_call(provider, cross_review_prompt)
+            response_data = await make_constitutional_api_call(provider, cross_review_prompt)
             round2_responses[provider] = {
-                "response": response,
+                "response": response_data.get("response", f"No response from {provider}"),
                 "role": role_assignments.get(provider, "General Analysis"),
                 "round": 2,
                 "constitutional_compliance": True,
                 "cross_review": True,
+                "constitutional_patches": response_data.get("constitutional_patches", {}),
                 "timestamp": datetime.now().isoformat()
             }
 
         except Exception as e:
             # Constitutional failure handling: retry once, continue session
             try:
-                response = await make_constitutional_api_call(provider, cross_review_prompt)
+                response_data = await make_constitutional_api_call(provider, cross_review_prompt)
                 round2_responses[provider] = {
-                    "response": response,
+                    "response": response_data.get("response", f"No response from {provider}"),
                     "role": role_assignments.get(provider, "General Analysis"),
                     "round": 2,
                     "constitutional_compliance": True,
                     "cross_review": True,
                     "retry": True,
+                    "constitutional_patches": response_data.get("constitutional_patches", {}),
                     "timestamp": datetime.now().isoformat()
                 }
             except:
@@ -2079,6 +2095,7 @@ def create_constitutional_session_object(responses: Dict[str, Any], mode: str, s
     session_obj.mode = mode
     session_obj.responses = responses
     session_obj.round1_responses = round1_responses
+    session_obj.round2_responses = {k: v for k, v in responses.items() if v.get("round") == 2} if responses and round1_responses else {}
     session_obj.system_packet = system_packet
     session_obj.constitutional_compliance = True
     session_obj.timestamp = datetime.now().isoformat()
@@ -2162,7 +2179,7 @@ async def get_saved_insights():
 async def get_provider_status():
     """Get current status of all AI providers"""
     # Update status before returning
-    providers = ["claude", "gpt4", "gemini", "grok"]
+    providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
     await update_provider_status(providers)
 
     return {
@@ -2182,7 +2199,7 @@ async def test_single_provider(provider: str):
     """CRITICAL FIX: Test single provider with proper error handling"""
 
     # CRITICAL FIX: Validate provider input
-    valid_providers = ["claude", "gpt4", "gemini", "groq", "grok"]
+    valid_providers = ["claude", "gpt4", "gemini", "groq", "grok", "perplexity"]
     if provider not in valid_providers:
         return {
             "provider": provider,
@@ -2281,7 +2298,7 @@ async def test_single_provider(provider: str):
 async def test_all_providers():
     """Constitutional requirement: Test all providers simultaneously"""
 
-    providers = ["claude", "gpt4", "gemini", "grok"]
+    providers = ["claude", "gpt4", "gemini", "grok", "perplexity"]
     results = {}
 
     for provider in providers:
