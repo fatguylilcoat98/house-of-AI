@@ -1947,8 +1947,8 @@ async def make_constitutional_api_call(provider: str, prompt: str) -> Dict[str, 
 
         print(f"COUNCIL API CALL: Making real API call to {provider}")
 
-        # Call the real API with higher token limits for natural conversation
-        council_max_tokens = 800  # Much higher for natural conversation
+        # Call the real API with UNLIMITED tokens for full responses
+        council_max_tokens = 200000  # UNLIMITED - let models provide full responses
         council_system_msg = "You're part of an AI council providing thoughtful analysis and discussion."
 
         if provider == "claude":

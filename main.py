@@ -524,7 +524,7 @@ async def tts_endpoint(req: TTSRequest):
     if not text:
         raise HTTPException(status_code=400, detail="Text required.")
 
-    text = text[:600]  # Raised cap from 300 → 600 chars
+    # Removed TTS character limit - unlimited audio generation now
 
     # Auto-select voice if not specified
     voice = req.voice
