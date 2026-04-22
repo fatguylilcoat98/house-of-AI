@@ -116,7 +116,6 @@
         .response-card {
             background: white;
             border-radius: 12px;
-            overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: transform 0.2s;
         }
@@ -164,13 +163,11 @@
         }
 
         .response-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
+            display: none;
         }
 
         .response-card.expanded .response-content {
-            max-height: 9999px;
+            display: block;
         }
 
         .response-text {
@@ -235,7 +232,7 @@
         <div class="header">
             <h1>🏛️ House of AI Council</h1>
             <p>Ask the Council - Get 5 AI perspectives simultaneously</p>
-            <div style="margin-top: 10px; font-size: 0.9rem; color: #95a5a6;">v2.1.0</div>
+            <div style="margin-top: 10px; font-size: 0.9rem; color: #95a5a6;">v2.2.0</div>
         </div>
 
         <div class="input-section">

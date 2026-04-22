@@ -203,7 +203,7 @@ class CouncilExecutionEngine:
                 },
                 json={
                     "model": "claude-3-5-sonnet-20241022",
-                    "max_tokens": 4000,
+                    "max_tokens": 8192,
                     "messages": [{"role": "user", "content": prompt}]
                 }
             )
@@ -223,7 +223,7 @@ class CouncilExecutionEngine:
                 json={
                     "model": "gpt-4",
                     "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 4000
+                    "max_tokens": 8192
                 }
             )
             response.raise_for_status()
@@ -238,7 +238,7 @@ class CouncilExecutionEngine:
                 headers={"Content-Type": "application/json"},
                 json={
                     "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"maxOutputTokens": 4000}
+                    "generationConfig": {"maxOutputTokens": 8192}
                 }
             )
             response.raise_for_status()
@@ -263,7 +263,7 @@ class CouncilExecutionEngine:
                 json={
                     "model": "llama-3.1-sonar-small-128k-online",
                     "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 4000
+                    "max_tokens": 8192
                 }
             )
             response.raise_for_status()
