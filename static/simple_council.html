@@ -170,7 +170,7 @@
         }
 
         .response-card.expanded .response-content {
-            max-height: none;
+            max-height: 9999px;
         }
 
         .response-text {
@@ -178,8 +178,8 @@
             white-space: pre-wrap;
             line-height: 1.6;
             color: #333;
-            max-height: 80vh;
-            overflow-y: auto;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .spinner {
@@ -235,6 +235,7 @@
         <div class="header">
             <h1>🏛️ House of AI Council</h1>
             <p>Ask the Council - Get 5 AI perspectives simultaneously</p>
+            <div style="margin-top: 10px; font-size: 0.9rem; color: #95a5a6;">v2.1.0</div>
         </div>
 
         <div class="input-section">
