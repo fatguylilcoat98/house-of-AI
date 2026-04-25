@@ -516,6 +516,58 @@ class TTSRequest(BaseModel):
     voice: str = ""
     app_mode: str = "kid"
 
+class SimpleQueryRequest(BaseModel):
+    prompt: str
+
+class SimpleQueryResponse(BaseModel):
+    prompt: str
+    responses: dict
+
+@app.post("/ask", response_model=SimpleQueryResponse)
+async def ask_all_ais(req: SimpleQueryRequest):
+    """
+    Simple multi-AI query - ask one question, get individual responses from each AI
+    exactly like going to each website separately
+    """
+    if not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt cannot be empty.")
+
+    responses = {}
+    simple_system_prompt = "You are a helpful AI assistant. Answer the user's question directly and naturally."
+
+    async with httpx.AsyncClient() as client:
+        # Query Claude (Anthropic)
+        if ANTHROPIC_API_KEY:
+            try:
+                claude_result = await call_claude(req.prompt, "", simple_system_prompt, client)
+                responses["claude"] = claude_result.response if not claude_result.error else f"Error: {claude_result.error}"
+            except Exception as e:
+                responses["claude"] = f"Error: {str(e)}"
+        else:
+            responses["claude"] = "No API key configured"
+
+        # Query GPT (OpenAI)
+        if OPENAI_API_KEY:
+            try:
+                gpt_result = await call_gpt(req.prompt, "", simple_system_prompt, client, "GPT")
+                responses["gpt"] = gpt_result.response if not gpt_result.error else f"Error: {gpt_result.error}"
+            except Exception as e:
+                responses["gpt"] = f"Error: {str(e)}"
+        else:
+            responses["gpt"] = "No API key configured"
+
+        # Query Gemini (Google)
+        if GEMINI_API_KEY:
+            try:
+                gemini_result = await call_gemini(req.prompt, "", simple_system_prompt, client)
+                responses["gemini"] = gemini_result.response if not gemini_result.error else f"Error: {gemini_result.error}"
+            except Exception as e:
+                responses["gemini"] = f"Error: {str(e)}"
+        else:
+            responses["gemini"] = "No API key configured"
+
+    return SimpleQueryResponse(prompt=req.prompt, responses=responses)
+
 @app.post("/tts")
 async def tts_endpoint(req: TTSRequest):
     if not OPENAI_API_KEY:
