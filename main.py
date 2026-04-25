@@ -44,6 +44,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY", "")
+GROK_API_KEY = os.getenv("GROK_API_KEY", "")
 PINECONE_API_KEY  = os.getenv("PINECONE_API_KEY", "")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "house-of-ai-memory")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
@@ -128,7 +129,8 @@ async def store_memory(prompt: str, responses: dict, client: httpx.AsyncClient):
                 "claude": responses.get("claude", "")[:1000],
                 "gpt": responses.get("gpt", "")[:1000],
                 "gemini": responses.get("gemini", "")[:1000],
-                "perplexity": responses.get("perplexity", "")[:1000]
+                "perplexity": responses.get("perplexity", "")[:1000],
+                "grok": responses.get("grok", "")[:1000]
             }
         }])
     except Exception:
@@ -169,6 +171,8 @@ async def retrieve_memories(prompt: str, client: httpx.AsyncClient, top_k: int =
                     memory_context += f"Gemini said: {metadata['gemini'][:300]}...\n"
                 if metadata.get('perplexity'):
                     memory_context += f"Perplexity said: {metadata['perplexity'][:300]}...\n"
+                if metadata.get('grok'):
+                    memory_context += f"Grok said: {metadata['grok'][:300]}...\n"
 
         return memory_context if len(memory_context) > 50 else ""
     except Exception:
@@ -500,6 +504,38 @@ async def call_perplexity(
         return AgentResponse(agent="Perplexity", response="", error=str(e))
 
 
+async def call_grok(
+    task: str, context: str, system_prompt: str, client: httpx.AsyncClient
+) -> AgentResponse:
+    try:
+        messages = [{"role": "system", "content": system_prompt}]
+        if context:
+            messages.append({"role": "user", "content": f"[CONTEXT]\n{context}"})
+            messages.append({"role": "assistant", "content": "Understood. I have reviewed the context."})
+        messages.append({"role": "user", "content": task})
+
+        r = await client.post(
+            "https://api.x.ai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROK_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "grok-beta",
+                "messages": messages,
+                "max_tokens": 4096,
+            },
+            timeout=180,
+        )
+        r.raise_for_status()
+        return AgentResponse(
+            agent="Grok",
+            response=r.json()["choices"][0]["message"]["content"]
+        )
+    except Exception as e:
+        return AgentResponse(agent="Grok", response="", error=str(e))
+
+
 # ---------------------------------------------------------------------------
 # Scout Fix Loop
 # ---------------------------------------------------------------------------
@@ -815,6 +851,16 @@ async def ask_all_ais(req: SimpleQueryRequest):
                 responses["perplexity"] = f"Error: {str(e)}"
         else:
             responses["perplexity"] = "No API key configured"
+
+        # Query Grok
+        if GROK_API_KEY:
+            try:
+                grok_result = await call_grok(req.prompt, "", system_prompt, client)
+                responses["grok"] = grok_result.response if not grok_result.error else f"Error: {grok_result.error}"
+            except Exception as e:
+                responses["grok"] = f"Error: {str(e)}"
+        else:
+            responses["grok"] = "No API key configured"
 
         # Store this conversation in memory
         await store_memory(req.prompt, responses, client)
