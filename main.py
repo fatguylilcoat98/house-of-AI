@@ -10,12 +10,20 @@ import os
 import re
 import asyncio
 import httpx
+import uuid
+from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 import json
+
+try:
+    from pinecone import Pinecone, ServerlessSpec
+    PINECONE_AVAILABLE = True
+except ImportError:
+    PINECONE_AVAILABLE = False
 
 from consensus_engine import run_consensus_pipeline
 
@@ -35,8 +43,187 @@ app.add_middleware(
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
+PINECONE_API_KEY  = os.getenv("PINECONE_API_KEY", "")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "house-of-ai-memory")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 
 MAX_FIX_ATTEMPTS = 2  # Scout → fix loop max retries
+
+# ---------------------------------------------------------------------------
+# Memory System (Pinecone)
+# ---------------------------------------------------------------------------
+pinecone_client = None
+pinecone_index = None
+
+if PINECONE_AVAILABLE and PINECONE_API_KEY:
+    try:
+        pinecone_client = Pinecone(api_key=PINECONE_API_KEY)
+
+        # Try to get existing index or create it
+        try:
+            pinecone_index = pinecone_client.Index(PINECONE_INDEX_NAME)
+        except Exception:
+            # Index doesn't exist, create it
+            pinecone_client.create_index(
+                name=PINECONE_INDEX_NAME,
+                dimension=1536,  # OpenAI embedding dimension
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1")
+            )
+            pinecone_index = pinecone_client.Index(PINECONE_INDEX_NAME)
+    except Exception as e:
+        print(f"Pinecone initialization failed: {e}")
+        pinecone_client = None
+        pinecone_index = None
+
+async def get_embedding(text: str, client: httpx.AsyncClient) -> list[float]:
+    """Get OpenAI embedding for text."""
+    if not OPENAI_API_KEY:
+        return []
+
+    try:
+        response = await client.post(
+            "https://api.openai.com/v1/embeddings",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "text-embedding-ada-002",
+                "input": text
+            },
+            timeout=30
+        )
+        response.raise_for_status()
+        return response.json()["data"][0]["embedding"]
+    except Exception:
+        return []
+
+async def store_memory(prompt: str, responses: dict, client: httpx.AsyncClient):
+    """Store a conversation in Pinecone memory."""
+    if not pinecone_index:
+        return
+
+    # Create memory text
+    memory_text = f"User: {prompt}\n"
+    for ai_name, response in responses.items():
+        if isinstance(response, str) and not response.startswith("Error:") and not response.startswith("No API"):
+            memory_text += f"\n{ai_name.title()}: {response[:500]}..."  # Truncate long responses
+
+    # Get embedding
+    embedding = await get_embedding(memory_text, client)
+    if not embedding:
+        return
+
+    # Store in Pinecone
+    try:
+        memory_id = str(uuid.uuid4())
+        pinecone_index.upsert(vectors=[{
+            "id": memory_id,
+            "values": embedding,
+            "metadata": {
+                "prompt": prompt,
+                "timestamp": datetime.now().isoformat(),
+                "claude": responses.get("claude", "")[:1000],
+                "gpt": responses.get("gpt", "")[:1000],
+                "gemini": responses.get("gemini", "")[:1000]
+            }
+        }])
+    except Exception:
+        pass  # Silently fail if memory storage fails
+
+async def retrieve_memories(prompt: str, client: httpx.AsyncClient, top_k: int = 3) -> str:
+    """Retrieve relevant memories for a prompt."""
+    if not pinecone_index:
+        return ""
+
+    # Get embedding for the prompt
+    embedding = await get_embedding(prompt, client)
+    if not embedding:
+        return ""
+
+    try:
+        # Query Pinecone for similar memories
+        results = pinecone_index.query(
+            vector=embedding,
+            top_k=top_k,
+            include_metadata=True
+        )
+
+        if not results.matches:
+            return ""
+
+        # Format memories for context
+        memory_context = "RELEVANT PAST CONVERSATIONS:\n"
+        for match in results.matches:
+            if match.score > 0.7:  # Only include highly relevant memories
+                metadata = match.metadata
+                memory_context += f"\nPrevious: {metadata.get('prompt', '')}\n"
+                if metadata.get('claude'):
+                    memory_context += f"Claude said: {metadata['claude'][:300]}...\n"
+                if metadata.get('gpt'):
+                    memory_context += f"GPT said: {metadata['gpt'][:300]}...\n"
+                if metadata.get('gemini'):
+                    memory_context += f"Gemini said: {metadata['gemini'][:300]}...\n"
+
+        return memory_context if len(memory_context) > 50 else ""
+    except Exception:
+        return ""
+
+async def tavily_search(query: str, client: httpx.AsyncClient) -> str:
+    """Search using Tavily API for current information."""
+    if not TAVILY_API_KEY:
+        return ""
+
+    try:
+        response = await client.post(
+            "https://api.tavily.com/search",
+            headers={
+                "Content-Type": "application/json"
+            },
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "search_depth": "basic",
+                "include_answer": True,
+                "include_images": False,
+                "include_raw_content": False,
+                "max_results": 3
+            },
+            timeout=30
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        # Format search results
+        search_context = f"CURRENT SEARCH RESULTS for '{query}':\n"
+
+        if data.get("answer"):
+            search_context += f"Summary: {data['answer']}\n\n"
+
+        for result in data.get("results", [])[:3]:
+            search_context += f"• {result.get('title', '')}\n{result.get('content', '')[:300]}...\nSource: {result.get('url', '')}\n\n"
+
+        return search_context
+    except Exception:
+        return ""
+
+def needs_search(prompt: str) -> tuple[bool, str]:
+    """Determine if a prompt needs current information and extract search query."""
+    current_indicators = [
+        "current", "latest", "recent", "now", "today", "2024", "2025", "2026",
+        "what's happening", "news", "update", "price", "stock", "weather"
+    ]
+
+    prompt_lower = prompt.lower()
+    if any(indicator in prompt_lower for indicator in current_indicators):
+        # Extract a search query from the prompt
+        search_query = prompt
+        if len(search_query) > 100:
+            search_query = search_query[:100] + "..."
+        return True, search_query
+
+    return False, ""
 
 # ---------------------------------------------------------------------------
 # Safety Governor
@@ -526,20 +713,37 @@ class SimpleQueryResponse(BaseModel):
 @app.post("/ask", response_model=SimpleQueryResponse)
 async def ask_all_ais(req: SimpleQueryRequest):
     """
-    Simple multi-AI query - ask one question, get individual responses from each AI
-    exactly like going to each website separately
+    Simple multi-AI query with memory - ask one question, get individual responses from each AI
+    with full memory of past conversations
     """
     if not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty.")
 
     responses = {}
-    simple_system_prompt = "You are a helpful AI assistant. Answer the user's question directly and naturally."
 
     async with httpx.AsyncClient() as client:
+        # Retrieve relevant memories
+        memory_context = await retrieve_memories(req.prompt, client)
+
+        # Check if we need current information
+        needs_current_info, search_query = needs_search(req.prompt)
+        search_context = ""
+        if needs_current_info:
+            search_context = await tavily_search(search_query, client)
+
+        # Build system prompt with memory and search
+        system_prompt = "You are a helpful AI assistant. Answer the user's question directly and naturally."
+
+        if memory_context:
+            system_prompt += f"\n\n{memory_context}\n\nRemember these past conversations when answering the current question. Reference previous topics naturally if relevant."
+
+        if search_context:
+            system_prompt += f"\n\n{search_context}\n\nUse this current information to provide up-to-date answers."
+
         # Query Claude (Anthropic)
         if ANTHROPIC_API_KEY:
             try:
-                claude_result = await call_claude(req.prompt, "", simple_system_prompt, client)
+                claude_result = await call_claude(req.prompt, "", system_prompt, client)
                 responses["claude"] = claude_result.response if not claude_result.error else f"Error: {claude_result.error}"
             except Exception as e:
                 responses["claude"] = f"Error: {str(e)}"
@@ -549,7 +753,7 @@ async def ask_all_ais(req: SimpleQueryRequest):
         # Query GPT (OpenAI)
         if OPENAI_API_KEY:
             try:
-                gpt_result = await call_gpt(req.prompt, "", simple_system_prompt, client, "GPT")
+                gpt_result = await call_gpt(req.prompt, "", system_prompt, client, "GPT")
                 responses["gpt"] = gpt_result.response if not gpt_result.error else f"Error: {gpt_result.error}"
             except Exception as e:
                 responses["gpt"] = f"Error: {str(e)}"
@@ -559,12 +763,15 @@ async def ask_all_ais(req: SimpleQueryRequest):
         # Query Gemini (Google)
         if GEMINI_API_KEY:
             try:
-                gemini_result = await call_gemini(req.prompt, "", simple_system_prompt, client)
+                gemini_result = await call_gemini(req.prompt, "", system_prompt, client)
                 responses["gemini"] = gemini_result.response if not gemini_result.error else f"Error: {gemini_result.error}"
             except Exception as e:
                 responses["gemini"] = f"Error: {str(e)}"
         else:
             responses["gemini"] = "No API key configured"
+
+        # Store this conversation in memory
+        await store_memory(req.prompt, responses, client)
 
     return SimpleQueryResponse(prompt=req.prompt, responses=responses)
 
@@ -610,6 +817,9 @@ async def health():
         "status": "NymbleLogic — House of AI live",
         "safety_layer": "active",
         "fix_loop": f"max {MAX_FIX_ATTEMPTS} attempts",
+        "memory": "enabled" if pinecone_index else "disabled",
+        "memory_index": PINECONE_INDEX_NAME if pinecone_index else "none",
+        "search": "enabled" if TAVILY_API_KEY else "disabled"
     }
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
